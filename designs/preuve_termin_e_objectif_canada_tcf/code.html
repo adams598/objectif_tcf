@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr-CA"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Écran de fin d'épreuve - Objectif Canada</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.02); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes floatUp {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .animate-pop-in {
+            animation: popIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        
+        .animate-float-up {
+            animation: floatUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+        
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "on-background": "#1d1b20",
+                      "surface-container-low": "#f8f2fa",
+                      "on-primary-container": "#e0d2ff",
+                      "inverse-primary": "#cfbcff",
+                      "on-tertiary-container": "#503d00",
+                      "on-tertiary-fixed-variant": "#594400",
+                      "primary-container": "#6750a4",
+                      "tertiary-fixed": "#ffdf93",
+                      "secondary-fixed": "#e9ddff",
+                      "error-container": "#ffdad6",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary": "#765b00",
+                      "surface-bright": "#fdf7ff",
+                      "background": "#fdf7ff",
+                      "on-tertiary-fixed": "#241a00",
+                      "inverse-surface": "#322f35",
+                      "on-tertiary": "#ffffff",
+                      "outline-variant": "#cbc4d2",
+                      "secondary-container": "#e1d4fd",
+                      "inverse-on-surface": "#f5eff7",
+                      "surface-container-high": "#ece6ee",
+                      "secondary-fixed-dim": "#cdc0e9",
+                      "primary-fixed-dim": "#cfbcff",
+                      "surface-container": "#f2ecf4",
+                      "on-primary-fixed": "#22005d",
+                      "surface-dim": "#ded8e0",
+                      "surface": "#fdf7ff",
+                      "on-primary-fixed-variant": "#4f378a",
+                      "surface-variant": "#e6e0e9",
+                      "on-surface-variant": "#494551",
+                      "on-secondary-fixed-variant": "#4b4263",
+                      "on-error": "#ffffff",
+                      "tertiary-fixed-dim": "#e7c365",
+                      "surface-tint": "#6750a4",
+                      "primary-fixed": "#e9ddff",
+                      "on-error-container": "#93000a",
+                      "on-surface": "#1d1b20",
+                      "on-secondary-container": "#645a7d",
+                      "on-primary": "#ffffff",
+                      "tertiary-container": "#c9a74d",
+                      "primary": "#4f378a",
+                      "on-secondary-fixed": "#1f1635",
+                      "secondary": "#63597c",
+                      "surface-container-highest": "#e6e0e9",
+                      "outline": "#7a7582"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "xs": "0.25rem",
+                      "md": "1rem",
+                      "xl": "2rem",
+                      "container-max": "1280px",
+                      "base": "4px",
+                      "2xl": "3rem",
+                      "sm": "0.5rem",
+                      "lg": "1.5rem"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": ["Geist"],
+                      "body-lg": ["Inter"],
+                      "display-md": ["Geist"],
+                      "body-md": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "display-lg": ["Geist"],
+                      "headline-lg": ["Geist"],
+                      "label-md": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                      "display-md": ["36px", {"lineHeight": "1.2", "letterSpacing": "-0.03em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "1.5", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                      "label-sm": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                      "headline-lg": ["30px", {"lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="bg-background min-h-screen flex items-center justify-center p-md sm:p-xl antialiased">
+<!-- Main Container -->
+<main class="w-full max-w-[800px] bg-surface-container-lowest border border-outline-variant rounded-[24px] shadow-[0_24px_48px_rgba(109,40,217,0.05)] overflow-hidden animate-pop-in relative">
+<!-- Subtle Background Glow -->
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[80px] pointer-events-none"></div>
+<div class="p-xl sm:p-2xl flex flex-col items-center text-center relative z-10">
+<!-- Celebratory Illustration -->
+<div class="w-48 h-48 sm:w-64 sm:h-64 mb-xl animate-float-up">
+<img alt="Illustration de célébration" class="w-full h-full object-contain drop-shadow-xl" data-alt="A modern, high-end 3D minimalist illustration celebrating success in an educational context. The scene features abstract geometric shapes, floating spheres, and elegant ribbons in vibrant shades of deep violet and indigo, set against a pristine, bright light-mode white background. Subtle, stylized confetti elements add a sense of achievement without cluttering the clean, premium corporate aesthetic. Soft, studio-quality lighting creates gentle shadows and highlights, emphasizing clarity, focus, and a sense of sophisticated accomplishment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfqD0x30dj6Y5jp2FsABy1X7gfPoKHIsOMd0noD_CKUYt5trdXyihTijJ1AIYnET8odqcUNFO8dXSVTXND3fIwG8-2iJ81ZhsdqYm4hwM5FjN0-n24eviIW6kzhRe37_D2-Kn2SSKq4_sDCMnUsW_tRDHS6bSd8kw_eNvc1SW15Pt6X2nqWrHA8UyvG2AynRdp4zwQEakCOb4ad2ZFdC41ynqCX0owUSIjtZBX87WfnS2HYyFz7-dS4jHWaXY_veSJg1wxgOcna0s"/>
+</div>
+<!-- Headers -->
+<h1 class="font-display-md text-display-md text-primary mb-md animate-float-up delay-100">
+                Félicitations, vous avez terminé l'épreuve !
+            </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg mb-2xl animate-float-up delay-100">
+                Vos réponses ont été soumises avec succès. L'analyse de vos compétences linguistiques est en cours de traitement.
+            </p>
+<!-- Recap Stats Grid (Bento style hint) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-md w-full max-w-md mb-2xl animate-float-up delay-200">
+<!-- Stat Card 1 -->
+<div class="bg-surface-container flex flex-col items-center justify-center p-lg rounded-xl border border-surface-variant transition-transform hover:-translate-y-1 duration-300">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center mb-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">timer</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-xs">Temps Écoulé</span>
+<span class="font-headline-lg text-headline-lg text-on-surface">42:15</span>
+</div>
+<!-- Stat Card 2 -->
+<div class="bg-surface-container flex flex-col items-center justify-center p-lg rounded-xl border border-surface-variant transition-transform hover:-translate-y-1 duration-300">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center mb-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">task_alt</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-xs">Questions Répondues</span>
+<span class="font-headline-lg text-headline-lg text-on-surface">40 <span class="text-on-surface-variant text-body-lg font-body-lg">/ 40</span></span>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex flex-col sm:flex-row gap-md w-full sm:w-auto animate-float-up delay-300">
+<button class="bg-surface-container-lowest border border-outline-variant text-on-surface font-label-md text-label-md px-xl py-md rounded-xl hover:bg-surface-container hover:text-primary transition-all duration-200 flex-1 sm:flex-none">
+                    Retour au tableau de bord
+                </button>
+<button class="bg-gradient-to-r from-primary to-on-primary-fixed-variant text-on-primary font-label-md text-label-md px-xl py-md rounded-xl hover:shadow-[0_8px_16px_rgba(79,55,138,0.25)] hover:scale-[1.02] transition-all duration-200 flex-1 sm:flex-none flex items-center justify-center gap-sm">
+                    Voir les résultats détaillés
+                    <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</main>
+</body></html>

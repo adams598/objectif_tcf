@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Expression Écrite - Objectif Canada</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-background": "#1d1b20",
+                        "surface-container-low": "#f8f2fa",
+                        "on-primary-container": "#e0d2ff",
+                        "inverse-primary": "#cfbcff",
+                        "on-tertiary-container": "#503d00",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "primary-container": "#6750a4",
+                        "tertiary-fixed": "#ffdf93",
+                        "secondary-fixed": "#e9ddff",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary": "#765b00",
+                        "surface-bright": "#fdf7ff",
+                        "background": "#fdf7ff",
+                        "on-tertiary-fixed": "#241a00",
+                        "inverse-surface": "#322f35",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#cbc4d2",
+                        "secondary-container": "#e1d4fd",
+                        "inverse-on-surface": "#f5eff7",
+                        "surface-container-high": "#ece6ee",
+                        "secondary-fixed-dim": "#cdc0e9",
+                        "primary-fixed-dim": "#cfbcff",
+                        "surface-container": "#f2ecf4",
+                        "on-primary-fixed": "#22005d",
+                        "surface-dim": "#ded8e0",
+                        "surface": "#fdf7ff",
+                        "on-primary-fixed-variant": "#4f378a",
+                        "surface-variant": "#e6e0e9",
+                        "on-surface-variant": "#494551",
+                        "on-secondary-fixed-variant": "#4b4263",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed-dim": "#e7c365",
+                        "surface-tint": "#6750a4",
+                        "primary-fixed": "#e9ddff",
+                        "on-error-container": "#93000a",
+                        "on-surface": "#1d1b20",
+                        "on-secondary-container": "#645a7d",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#c9a74d",
+                        "primary": "#4f378a",
+                        "on-secondary-fixed": "#1f1635",
+                        "secondary": "#63597c",
+                        "surface-container-highest": "#e6e0e9",
+                        "outline": "#7a7582"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "xs": "0.25rem",
+                        "md": "1rem",
+                        "xl": "2rem",
+                        "container-max": "1280px",
+                        "base": "4px",
+                        "2xl": "3rem",
+                        "sm": "0.5rem",
+                        "lg": "1.5rem"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Geist"],
+                        "body-lg": ["Inter"],
+                        "display-md": ["Geist"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "display-lg": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "display-md": ["36px", { "lineHeight": "1.2", "letterSpacing": "-0.03em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "headline-lg": ["30px", { "lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom scrollbar for editor areas */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbc4d2; /* outline-variant */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7a7582; /* outline */
+        }
+        
+        /* Focus styles for contenteditable to avoid default browser outline */
+        [contenteditable]:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface h-screen flex flex-col overflow-hidden antialiased">
+<!-- Focused Exam Header (Overrides standard navigation) -->
+<header class="h-20 flex items-center justify-between px-gutter border-b border-outline-variant bg-surface shrink-0 z-10 shadow-sm relative">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined" data-icon="edit_document">edit_document</span>
+</div>
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface m-0 leading-tight">Expression Écrite</h1>
+<div class="flex items-center gap-2 font-label-sm text-label-sm text-on-surface-variant">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container">Section B</span>
+<span>Tâche 1 sur 2</span>
+</div>
+</div>
+</div>
+<!-- Timer and Global Actions -->
+<div class="flex items-center gap-lg">
+<!-- Progress / Timer Cluster -->
+<div class="flex items-center gap-md bg-surface-container px-md py-sm rounded-xl border border-outline-variant">
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Temps restant</span>
+<div class="flex items-center gap-sm font-display-md text-display-md text-on-surface leading-none">
+<span class="material-symbols-outlined text-primary" data-icon="timer">timer</span>
+<span>42:15</span>
+</div>
+</div>
+<!-- Mini Progress Bar inside timer block -->
+<div class="w-24 h-2 bg-surface-variant rounded-full overflow-hidden ml-sm">
+<div class="h-full bg-primary w-[35%] rounded-full"></div>
+</div>
+</div>
+<!-- Primary Action -->
+<button class="bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-label-md text-label-md px-lg py-sm h-12 rounded-xl transition-all shadow-sm flex items-center gap-sm">
+<span>Terminer l'épreuve</span>
+<span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</header>
+<!-- Split Screen Main Canvas -->
+<main class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+<!-- Background decorative blur (Subtle depth) -->
+<div class="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+<!-- Left Panel: Instructions -->
+<section class="w-full lg:w-[45%] h-full flex flex-col bg-surface-container-lowest border-r border-outline-variant relative">
+<!-- Instructions Header -->
+<div class="px-gutter py-md border-b border-outline-variant bg-surface sticky top-0 z-10 flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="info">info</span>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Consignes</h2>
+</div>
+<!-- Instructions Content (Scrollable) -->
+<div class="flex-1 overflow-y-auto p-gutter lg:p-xl space-y-xl text-on-surface font-body-lg text-body-lg">
+<div class="prose max-w-none">
+<p class="font-bold text-on-surface">Lisez attentivement le texte ci-dessous et répondez à la consigne.</p>
+<!-- Simulated Document Card -->
+<div class="mt-lg p-lg bg-surface rounded-xl border border-outline-variant shadow-sm relative overflow-hidden">
+<!-- Decorative top bar for document -->
+<div class="absolute top-0 left-0 w-full h-1 bg-secondary"></div>
+<div class="mb-md pb-sm border-b border-outline-variant flex justify-between items-end">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Article de presse</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Le Monde Quotidien</span>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-md">La fin du télétravail : une erreur stratégique ?</h3>
+<p class="text-on-surface-variant mb-md leading-relaxed">
+                            De nombreuses entreprises technologiques annoncent un retour obligatoire au bureau cinq jours par semaine, mettant fin à l'ère du travail hybride instaurée post-pandémie. Les dirigeants invoquent la nécessité de stimuler la collaboration spontanée et de renforcer la culture d'entreprise.
+                        </p>
+<p class="text-on-surface-variant leading-relaxed">
+                            Cependant, cette décision suscite une vive opposition de la part des employés, qui soulignent les avantages du télétravail : meilleur équilibre vie professionnelle/vie personnelle, réduction du temps de trajet et, selon plusieurs études, une productivité souvent supérieure.
+                        </p>
+</div>
+<div class="mt-xl p-md bg-secondary-container/30 border-l-4 border-primary rounded-r-lg">
+<h4 class="font-label-md text-label-md font-bold text-on-surface mb-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="edit">edit</span>
+                            Votre tâche
+                        </h4>
+<p class="text-on-surface-variant">
+                            Écrivez une lettre au rédacteur en chef du journal pour exprimer votre opinion sur cette question. Développez au moins trois arguments pour justifier votre point de vue.
+                        </p>
+<ul class="list-disc list-inside mt-sm text-on-surface-variant space-y-xs ml-xs">
+<li>Longueur exigée : <strong>200 à 250 mots</strong>.</li>
+<li>Format : Lettre formelle.</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Panel: Editor Canvas -->
+<section class="w-full lg:w-[55%] h-full flex flex-col bg-surface relative">
+<!-- Rich Text Toolbar -->
+<div class="h-14 border-b border-outline-variant bg-surface-container flex items-center px-md gap-sm shrink-0 sticky top-0 z-10">
+<div class="flex items-center gap-xs pr-sm border-r border-outline-variant">
+<button class="w-8 h-8 rounded hover:bg-surface-variant flex items-center justify-center text-on-surface-variant transition-colors" title="Gras">
+<span class="material-symbols-outlined text-[20px]" data-icon="format_bold">format_bold</span>
+</button>
+<button class="w-8 h-8 rounded hover:bg-surface-variant flex items-center justify-center text-on-surface-variant transition-colors" title="Italique">
+<span class="material-symbols-outlined text-[20px]" data-icon="format_italic">format_italic</span>
+</button>
+<button class="w-8 h-8 rounded hover:bg-surface-variant flex items-center justify-center text-on-surface-variant transition-colors" title="Souligné">
+<span class="material-symbols-outlined text-[20px]" data-icon="format_underlined">format_underlined</span>
+</button>
+</div>
+<div class="flex items-center gap-xs pr-sm border-r border-outline-variant">
+<button class="w-8 h-8 rounded hover:bg-surface-variant flex items-center justify-center text-on-surface-variant transition-colors" title="Liste à puces">
+<span class="material-symbols-outlined text-[20px]" data-icon="format_list_bulleted">format_list_bulleted</span>
+</button>
+<button class="w-8 h-8 rounded hover:bg-surface-variant flex items-center justify-center text-on-surface-variant transition-colors" title="Liste numérotée">
+<span class="material-symbols-outlined text-[20px]" data-icon="format_list_numbered">format_list_numbered</span>
+</button>
+</div>
+<div class="flex items-center gap-xs">
+<button class="w-8 h-8 rounded hover:bg-surface-variant flex items-center justify-center text-on-surface-variant transition-colors" title="Annuler">
+<span class="material-symbols-outlined text-[20px]" data-icon="undo">undo</span>
+</button>
+<button class="w-8 h-8 rounded hover:bg-surface-variant flex items-center justify-center text-on-surface-variant transition-colors" title="Rétablir">
+<span class="material-symbols-outlined text-[20px]" data-icon="redo">redo</span>
+</button>
+</div>
+<div class="ml-auto text-on-surface-variant">
+<button class="h-8 px-3 rounded hover:bg-surface-variant flex items-center justify-center gap-xs font-label-sm text-label-sm transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="fullscreen">fullscreen</span>
+                        Mode plein écran
+                    </button>
+</div>
+</div>
+<!-- Writing Area -->
+<!-- Using contenteditable for a more authentic rich text feel rather than a raw textarea -->
+<div class="flex-1 overflow-y-auto p-gutter lg:p-xl cursor-text relative group">
+<!-- Focus indicator line (subtle) -->
+<div class="absolute left-0 top-0 w-1 h-full bg-transparent group-focus-within:bg-primary transition-colors duration-300"></div>
+<div class="w-full h-full min-h-[500px] outline-none font-body-lg text-body-lg text-on-surface leading-relaxed" contenteditable="true" placeholder="Commencez à rédiger votre réponse ici...">Objet : Réaction à votre article sur la fin du télétravail
+
+Monsieur le Rédacteur en chef,
+
+C'est avec un vif intérêt que j'ai pris connaissance de votre article paru ce matin concernant la décision de plusieurs entreprises d'imposer un retour complet au bureau. Je tiens à exprimer mon profond désaccord face à cette tendance que je juge anachronique et contre-productive.
+
+Premièrement, l'argument selon lequel le présentiel strict est l'unique garant de la collaboration me semble dépassé. Les outils numériques actuels, s'ils sont bien maîtrisés, permettent une synergie d'équipe tout aussi efficace, voire supérieure grâce à une communication asynchrone mieux structurée.</div>
+</div>
+<!-- Editor Footer (Status & Metrics) -->
+<div class="h-12 border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between px-gutter shrink-0">
+<!-- Auto-save Status -->
+<div class="flex items-center gap-xs text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] animate-pulse" data-icon="cloud_done">cloud_done</span>
+<span>Enregistré automatiquement à 14:32</span>
+</div>
+<!-- Word Counter -->
+<div class="flex items-center gap-md">
+<!-- Target progress ring (SVG representation) -->
+<div class="relative w-6 h-6 flex items-center justify-center">
+<svg class="w-6 h-6 transform -rotate-90" viewbox="0 0 24 24">
+<circle class="text-surface-variant" cx="12" cy="12" fill="transparent" r="10" stroke="currentColor" stroke-width="3"></circle>
+<!-- 105 / 200 = 52.5% -> stroke-dasharray = 62.8, stroke-dashoffset = 62.8 - (62.8 * 0.525) = 29.8 -->
+<circle class="text-primary transition-all duration-500" cx="12" cy="12" fill="transparent" r="10" stroke="currentColor" stroke-dasharray="62.8" stroke-dashoffset="29.8" stroke-width="3"></circle>
+</svg>
+</div>
+<!-- Text Counter -->
+<div class="font-label-md text-label-md">
+<span class="text-on-surface font-bold">105</span>
+<span class="text-on-surface-variant"> / 250 mots</span>
+</div>
+<!-- Constraint Warning (Hidden by default, shown if under/over limit) -->
+<div class="hidden items-center gap-xs text-error font-label-sm text-label-sm ml-sm bg-error-container px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px]" data-icon="warning">warning</span>
+                        Trop court
+                    </div>
+</div>
+</div>
+</section>
+</main>
+<script>
+        // Simple script to handle contenteditable placeholder behavior
+        const editor = document.querySelector('[contenteditable]');
+        const checkEmpty = () => {
+            if (editor.textContent.trim() === '') {
+                editor.classList.add('is-empty');
+                editor.innerHTML = ''; // Clear br tags inserted by browsers
+            } else {
+                editor.classList.remove('is-empty');
+            }
+        };
+        
+        editor.addEventListener('input', checkEmpty);
+        checkEmpty(); // Initial check
+    </script>
+<style>
+        [contenteditable].is-empty:before {
+            content: attr(placeholder);
+            color: #7a7582; /* outline color */
+            pointer-events: none;
+            display: block; /* For Firefox */
+        }
+    </style>
+</body></html>

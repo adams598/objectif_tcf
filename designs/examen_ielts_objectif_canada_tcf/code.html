@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Objectif Canada - IELTS General Training</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Geist & Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Note: Geist is a custom font, falling back to sans-serif for demo purposes if not locally hosted, but classes will be applied -->
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#63597c",
+                        "outline-variant": "#cbc4d2",
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#e1d4fd",
+                        "primary": "#4f378a",
+                        "on-secondary": "#ffffff",
+                        "background": "#fdf7ff",
+                        "surface-dim": "#ded8e0",
+                        "primary-fixed-dim": "#cfbcff",
+                        "error-container": "#ffdad6",
+                        "surface-tint": "#6750a4",
+                        "error": "#ba1a1a",
+                        "secondary-fixed-dim": "#cdc0e9",
+                        "on-primary": "#ffffff",
+                        "surface-container-low": "#f8f2fa",
+                        "on-surface": "#1d1b20",
+                        "surface-container-high": "#ece6ee",
+                        "surface-container": "#f2ecf4",
+                        "on-primary-fixed": "#22005d",
+                        "secondary-fixed": "#e9ddff",
+                        "inverse-primary": "#cfbcff",
+                        "on-secondary-container": "#645a7d",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#c9a74d",
+                        "surface-bright": "#fdf7ff",
+                        "tertiary-fixed": "#ffdf93",
+                        "on-secondary-fixed-variant": "#4b4263",
+                        "on-primary-container": "#e0d2ff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface-variant": "#494551",
+                        "primary-container": "#6750a4",
+                        "on-tertiary-container": "#503d00",
+                        "primary-fixed": "#e9ddff",
+                        "on-background": "#1d1b20",
+                        "inverse-surface": "#322f35",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#1f1635",
+                        "tertiary-fixed-dim": "#e7c365",
+                        "on-tertiary-fixed": "#241a00",
+                        "inverse-on-surface": "#f5eff7",
+                        "surface-variant": "#e6e0e9",
+                        "outline": "#7a7582",
+                        "surface": "#fdf7ff",
+                        "surface-container-highest": "#e6e0e9",
+                        "on-primary-fixed-variant": "#4f378a",
+                        "tertiary": "#765b00"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "2rem",
+                        "sm": "0.5rem",
+                        "md": "1rem",
+                        "lg": "1.5rem",
+                        "base": "4px",
+                        "2xl": "3rem",
+                        "xs": "0.25rem",
+                        "gutter": "24px",
+                        "container-max": "1280px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Geist", "sans-serif"],
+                        "label-md": ["Inter", "sans-serif"],
+                        "headline-lg-mobile": ["Geist", "sans-serif"],
+                        "headline-lg": ["Geist", "sans-serif"],
+                        "label-sm": ["Inter", "sans-serif"],
+                        "display-md": ["Geist", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-lg": ["30px", { "lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "display-md": ["36px", { "lineHeight": "1.2", "letterSpacing": "-0.03em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "-0.01em", "fontWeight": "400" }]
+                    },
+                    "boxShadow": {
+                        'soft-violet': '0 4px 20px -2px rgba(109, 40, 217, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .geist { font-family: 'Geist', sans-serif; }
+        .gradient-primary { background: linear-gradient(135deg, #4f378a 0%, #6750a4 100%); }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col pt-20 selection:bg-primary selection:text-on-primary">
+<!-- TopNavBar -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-lg h-20 bg-surface/80 backdrop-blur-md shadow-sm border-b border-outline-variant">
+<div class="flex items-center gap-xl">
+<a class="font-display-md text-display-md font-bold text-primary flex items-center gap-sm" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">explore</span>
+                Objectif Canada
+            </a>
+<!-- Desktop Nav Links -->
+<div class="hidden md:flex gap-lg font-label-md text-label-md">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">TCF</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">TEF</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 scale-95 transition-transform" href="#">IELTS</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Professeurs</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="hidden md:block font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors">Connexion</button>
+<button class="font-label-md text-label-md gradient-primary text-on-primary px-lg py-sm rounded-xl hover:opacity-90 transition-opacity flex items-center gap-sm shadow-soft-violet">
+                Commencer
+                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+<button class="md:hidden text-on-surface">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-md md:px-xl py-xl md:py-2xl flex flex-col gap-2xl">
+<!-- Hero Section -->
+<section class="flex flex-col md:flex-row items-center justify-between gap-xl">
+<div class="flex flex-col gap-lg w-full md:w-1/2">
+<div class="inline-flex items-center gap-sm px-md py-xs bg-secondary-container text-on-secondary-container rounded-full font-label-sm text-label-sm w-max border border-primary/10">
+<span class="material-symbols-outlined text-[16px]">public</span>
+                    Entrée Express Canada
+                </div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-display-lg md:text-display-lg text-primary-fixed-variant">
+                    Maîtrisez l'IELTS <br/> General Training
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                    Le test d'anglais incontournable pour votre projet d'immigration au Canada. Découvrez les 4 modules, visez le NCLC 9, et débloquez votre avenir canadien.
+                </p>
+<div class="flex items-center gap-md pt-sm">
+<button class="gradient-primary text-on-primary font-label-md text-label-md px-xl py-md rounded-xl hover:opacity-90 transition-opacity shadow-soft-violet flex items-center gap-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+                        S'entraîner maintenant
+                    </button>
+<button class="bg-surface border border-outline-variant text-on-surface font-label-md text-label-md px-xl py-md rounded-xl hover:bg-surface-variant transition-colors flex items-center gap-sm">
+                        Évaluer mon niveau
+                    </button>
+</div>
+</div>
+<div class="w-full md:w-1/2 h-64 md:h-96 rounded-2xl overflow-hidden shadow-soft-violet border border-outline-variant relative">
+<div class="bg-cover bg-center w-full h-full absolute inset-0" data-alt="A bright, modern flat-lay photography composition of study materials on a pristine white desk. Features a minimalist notebook, a sleek metallic pen, and a tablet displaying language learning progress. Soft, diffused daylight casts extremely subtle shadows, creating a high-key, optimistic, and highly organized aesthetic suitable for a premium educational platform. Accents of deep violet add a touch of branding." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuArgrg3ACzwQKbkFn3mg6ApnOP_B6mUX9B4ArgCPHb8T-6QSvY-oHr08pw72XNJA0znjJM7DVo7WwovlxknzLrHBkUuvUvFRl28cRIOQdXiNHxU9I1z1XbmCiNY5w2lTKuuxnwxxo7Nxf_thNtHt4F-na0te5dZf13mgqv5IIWMKl0hSGgm6suwHRysS4rkZ5pd9Pq_VpX9TzqDAQhbsSia4MdwHhRmmhrXAew5nONCzdCMWVQs3apCdUdUNJ_xhpkWW1w_O3bDo8I')"></div>
+<!-- Overlay gradient for depth -->
+<div class="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent"></div>
+</div>
+</section>
+<!-- The 4 Modules (Bento Grid) -->
+<section class="flex flex-col gap-lg">
+<div class="flex flex-col gap-sm">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Les 4 Modules de l'Examen</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Une évaluation complète de vos compétences linguistiques.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<!-- Listening -->
+<div class="bg-surface border border-outline-variant rounded-xl p-lg shadow-sm hover:shadow-soft-violet transition-shadow flex flex-col gap-md group">
+<div class="flex items-center justify-between">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">headphones</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline border border-outline-variant px-sm py-xs rounded-full">30 minutes</span>
+</div>
+<div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Listening</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-sm">40 questions basées sur 4 enregistrements audio (conversations et monologues du quotidien).</p>
+</div>
+</div>
+<!-- Reading -->
+<div class="bg-surface border border-outline-variant rounded-xl p-lg shadow-sm hover:shadow-soft-violet transition-shadow flex flex-col gap-md group">
+<div class="flex items-center justify-between">
+<div class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline border border-outline-variant px-sm py-xs rounded-full">60 minutes</span>
+</div>
+<div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Reading</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-sm">40 questions. Compréhension de textes issus de livres, journaux, magazines et directives d'entreprise.</p>
+</div>
+</div>
+<!-- Writing -->
+<div class="bg-surface border border-outline-variant rounded-xl p-lg shadow-sm hover:shadow-soft-violet transition-shadow flex flex-col gap-md group">
+<div class="flex items-center justify-between">
+<div class="w-12 h-12 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">edit_document</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline border border-outline-variant px-sm py-xs rounded-full">60 minutes</span>
+</div>
+<div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Writing</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-sm">2 tâches : rédaction d'une lettre (minimum 150 mots) et d'un essai argumentatif (minimum 250 mots).</p>
+</div>
+</div>
+<!-- Speaking -->
+<div class="bg-surface border border-outline-variant rounded-xl p-lg shadow-sm hover:shadow-soft-violet transition-shadow flex flex-col gap-md group">
+<div class="flex items-center justify-between">
+<div class="w-12 h-12 rounded-full bg-error-container text-on-error-container flex items-center justify-center group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">record_voice_over</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline border border-outline-variant px-sm py-xs rounded-full">11-14 minutes</span>
+</div>
+<div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Speaking</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-sm">Entrevue face-à-face avec un examinateur. Questions personnelles, sujet imposé et discussion abstraite.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Conversion NCLC Section -->
+<section class="bg-surface-container-low rounded-2xl p-lg md:p-xl border border-outline-variant shadow-sm flex flex-col gap-lg">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Équivalence NCLC (CLB)</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-sm">Niveaux de compétence linguistique canadiens exigés pour l'immigration.</p>
+</div>
+<div class="flex items-center gap-sm bg-surface px-md py-sm rounded-lg border border-outline-variant">
+<span class="material-symbols-outlined text-tertiary">target</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">Objectif Recommandé : NCLC 9+</span>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant font-label-md text-label-md text-on-surface-variant">
+<th class="py-md px-sm font-semibold">Niveau NCLC</th>
+<th class="py-md px-sm font-semibold">Listening</th>
+<th class="py-md px-sm font-semibold">Reading</th>
+<th class="py-md px-sm font-semibold">Writing</th>
+<th class="py-md px-sm font-semibold">Speaking</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<tr class="border-b border-outline-variant bg-primary/5 hover:bg-primary/10 transition-colors">
+<td class="py-md px-sm font-bold text-primary flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">verified</span> NCLC 10
+                            </td>
+<td class="py-md px-sm">8.5 - 9.0</td>
+<td class="py-md px-sm">8.0 - 9.0</td>
+<td class="py-md px-sm">7.5 - 9.0</td>
+<td class="py-md px-sm">7.5 - 9.0</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-variant transition-colors relative before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-tertiary before:rounded-r-md">
+<td class="py-md px-sm font-bold pl-md">NCLC 9 (Cible)</td>
+<td class="py-md px-sm font-semibold">8.0</td>
+<td class="py-md px-sm font-semibold">7.0</td>
+<td class="py-md px-sm font-semibold">7.0</td>
+<td class="py-md px-sm font-semibold">7.0</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-variant transition-colors">
+<td class="py-md px-sm font-medium">NCLC 8</td>
+<td class="py-md px-sm">7.5</td>
+<td class="py-md px-sm">6.5</td>
+<td class="py-md px-sm">6.5</td>
+<td class="py-md px-sm">6.5</td>
+</tr>
+<tr class="hover:bg-surface-variant transition-colors">
+<td class="py-md px-sm font-medium">NCLC 7</td>
+<td class="py-md px-sm">6.0</td>
+<td class="py-md px-sm">6.0</td>
+<td class="py-md px-sm">6.0</td>
+<td class="py-md px-sm">6.0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mt-md flex justify-center">
+<button class="gradient-primary text-on-primary font-label-md text-label-md px-xl py-md rounded-xl hover:opacity-90 transition-opacity shadow-soft-violet">
+                    S'entraîner maintenant
+                </button>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-xl px-lg flex flex-col md:flex-row justify-between items-center gap-lg bg-surface-container-lowest border-t border-outline-variant mt-auto">
+<div class="flex items-center gap-md">
+<span class="font-headline-lg text-headline-lg text-primary">Objectif Canada</span>
+<span class="font-body-md text-body-md text-on-surface-variant">© 2024 Objectif Canada TCF. Tous droits réservés.</span>
+</div>
+<div class="flex flex-wrap justify-center gap-md font-label-sm text-label-sm">
+<a class="text-on-surface-variant hover:text-primary underline opacity-80 hover:opacity-100 transition-opacity" href="#">Politique de confidentialité</a>
+<a class="text-on-surface-variant hover:text-primary underline opacity-80 hover:opacity-100 transition-opacity" href="#">Conditions d'utilisation</a>
+<a class="text-on-surface-variant hover:text-primary underline opacity-80 hover:opacity-100 transition-opacity" href="#">Contact</a>
+<a class="text-on-surface-variant hover:text-primary underline opacity-80 hover:opacity-100 transition-opacity" href="#">Blog</a>
+</div>
+</footer>
+</body></html>

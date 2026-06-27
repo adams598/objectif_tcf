@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr-CA"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Espace Communauté - Objectif Canada</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-tint": "#6750a4",
+                      "outline": "#7a7582",
+                      "surface-variant": "#e6e0e9",
+                      "surface-container-highest": "#e6e0e9",
+                      "on-tertiary-fixed-variant": "#594400",
+                      "secondary-container": "#e1d4fd",
+                      "on-primary-fixed": "#22005d",
+                      "surface-container-high": "#ece6ee",
+                      "surface-dim": "#ded8e0",
+                      "inverse-primary": "#cfbcff",
+                      "on-tertiary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "tertiary-fixed": "#ffdf93",
+                      "inverse-on-surface": "#f5eff7",
+                      "outline-variant": "#cbc4d2",
+                      "on-tertiary-container": "#503d00",
+                      "secondary": "#63597c",
+                      "surface": "#fdf7ff",
+                      "primary-fixed": "#e9ddff",
+                      "tertiary": "#765b00",
+                      "on-tertiary-fixed": "#241a00",
+                      "inverse-surface": "#322f35",
+                      "background": "#fdf7ff",
+                      "on-secondary-fixed": "#1f1635",
+                      "on-primary-container": "#e0d2ff",
+                      "on-primary": "#ffffff",
+                      "surface-bright": "#fdf7ff",
+                      "secondary-fixed": "#e9ddff",
+                      "primary-container": "#6750a4",
+                      "surface-container": "#f2ecf4",
+                      "tertiary-container": "#c9a74d",
+                      "on-secondary-fixed-variant": "#4b4263",
+                      "primary": "#4f378a",
+                      "on-primary-fixed-variant": "#4f378a",
+                      "on-background": "#1d1b20",
+                      "error-container": "#ffdad6",
+                      "on-surface": "#1d1b20",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-fixed-dim": "#cfbcff",
+                      "on-secondary-container": "#645a7d",
+                      "tertiary-fixed-dim": "#e7c365",
+                      "secondary-fixed-dim": "#cdc0e9",
+                      "on-secondary": "#ffffff",
+                      "on-error": "#ffffff",
+                      "on-surface-variant": "#494551",
+                      "error": "#ba1a1a",
+                      "surface-container-low": "#f8f2fa"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xl": "2rem",
+                      "base": "4px",
+                      "xs": "0.25rem",
+                      "lg": "1.5rem",
+                      "sm": "0.5rem",
+                      "md": "1rem",
+                      "container-max": "1280px",
+                      "gutter": "24px",
+                      "2xl": "3rem"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Geist"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Geist"
+                      ],
+                      "headline-lg": [
+                              "Geist"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "display-md": [
+                              "Geist"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.04em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "30px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-md": [
+                              "36px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.03em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .soft-shadow {
+            box-shadow: 0 4px 20px -2px rgba(109, 40, 217, 0.05), 0 0 3px rgba(109, 40, 217, 0.02);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface flex h-screen overflow-hidden antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Mobile Top Navigation (Visible only on small screens) -->
+<nav class="lg:hidden fixed top-0 left-0 w-full z-50 flex justify-between items-center px-md h-20 bg-surface/90 backdrop-blur-md border-b border-outline-variant shadow-sm">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary text-2xl">menu</span>
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">Objectif Canada</div>
+</div>
+<img alt="Profil utilisateur" class="w-10 h-10 rounded-full border border-outline-variant object-cover" data-alt="A small circular avatar of a professional student user in a modern SaaS application. The style is clean, high-key lighting, minimalist corporate aesthetic, indicating success and focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqhzFVNkn1eW2DD_-OWc9MEJpz4dNelcQIftFZKZPnUVrhUGHOeOgwyzaKTYlrSqhldml7NBKlt74ySN4mm1fzLeGozar7D3i8H7OmUMC_g5eyxEgsbt35ZQGQrbuRp6PdbNf3u13ZstmnHNa2fgNrollcKVTB0Y51rPzJ81qhCn3NJwyQihUTLtqElJdGPjPre_fPT079pkSShVWpyqJ07wKxFbYoAaVEuD-mnvS-y_s-E9Ltlfe_-hIEsnAg6NhcOadyx-ijnsk"/>
+</nav>
+<!-- Side Navigation Bar (Desktop) -->
+<aside class="hidden lg:flex flex-col w-[280px] h-screen bg-surface border-r border-outline-variant shadow-md flex-shrink-0 relative z-40">
+<!-- Header -->
+<div class="p-xl border-b border-outline-variant">
+<div class="flex items-center gap-md mb-lg">
+<img alt="Photo de profil étudiant" class="w-12 h-12 rounded-full border-2 border-primary-container object-cover" data-alt="A high-quality, professional headshot avatar of an ambitious student. The image is framed in a circle, bathed in soft, bright, modern lighting. The aesthetic is premium educational SaaS, clean and encouraging." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBllCgZTMMsOf6rCnhS46YQNgg-2xck0tAS7fYBT8Ie6H0ND6pGTrMAH-pcRE31YCNMvGtmuZK-HLcZSpTwhCUubr4jEjVlpkLgRk0ZmGGKYLqDvv71X6qCf56etguPyBFxiWirM7Eni01eIKr1KBZfqizHoogeuvXEXFbVqwtGWqK9upfZKXDX1uFlo2xQjLkY-hkmzAYI1EB3-cGVmVTJeU0FDrPrd-oaMaNmGWemjFi3-brtwD1jS1w_lIa4m81JS_cQhlYRCqI"/>
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary">Espace Étudiant</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Objectif: NCLC 9</p>
+</div>
+</div>
+<button class="w-full bg-gradient-to-r from-primary to-surface-tint text-on-primary font-label-md text-label-md py-md rounded-xl shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-sm">rocket_launch</span>
+                Mode Examen
+            </button>
+</div>
+<!-- Main Nav Links -->
+<div class="flex-1 overflow-y-auto py-lg px-md flex flex-col gap-sm hide-scrollbar">
+<!-- Inactive -->
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-xl hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Tableau de bord</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-xl hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-label-md text-label-md">Mes séries</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-xl hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Résultats</span>
+</a>
+<!-- Active Tab -->
+<a class="flex items-center gap-md p-md bg-secondary-container text-on-secondary-container rounded-xl relative before:content-[''] before:absolute before:left-0 before:w-1 before:h-2/3 before:bg-primary before:rounded-full translate-x-1 duration-200 shadow-sm" href="#">
+<span class="material-symbols-outlined fill">groups</span>
+<span class="font-label-md text-label-md font-semibold">Communauté</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-xl hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">chat</span>
+<span class="font-label-md text-label-md">Messagerie</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-xl hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Paramètres</span>
+</a>
+</div>
+<!-- Footer Nav -->
+<div class="p-md border-t border-outline-variant flex flex-col gap-sm">
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-xl hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">Aide</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-xl hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Déconnexion</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 h-full overflow-y-auto bg-surface-container-lowest pt-20 lg:pt-0">
+<div class="max-w-container-max mx-auto px-md lg:px-xl py-xl lg:py-2xl grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Feed Area (Cols 1-8) -->
+<div class="lg:col-span-8 flex flex-col gap-lg">
+<!-- Page Header & Filters -->
+<header class="mb-sm">
+<h1 class="font-display-md text-display-md lg:text-display-lg text-on-surface mb-xs">Communauté</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-lg">Échangez, posez vos questions et célébrez vos réussites avec les autres candidats.</p>
+<!-- Scrollable Filters -->
+<div class="flex overflow-x-auto hide-scrollbar gap-sm pb-xs">
+<button class="whitespace-nowrap px-md py-sm bg-primary text-on-primary rounded-full font-label-md text-label-md shadow-sm">Tous les posts</button>
+<button class="whitespace-nowrap px-md py-sm bg-surface-container text-on-surface rounded-full font-label-md text-label-md border border-outline-variant hover:bg-surface-variant transition-colors">TCF Canada</button>
+<button class="whitespace-nowrap px-md py-sm bg-surface-container text-on-surface rounded-full font-label-md text-label-md border border-outline-variant hover:bg-surface-variant transition-colors">TEF</button>
+<button class="whitespace-nowrap px-md py-sm bg-surface-container text-on-surface rounded-full font-label-md text-label-md border border-outline-variant hover:bg-surface-variant transition-colors">Logement</button>
+<button class="whitespace-nowrap px-md py-sm bg-surface-container text-on-surface rounded-full font-label-md text-label-md border border-outline-variant hover:bg-surface-variant transition-colors">Visa &amp; Démarches</button>
+</div>
+</header>
+<!-- Composer Card -->
+<div class="bg-surface rounded-xl border border-outline-variant soft-shadow p-lg flex flex-col gap-md">
+<div class="flex gap-md">
+<img alt="Votre profil" class="w-10 h-10 rounded-full bg-surface-variant object-cover flex-shrink-0" data-alt="A pristine, minimalist avatar placeholder for a user profile in a modern web application. The design uses very subtle violet and indigo tones on a white background, projecting a clean, corporate SaaS identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVsihzIl0mJyoTLJWBSm2nXr_2v0GeVp7aCnAmB1bWxJAJrFFAYK5kGQ97WENuJokHgbVxFad56xGWX8S0NSLObMPMYaw8o0BpVQQdPzT98MTt4igs83e1bclKcE4JwXy99bDBYIT6XPeyMOcm55g7eUokVVbG2vPH8MqW-QawvG5JI2qMH8Fw4oIihRhcwNjYKNTELlJLv_BQIa8weIMOy0irRdKfNT02Jo1BrNA-AotBUlA1gBOOl0ZreJcxwLbDiAuYKgmY1Yc"/>
+<textarea class="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary rounded-lg resize-none p-sm font-body-md text-body-md text-on-surface placeholder:text-outline h-12" placeholder="Partagez une question, un conseil ou votre score..."></textarea>
+</div>
+<div class="flex justify-between items-center pl-14">
+<div class="flex gap-sm">
+<button class="p-xs text-outline hover:text-primary transition-colors rounded-lg hover:bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">image</span>
+</button>
+<button class="p-xs text-outline hover:text-primary transition-colors rounded-lg hover:bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">poll</span>
+</button>
+<button class="p-xs text-outline hover:text-primary transition-colors rounded-lg hover:bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">emoji_emotions</span>
+</button>
+</div>
+<button class="bg-primary-container text-on-primary-container px-lg py-sm rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity font-semibold">Publier</button>
+</div>
+</div>
+<!-- Feed Posts -->
+<div class="flex flex-col gap-lg">
+<!-- Post 1: Success / Score Sharing -->
+<article class="bg-surface rounded-xl border border-outline-variant soft-shadow p-lg flex flex-col gap-md">
+<!-- Author Meta -->
+<div class="flex justify-between items-start">
+<div class="flex gap-md items-center">
+<img alt="Sarah L." class="w-12 h-12 rounded-full border border-surface-variant object-cover" data-alt="A portrait of an expressive, diverse young professional smiling confidently. They are framed in a circular avatar against a soft, bright background. The lighting is premium and high-key, suitable for an educational achievement dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRF_Lb89UI_oJYTspnQwSnYCBYoLSi3ycStIvbckmBlV3Q3ixu-mfjxHLmaF7wlgWRNeBG8Woil4Ka46jBOXH29YgNuEJVwK8PYGXYjYrnVwEFFqIkV2ojOEsdzefHbV6zuPDvt1V05rIx260eM0gYJzYVXN6qo4mi7NnxSyvx6UTrAfGhdFTXbnILZJipTxtafkconpj_3TRT7d4fkEyyn_kr-kI3QN5KQ0tl2kL5BIu93s2ZGRJnRN6l6Qk_eZ33mycu4fmsf0k"/>
+<div>
+<div class="flex items-center gap-xs">
+<h3 class="font-label-md text-label-md text-on-surface font-semibold">Sarah L.</h3>
+<span class="material-symbols-outlined text-tertiary-container text-[16px] fill" title="Membre Vérifié">verified</span>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Il y a 2 heures • TCF Canada</p>
+</div>
+</div>
+<button class="text-outline hover:text-on-surface"><span class="material-symbols-outlined">more_horiz</span></button>
+</div>
+<!-- Content -->
+<div>
+<p class="font-body-md text-body-md text-on-surface leading-relaxed mb-md">Je viens de recevoir mes résultats ! Objectif NCLC 9 atteint. Merci à la communauté pour les ressources sur l'expression écrite, ça m'a sauvé. Ne lâchez rien ! 🎉🇨🇦</p>
+<!-- Custom Embedded Score Card -->
+<div class="bg-surface-container-low border border-primary-fixed-dim rounded-lg p-md flex items-center justify-between">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-headline-lg text-headline-lg font-bold">C1</div>
+<div>
+<div class="font-label-md text-label-md font-semibold text-on-surface">Score Global TCF</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">Niveau Avancé</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary text-[32px]">workspace_premium</span>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-lg border-t border-outline-variant pt-sm mt-xs">
+<button class="flex items-center gap-xs text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[20px] fill text-primary">favorite</span>
+                                24 Likes
+                            </button>
+<button class="flex items-center gap-xs text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+                                8 Commentaires
+                            </button>
+<button class="flex items-center gap-xs text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm ml-auto">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</button>
+</div>
+</article>
+<!-- Post 2: Question -->
+<article class="bg-surface rounded-xl border border-outline-variant soft-shadow p-lg flex flex-col gap-md">
+<div class="flex justify-between items-start">
+<div class="flex gap-md items-center">
+<div class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-headline-lg-mobile text-headline-lg-mobile font-bold">M</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface font-semibold">Marc D.</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Il y a 5 heures • Visa &amp; Démarches</p>
+</div>
+</div>
+<button class="text-outline hover:text-on-surface"><span class="material-symbols-outlined">more_horiz</span></button>
+</div>
+<div>
+<h4 class="font-label-md text-label-md font-bold text-on-surface mb-xs">Délais actuels Entrée Express ?</h4>
+<p class="font-body-md text-body-md text-on-surface leading-relaxed mb-xs">Bonjour tout le monde. Quelqu'un ayant reçu son ITA récemment pourrait-il partager les délais actuels pour le traitement médical ? J'ai soumis mon dossier il y a 3 semaines.</p>
+</div>
+<div class="flex items-center gap-lg border-t border-outline-variant pt-sm mt-xs">
+<button class="flex items-center gap-xs text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+                                3 Likes
+                            </button>
+<button class="flex items-center gap-xs text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+                                12 Commentaires
+                            </button>
+</div>
+</article>
+</div>
+</div>
+<!-- Right Column: Sidebar (Leaderboard & Online) (Cols 9-12) -->
+<aside class="lg:col-span-4 flex flex-col gap-lg">
+<!-- Leaderboard Card -->
+<div class="bg-surface rounded-xl border border-outline-variant soft-shadow p-lg">
+<div class="flex items-center gap-sm mb-md">
+<span class="material-symbols-outlined text-tertiary-container fill">emoji_events</span>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-on-surface">Top Étudiants</h3>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-md">Basé sur l'activité et les séries complétées cette semaine.</p>
+<div class="flex flex-col gap-sm">
+<!-- Rank 1 -->
+<div class="flex items-center justify-between p-sm bg-tertiary-fixed-dim/20 rounded-lg border border-tertiary-fixed-dim/30">
+<div class="flex items-center gap-sm">
+<div class="w-6 text-center font-label-md text-label-md font-bold text-tertiary-container">1</div>
+<img alt="Avatar" class="w-8 h-8 rounded-full object-cover" data-alt="A small circular headshot of an energetic user in a light-mode SaaS interface. The image is brightly lit, depicting a successful student, surrounded by a very subtle gold/tertiary glow indicating a top ranking." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDssOBubIY5Gij5dE6LlB2gXuuc3BJ_VsR-WjIKqQvss0_MahgRy9HMwZuR5z04kesE_j8aH_Exc5b9BSWLjYH1N85i1PheCqTGxsnAw3j1Rl5VBnEnrgNIRJZsKn-qf3-CwIcNYmqV0FGZ--A3BNwvtHZusmA6zbYqLSFeP9-1HjAo8mERgUQuAfvnP-rqcNi6waRHz104q7WuFp_UTKdK6VNUIGNiM_2ysGkG6W6mG5FsfzB2LXfsLmbTb7BqJoIl5PhNLIsZt7w"/>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Amira K.</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary-container font-bold flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">local_fire_department</span> 1.2k pts</span>
+</div>
+<!-- Rank 2 -->
+<div class="flex items-center justify-between p-sm hover:bg-surface-container rounded-lg transition-colors">
+<div class="flex items-center gap-sm">
+<div class="w-6 text-center font-label-md text-label-md text-outline">2</div>
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center font-label-sm text-label-sm text-on-surface-variant">JB</div>
+<span class="font-label-md text-label-md text-on-surface">Jean-Baptiste</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">980 pts</span>
+</div>
+<!-- Rank 3 -->
+<div class="flex items-center justify-between p-sm hover:bg-surface-container rounded-lg transition-colors">
+<div class="flex items-center gap-sm">
+<div class="w-6 text-center font-label-md text-label-md text-outline">3</div>
+<img alt="Avatar" class="w-8 h-8 rounded-full object-cover" data-alt="A tiny profile picture of a male student looking focused. Bright, clean background, modern corporate feel, typical of a high-end educational platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCD9QSoM3gxISIJE3VnYkDD8i9o0pBNlHW-9wq3LNqkv8G0jW1DC2Bb-WfCVaf2GK2p1RCIpELnqiG4-k-hyj-vbvwvloEYdAZBOXjMsFWY8Z6Lp5m9wACu4-AGMoPovAF8Ivg4LneVMLvNPjc8MTZMIGDQeHBLVvNy9otESR7ivpEmMIWYaE8gRy5Bol9StC0_NsASbDBk_h4Yovd99y0YtR-prP4yOoeaZ1v1MJxW0LVrgV3ciF5jtLSbRU3UkS--n2Fn-JSwdMo"/>
+<span class="font-label-md text-label-md text-on-surface">Thomas V.</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">850 pts</span>
+</div>
+</div>
+<button class="w-full mt-md text-primary font-label-sm text-label-sm hover:underline text-center">Voir le classement complet</button>
+</div>
+<!-- Online Members Card -->
+<div class="bg-surface rounded-xl border border-outline-variant soft-shadow p-lg">
+<div class="flex items-center gap-sm mb-md">
+<div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+<h3 class="font-label-md text-label-md font-bold text-on-surface uppercase tracking-wider">En Ligne (42)</h3>
+</div>
+<div class="flex flex-col gap-xs">
+<div class="flex items-center gap-sm p-xs hover:bg-surface-container rounded-lg cursor-pointer">
+<div class="relative">
+<img alt="User" class="w-8 h-8 rounded-full object-cover" data-alt="Small avatar of a female user, brightly lit, minimalist background. Educational SaaS context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSXhRFAmeqzQ9uHa5-i565U-6EkSpB1p_BjIWUusDYilPzJLAHAvoOphTLF2T_MU2E8H7oqNxZo0B960bx1djnqHReBFfKRYXP5e7C3MnyhDrdu8MgJoGQY-v4yg8o2F6kaYEwm0OV4uHLSapg2RmJ8G26x01wIj3dsXpW4F47arIYA7OdgSDsfczXgMZOdEQCvhTV8N9jgYvbaJ60lo6HjNs9lN_cVOroMKAF_PZf32-VQgToXkLaGpFCDs1-W-42x1IGGUF1Ymw"/>
+<div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-surface rounded-full"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface">Léa Dubois</span>
+</div>
+<div class="flex items-center gap-sm p-xs hover:bg-surface-container rounded-lg cursor-pointer">
+<div class="relative">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-sm text-label-sm">K</div>
+<div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-surface rounded-full"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface">Karim M.</span>
+</div>
+<div class="flex items-center gap-sm p-xs hover:bg-surface-container rounded-lg cursor-pointer">
+<div class="relative">
+<img alt="User" class="w-8 h-8 rounded-full object-cover grayscale opacity-70" data-alt="Small avatar of a user, soft lighting, clean UI context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGQK42r9JvWz3cOM3U_TD8fLAuGKKgeDvRbD74ZEEHAKzTviVj4sxizUbir5_rFnkEP0YgX5CDAYv7Hyt6Vv-7039cf3SghG_DgkjBlHBx9rR7QGuQLZR1jevnpIkSDq-h93V2TDo-Yc9VNMkV9YOvtR3fQ0l_Rufl1oCMVBuhZY3yO9yYozhNlKASWab_xh23C21yekd_Iv07B1KekNScyNRMBkmOpmQU_UxD0HV3jI1ZYQGIF00HobkEylpfybIoSXhek3hUHOU"/>
+<div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-yellow-500 border-2 border-surface rounded-full"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant italic">Sophie T. (Absente)</span>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</main>
+</body></html>

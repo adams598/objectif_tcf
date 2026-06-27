@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Objectif Canada - Intégration</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+<!-- Tailwind CSS & Config -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-background": "#1d1b20",
+                        "surface-container-low": "#f8f2fa",
+                        "on-primary-container": "#e0d2ff",
+                        "inverse-primary": "#cfbcff",
+                        "on-tertiary-container": "#503d00",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "primary-container": "#6750a4",
+                        "tertiary-fixed": "#ffdf93",
+                        "secondary-fixed": "#e9ddff",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary": "#765b00",
+                        "surface-bright": "#fdf7ff",
+                        "background": "#fdf7ff",
+                        "on-tertiary-fixed": "#241a00",
+                        "inverse-surface": "#322f35",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#cbc4d2",
+                        "secondary-container": "#e1d4fd",
+                        "inverse-on-surface": "#f5eff7",
+                        "surface-container-high": "#ece6ee",
+                        "secondary-fixed-dim": "#cdc0e9",
+                        "primary-fixed-dim": "#cfbcff",
+                        "surface-container": "#f2ecf4",
+                        "on-primary-fixed": "#22005d",
+                        "surface-dim": "#ded8e0",
+                        "surface": "#fdf7ff",
+                        "on-primary-fixed-variant": "#4f378a",
+                        "surface-variant": "#e6e0e9",
+                        "on-surface-variant": "#494551",
+                        "on-secondary-fixed-variant": "#4b4263",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed-dim": "#e7c365",
+                        "surface-tint": "#6750a4",
+                        "primary-fixed": "#e9ddff",
+                        "on-error-container": "#93000a",
+                        "on-surface": "#1d1b20",
+                        "on-secondary-container": "#645a7d",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#c9a74d",
+                        "primary": "#4f378a",
+                        "on-secondary-fixed": "#1f1635",
+                        "secondary": "#63597c",
+                        "surface-container-highest": "#e6e0e9",
+                        "outline": "#7a7582"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "xs": "0.25rem",
+                        "md": "1rem",
+                        "xl": "2rem",
+                        "container-max": "1280px",
+                        "base": "4px",
+                        "2xl": "3rem",
+                        "sm": "0.5rem",
+                        "lg": "1.5rem"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Geist", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "display-md": ["Geist", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "label-sm": ["Inter", "sans-serif"],
+                        "display-lg": ["Geist", "sans-serif"],
+                        "headline-lg": ["Geist", "sans-serif"],
+                        "label-md": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "display-md": ["36px", { "lineHeight": "1.2", "letterSpacing": "-0.03em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "headline-lg": ["30px", { "lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .step-container {
+                @apply hidden opacity-0 transition-opacity duration-300 ease-in-out;
+            }
+            .step-container.active {
+                @apply block opacity-100;
+            }
+            
+            /* Hide default radio circle but keep it functional */
+            .custom-radio-input {
+                @apply sr-only;
+            }
+            .custom-radio-label {
+                @apply flex flex-col items-center justify-center p-md border-2 border-outline-variant rounded-xl cursor-pointer transition-all duration-200 bg-surface-container-lowest text-on-surface;
+            }
+            .custom-radio-input:checked + .custom-radio-label {
+                @apply border-primary bg-primary-container text-on-primary-container shadow-sm;
+            }
+            .custom-radio-input:focus-visible + .custom-radio-label {
+                @apply outline-none ring-2 ring-primary ring-offset-2;
+            }
+            
+            .custom-date-input {
+                @apply w-full border-2 border-outline-variant rounded-xl px-md py-md bg-surface-container-lowest text-on-surface font-body-md focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors;
+            }
+            
+            .btn-primary {
+                @apply flex items-center justify-center gap-sm bg-primary text-on-primary font-label-md text-label-md px-xl py-md rounded-xl hover:bg-on-primary-fixed-variant transition-colors shadow-sm;
+            }
+            .btn-secondary {
+                @apply flex items-center justify-center gap-sm bg-surface-container-lowest text-on-surface border border-outline-variant font-label-md text-label-md px-xl py-md rounded-xl hover:bg-surface-variant transition-colors;
+            }
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col items-center justify-center p-md md:p-xl font-body-md antialiased">
+<!-- Decorative background elements -->
+<div class="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+<div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary-container/20 blur-[100px]"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary-container/20 blur-[100px]"></div>
+</div>
+<!-- Main Card -->
+<div class="w-full max-w-lg bg-surface-container-lowest border border-outline-variant rounded-xl shadow-[0_4px_24px_rgba(109,40,217,0.05)] overflow-hidden flex flex-col">
+<!-- Header & Progress -->
+<div class="p-xl border-b border-outline-variant bg-surface-bright">
+<div class="flex justify-between items-end mb-sm">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary tracking-tight">Configuration</h1>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider" id="progress-text">Étape 2 sur 5</span>
+</div>
+<!-- Progress Bar Track -->
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<!-- Progress Bar Fill -->
+<div class="h-full bg-primary rounded-full transition-all duration-500 ease-out" id="progress-fill" style="width: 25%;"></div>
+</div>
+</div>
+<!-- Form Content Area -->
+<div class="p-xl flex-grow relative">
+<!-- STEP 2: Current Level -->
+<div class="step-container active" id="step-2">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg mb-sm">Votre niveau actuel</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">Sélectionnez le niveau CECRL qui correspond le mieux à vos compétences actuelles en français.</p>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-md">
+<!-- A1 -->
+<div>
+<input class="custom-radio-input" id="level-a1" name="level" type="radio" value="A1"/>
+<label class="custom-radio-label" for="level-a1">
+<span class="font-headline-lg text-headline-lg mb-xs">A1</span>
+<span class="font-label-sm text-label-sm text-center">Débutant</span>
+</label>
+</div>
+<!-- A2 -->
+<div>
+<input checked="" class="custom-radio-input" id="level-a2" name="level" type="radio" value="A2"/>
+<label class="custom-radio-label" for="level-a2">
+<span class="font-headline-lg text-headline-lg mb-xs">A2</span>
+<span class="font-label-sm text-label-sm text-center">Élémentaire</span>
+</label>
+</div>
+<!-- B1 -->
+<div>
+<input class="custom-radio-input" id="level-b1" name="level" type="radio" value="B1"/>
+<label class="custom-radio-label" for="level-b1">
+<span class="font-headline-lg text-headline-lg mb-xs">B1</span>
+<span class="font-label-sm text-label-sm text-center">Intermédiaire</span>
+</label>
+</div>
+<!-- B2 -->
+<div>
+<input class="custom-radio-input" id="level-b2" name="level" type="radio" value="B2"/>
+<label class="custom-radio-label" for="level-b2">
+<span class="font-headline-lg text-headline-lg mb-xs">B2</span>
+<span class="font-label-sm text-label-sm text-center">Avancé</span>
+</label>
+</div>
+<!-- C1 -->
+<div>
+<input class="custom-radio-input" id="level-c1" name="level" type="radio" value="C1"/>
+<label class="custom-radio-label" for="level-c1">
+<span class="font-headline-lg text-headline-lg mb-xs">C1</span>
+<span class="font-label-sm text-label-sm text-center">Autonome</span>
+</label>
+</div>
+<!-- C2 -->
+<div>
+<input class="custom-radio-input" id="level-c2" name="level" type="radio" value="C2"/>
+<label class="custom-radio-label" for="level-c2">
+<span class="font-headline-lg text-headline-lg mb-xs">C2</span>
+<span class="font-label-sm text-label-sm text-center text-emerald-600">Maîtrise</span>
+</label>
+</div>
+</div>
+</div>
+<!-- STEP 3: Exam Date -->
+<div class="step-container" id="step-3">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg mb-sm">Date de l'examen</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">Quand prévoyez-vous de passer votre test officiel ? Cela nous aide à planifier vos révisions.</p>
+<div class="relative max-w-sm mx-auto mt-xl">
+<label class="sr-only" for="exam-date">Date de l'examen</label>
+<div class="absolute inset-y-0 left-0 pl-md flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined">calendar_today</span>
+</div>
+<input class="custom-date-input pl-2xl" id="exam-date" name="exam-date" type="date"/>
+</div>
+<div class="mt-md text-center">
+<button class="text-primary font-label-md text-label-md hover:underline bg-transparent border-none cursor-pointer" type="button">
+                        Je ne sais pas encore
+                    </button>
+</div>
+</div>
+<!-- STEP 4: Native Language -->
+<div class="step-container" id="step-4">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg mb-sm">Langue maternelle</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">Connaître votre langue maternelle nous permet de cibler les erreurs fréquentes spécifiques à votre profil.</p>
+<div class="space-y-sm max-h-[409px] overflow-y-auto pr-sm rounded-xl">
+<!-- Option 1 -->
+<label class="flex items-center justify-between p-md border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary-container/10">
+<div class="flex items-center gap-md">
+<span aria-hidden="true" class="text-2xl">🇬🇧</span>
+<span class="font-body-lg text-body-lg text-on-surface">Anglais</span>
+</div>
+<input class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="native_lang" type="radio" value="en"/>
+</label>
+<!-- Option 2 -->
+<label class="flex items-center justify-between p-md border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary-container/10">
+<div class="flex items-center gap-md">
+<span aria-hidden="true" class="text-2xl">🇪🇸</span>
+<span class="font-body-lg text-body-lg text-on-surface">Espagnol</span>
+</div>
+<input checked="" class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="native_lang" type="radio" value="es"/>
+</label>
+<!-- Option 3 -->
+<label class="flex items-center justify-between p-md border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary-container/10">
+<div class="flex items-center gap-md">
+<span aria-hidden="true" class="text-2xl">🇦🇪</span>
+<span class="font-body-lg text-body-lg text-on-surface">Arabe</span>
+</div>
+<input class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="native_lang" type="radio" value="ar"/>
+</label>
+<!-- Option 4 -->
+<label class="flex items-center justify-between p-md border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary-container/10">
+<div class="flex items-center gap-md">
+<span aria-hidden="true" class="text-2xl">🇨🇳</span>
+<span class="font-body-lg text-body-lg text-on-surface">Mandarin</span>
+</div>
+<input class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="native_lang" type="radio" value="zh"/>
+</label>
+<div class="p-sm text-center">
+<button class="text-primary font-label-md text-label-md hover:underline bg-transparent border-none cursor-pointer flex items-center justify-center gap-xs mx-auto" type="button">
+<span class="material-symbols-outlined text-sm">search</span>
+                            Rechercher une autre langue
+                        </button>
+</div>
+</div>
+</div>
+<!-- STEP 5: Country Flag -->
+<div class="step-container" id="step-5">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg mb-sm">Pays de destination</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">Quel est votre objectif principal pour cette certification ?</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+<!-- Canada -->
+<div>
+<input checked="" class="custom-radio-input" id="dest-ca" name="destination" type="radio" value="CA"/>
+<label class="custom-radio-label py-lg" for="dest-ca">
+<span aria-hidden="true" class="text-4xl mb-sm">🇨🇦</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-center">Canada</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Résidence permanente / Études</span>
+</label>
+</div>
+<!-- France -->
+<div>
+<input class="custom-radio-input" id="dest-fr" name="destination" type="radio" value="FR"/>
+<label class="custom-radio-label py-lg" for="dest-fr">
+<span aria-hidden="true" class="text-4xl mb-sm">🇫🇷</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-center">France</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Naturalisation / Études</span>
+</label>
+</div>
+<!-- Suisse -->
+<div>
+<input class="custom-radio-input" id="dest-ch" name="destination" type="radio" value="CH"/>
+<label class="custom-radio-label py-lg" for="dest-ch">
+<span aria-hidden="true" class="text-4xl mb-sm">🇨🇭</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-center">Suisse</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Travail / Installation</span>
+</label>
+</div>
+<!-- Autre -->
+<div>
+<input class="custom-radio-input" id="dest-other" name="destination" type="radio" value="OTHER"/>
+<label class="custom-radio-label py-lg h-full" for="dest-other">
+<span class="material-symbols-outlined text-4xl mb-sm text-outline">language</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-center">Autre</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Préciser plus tard</span>
+</label>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="p-xl border-t border-outline-variant bg-surface-bright flex justify-between items-center">
+<button class="btn-secondary invisible" id="btn-back">
+<span class="material-symbols-outlined text-lg">arrow_back</span>
+                Retour
+            </button>
+<button class="btn-primary ml-auto" id="btn-next">
+                Suivant
+                <span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Simple JS to handle step navigation for demonstration -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let currentStep = 2;
+            const totalSteps = 5;
+            
+            const btnNext = document.getElementById('btn-next');
+            const btnBack = document.getElementById('btn-back');
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+            
+            function updateUI() {
+                // Hide all steps
+                document.querySelectorAll('.step-container').forEach(el => {
+                    el.classList.remove('active');
+                    // slight delay to allow fade out before display none
+                    setTimeout(() => {
+                        if(!el.classList.contains('active')) el.style.display = 'none';
+                    }, 300);
+                });
+                
+                // Show current step
+                const currentEl = document.getElementById(`step-${currentStep}`);
+                if(currentEl) {
+                    currentEl.style.display = 'block';
+                    // slight delay to allow display block before fade in
+                    setTimeout(() => currentEl.classList.add('active'), 10);
+                }
+                
+                // Update Progress
+                const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
+                progressFill.style.width = `${progressPercentage}%`;
+                progressText.textContent = `Étape ${currentStep} sur ${totalSteps}`;
+                
+                // Update Buttons
+                if (currentStep === 2) {
+                    btnBack.classList.add('invisible');
+                } else {
+                    btnBack.classList.remove('invisible');
+                }
+                
+                if (currentStep === totalSteps) {
+                    btnNext.innerHTML = `Terminer <span class="material-symbols-outlined text-lg">check</span>`;
+                } else {
+                    btnNext.innerHTML = `Suivant <span class="material-symbols-outlined text-lg">arrow_forward</span>`;
+                }
+            }
+
+            btnNext.addEventListener('click', () => {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    updateUI();
+                } else {
+                    // Final action (e.g., redirect)
+                    alert('Configuration terminée !');
+                }
+            });
+
+            btnBack.addEventListener('click', () => {
+                if (currentStep > 2) {
+                    currentStep--;
+                    updateUI();
+                }
+            });
+            
+            // Initial setup
+            document.querySelectorAll('.step-container').forEach(el => {
+                if(el.id !== 'step-2') el.style.display = 'none';
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html lang="fr-CA"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Onboarding - Étape 1</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary": "#63597c",
+                      "outline-variant": "#cbc4d2",
+                      "on-error-container": "#93000a",
+                      "secondary-container": "#e1d4fd",
+                      "primary": "#4f378a",
+                      "on-secondary": "#ffffff",
+                      "background": "#fdf7ff",
+                      "surface-dim": "#ded8e0",
+                      "primary-fixed-dim": "#cfbcff",
+                      "error-container": "#ffdad6",
+                      "surface-tint": "#6750a4",
+                      "error": "#ba1a1a",
+                      "secondary-fixed-dim": "#cdc0e9",
+                      "on-primary": "#ffffff",
+                      "surface-container-low": "#f8f2fa",
+                      "on-surface": "#1d1b20",
+                      "surface-container-high": "#ece6ee",
+                      "surface-container": "#f2ecf4",
+                      "on-primary-fixed": "#22005d",
+                      "secondary-fixed": "#e9ddff",
+                      "inverse-primary": "#cfbcff",
+                      "on-secondary-container": "#645a7d",
+                      "on-error": "#ffffff",
+                      "tertiary-container": "#c9a74d",
+                      "surface-bright": "#fdf7ff",
+                      "tertiary-fixed": "#ffdf93",
+                      "on-secondary-fixed-variant": "#4b4263",
+                      "on-primary-container": "#e0d2ff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-surface-variant": "#494551",
+                      "primary-container": "#6750a4",
+                      "on-tertiary-container": "#503d00",
+                      "primary-fixed": "#e9ddff",
+                      "on-background": "#1d1b20",
+                      "inverse-surface": "#322f35",
+                      "on-tertiary-fixed-variant": "#594400",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-fixed": "#1f1635",
+                      "tertiary-fixed-dim": "#e7c365",
+                      "on-tertiary-fixed": "#241a00",
+                      "inverse-on-surface": "#f5eff7",
+                      "surface-variant": "#e6e0e9",
+                      "outline": "#7a7582",
+                      "surface": "#fdf7ff",
+                      "surface-container-highest": "#e6e0e9",
+                      "on-primary-fixed-variant": "#4f378a",
+                      "tertiary": "#765b00"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xl": "2rem",
+                      "sm": "0.5rem",
+                      "md": "1rem",
+                      "lg": "1.5rem",
+                      "base": "4px",
+                      "2xl": "3rem",
+                      "xs": "0.25rem",
+                      "gutter": "24px",
+                      "container-max": "1280px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Geist"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Geist"
+                      ],
+                      "headline-lg": [
+                              "Geist"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "display-md": [
+                              "Geist"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.04em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "30px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-md": [
+                              "36px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.03em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .gradient-text {
+            background: linear-gradient(to right, #4f378a, #6750a4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gradient-bg {
+            background: linear-gradient(to right, #4f378a, #6750a4);
+        }
+        .card-active {
+            border-color: #4f378a;
+            box-shadow: 0 4px 20px rgba(109, 40, 217, 0.1);
+            background-color: #f8f2fa;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col items-center justify-center font-sans text-on-surface">
+<div class="w-full max-w-container-max mx-auto px-4 md:px-10 flex flex-col h-screen max-h-[800px]">
+<!-- Progress Bar -->
+<div class="w-full max-w-2xl mx-auto pt-10 pb-6">
+<div class="flex justify-between items-center mb-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Étape 1 sur 5</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">Définition de l'objectif</span>
+</div>
+<div class="h-2 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 20%;"></div>
+</div>
+</div>
+<!-- Main Content -->
+<main class="flex-grow flex flex-col items-center justify-center w-full max-w-2xl mx-auto">
+<div class="text-center mb-10">
+<h1 class="font-display-md text-display-md text-on-surface mb-4">Quel est votre objectif principal au Canada ?</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Cela nous aidera à personnaliser votre parcours de préparation au test.</p>
+</div>
+<!-- Options Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md w-full mb-12">
+<!-- Option 1: Résidence Permanente -->
+<button class="flex flex-col items-center text-center p-xl bg-surface border border-surface-variant rounded-xl hover:border-primary transition-all duration-200 group focus:outline-none card-active" id="btn-rp">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 group-hover:bg-primary-container transition-colors duration-200 text-primary">
+<span class="material-symbols-outlined" data-weight="fill" style="font-size: 32px;">home_work</span>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">Résidence Permanente</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Immigrer et s'installer durablement au Canada.</p>
+</button>
+<!-- Option 2: Études -->
+<button class="flex flex-col items-center text-center p-xl bg-surface border border-surface-variant rounded-xl hover:border-primary transition-all duration-200 group focus:outline-none" id="btn-etudes">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 group-hover:bg-primary-container transition-colors duration-200 text-on-surface-variant group-hover:text-primary">
+<span class="material-symbols-outlined" style="font-size: 32px;">school</span>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">Études</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Poursuivre des études supérieures dans une institution canadienne.</p>
+</button>
+<!-- Option 3: Travail -->
+<button class="flex flex-col items-center text-center p-xl bg-surface border border-surface-variant rounded-xl hover:border-primary transition-all duration-200 group focus:outline-none" id="btn-travail">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 group-hover:bg-primary-container transition-colors duration-200 text-on-surface-variant group-hover:text-primary">
+<span class="material-symbols-outlined" style="font-size: 32px;">work</span>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">Travail</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Obtenir un permis de travail ou faire avancer sa carrière.</p>
+</button>
+</div>
+<!-- Action Button -->
+<div class="w-full flex justify-end">
+<button class="gradient-bg text-on-primary font-label-md text-label-md px-8 py-4 rounded-xl shadow-sm hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex items-center gap-2">
+                    Suivant
+                    <span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
+</button>
+</div>
+</main>
+</div>
+<script>
+        // Simple interaction for selecting an option
+        const buttons = [document.getElementById('btn-rp'), document.getElementById('btn-etudes'), document.getElementById('btn-travail')];
+        
+        buttons.forEach(btn => {
+            if(btn) {
+                btn.addEventListener('click', () => {
+                    // Remove active class from all
+                    buttons.forEach(b => {
+                        b.classList.remove('card-active');
+                        const iconContainer = b.querySelector('div.rounded-full');
+                        iconContainer.classList.remove('bg-primary-container', 'text-primary');
+                        iconContainer.classList.add('bg-surface-container', 'text-on-surface-variant');
+                        const icon = b.querySelector('.material-symbols-outlined');
+                        icon.removeAttribute('data-weight');
+                        icon.style.fontVariationSettings = "'FILL' 0";
+                    });
+
+                    // Add active class to clicked
+                    btn.classList.add('card-active');
+                    const iconContainer = btn.querySelector('div.rounded-full');
+                    iconContainer.classList.remove('bg-surface-container', 'text-on-surface-variant');
+                    iconContainer.classList.add('bg-primary-container', 'text-primary');
+                    const icon = btn.querySelector('.material-symbols-outlined');
+                    icon.setAttribute('data-weight', 'fill');
+                    icon.style.fontVariationSettings = "'FILL' 1";
+                });
+            }
+        });
+    </script>
+</body></html>

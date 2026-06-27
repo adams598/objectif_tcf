@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Objectif Canada TCF - Le goût des C2 🍁</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Geist for Display/Headline, Inter for Body/Labels -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "on-surface-variant": "#494551",
+                            "surface-variant": "#e6e0e9",
+                            "surface-dim": "#ded8e0",
+                            "on-surface": "#1d1b20",
+                            "tertiary-fixed": "#ffdf93",
+                            "surface": "#fdf7ff",
+                            "on-tertiary-fixed": "#241a00",
+                            "secondary-fixed-dim": "#cdc0e9",
+                            "primary-fixed": "#e9ddff",
+                            "tertiary-fixed-dim": "#e7c365",
+                            "on-secondary-fixed-variant": "#4b4263",
+                            "surface-container-high": "#ece6ee",
+                            "error-container": "#ffdad6",
+                            "surface-bright": "#fdf7ff",
+                            "on-primary-fixed": "#22005d",
+                            "inverse-on-surface": "#f5eff7",
+                            "surface-tint": "#6750a4",
+                            "secondary": "#63597c",
+                            "primary": "#4f378a",
+                            "on-tertiary-container": "#503d00",
+                            "on-tertiary-fixed-variant": "#594400",
+                            "tertiary-container": "#c9a74d",
+                            "on-primary-container": "#e0d2ff",
+                            "on-error-container": "#93000a",
+                            "on-primary-fixed-variant": "#4f378a",
+                            "surface-container-lowest": "#ffffff",
+                            "secondary-fixed": "#e9ddff",
+                            "outline": "#7a7582",
+                            "on-error": "#ffffff",
+                            "error": "#ba1a1a",
+                            "on-background": "#1d1b20",
+                            "inverse-primary": "#cfbcff",
+                            "secondary-container": "#e1d4fd",
+                            "outline-variant": "#cbc4d2",
+                            "surface-container-low": "#f8f2fa",
+                            "tertiary": "#765b00",
+                            "on-secondary-container": "#645a7d",
+                            "on-tertiary": "#ffffff",
+                            "on-primary": "#ffffff",
+                            "background": "#fdf7ff",
+                            "surface-container": "#f2ecf4",
+                            "primary-container": "#6750a4",
+                            "surface-container-highest": "#e6e0e9",
+                            "inverse-surface": "#322f35",
+                            "on-secondary": "#ffffff",
+                            "primary-fixed-dim": "#cfbcff",
+                            "on-secondary-fixed": "#1f1635"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "2xl": "1rem",
+                            "full": "9999px"
+                    },
+                    "spacing": {
+                            "xs": "0.25rem",
+                            "2xl": "3rem",
+                            "sm": "0.5rem",
+                            "md": "1rem",
+                            "lg": "1.5rem",
+                            "xl": "2rem",
+                            "gutter": "24px",
+                            "base": "4px",
+                            "container-max": "1280px"
+                    },
+                    "fontFamily": {
+                            "body-lg": ["Inter"],
+                            "label-sm": ["Inter"],
+                            "display-md": ["Geist"],
+                            "display-lg": ["Geist"],
+                            "headline-lg": ["Geist"],
+                            "headline-lg-mobile": ["Geist"],
+                            "body-md": ["Inter"],
+                            "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                            "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                            "label-sm": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                            "display-md": ["36px", { "lineHeight": "1.2", "letterSpacing": "-0.03em", "fontWeight": "600" }],
+                            "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                            "headline-lg": ["30px", { "lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                            "headline-lg-mobile": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                            "body-md": ["16px", { "lineHeight": "1.5", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                            "label-md": ["14px", { "lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom Utilities for Design System Alignment */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(203, 196, 210, 0.5); /* outline-variant */
+            box-shadow: 0 4px 6px -1px rgba(109, 40, 217, 0.05), 0 2px 4px -1px rgba(109, 40, 217, 0.03); /* Soft Violet Shadow */
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #4f378a, #6750a4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f378a, #6750a4);
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 55, 138, 0.3);
+        }
+
+        .btn-secondary {
+            background: #ffffff;
+            color: #1d1b20;
+            border: 1px solid #cbc4d2;
+            transition: all 0.2s ease;
+        }
+        .btn-secondary:hover {
+            background: #fdf7ff;
+            border-color: #4f378a;
+        }
+
+        /* Ambient Blob Animations */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+
+        /* Infinite Carousel */
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(calc(-250px * 8)); }
+        }
+        .carousel-track {
+            animation: scroll 40s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-lg overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- JSON: TopNavBar -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-lg h-20 bg-surface/80 backdrop-blur-md border-b border-outline-variant shadow-sm transition-all duration-300" id="global-nav">
+<!-- Logo -->
+<a class="flex items-center gap-sm" href="#">
+<span class="font-display-md text-display-md font-bold text-primary">Objectif Canada</span>
+</a>
+<!-- Desktop Navigation -->
+<div class="hidden md:flex items-center gap-xl">
+<ul class="flex items-center gap-lg">
+<!-- Highlight TCF as active since this is the TCF landing page -->
+<li><a class="text-primary font-bold border-b-2 border-primary pb-1 font-label-md text-label-md transition-colors hover:text-primary" href="#">TCF</a></li>
+<li><a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="#">TEF</a></li>
+<li><a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="#">IELTS</a></li>
+<li><a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="#">Professeurs</a></li>
+</ul>
+</div>
+<!-- Actions -->
+<div class="hidden md:flex items-center gap-md">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Connexion</a>
+<a class="btn-primary font-label-md text-label-md px-lg py-sm rounded-xl" href="#">Commencer</a>
+</div>
+<!-- Mobile Menu Toggle -->
+<button class="md:hidden text-on-surface p-sm">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</nav>
+<main class="pt-20"> <!-- Offset for fixed nav -->
+<!-- HERO SECTION -->
+<section class="relative min-h-[921px] flex flex-col items-center justify-center pt-2xl pb-2xl px-md md:px-lg overflow-hidden">
+<!-- Abstract Blob Background -->
+<div class="absolute inset-0 w-full h-full overflow-hidden -z-10 pointer-events-none opacity-40">
+<div class="absolute top-0 -left-4 w-72 h-72 bg-primary-container rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+<div class="absolute top-0 -right-4 w-72 h-72 bg-secondary-container rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+<div class="absolute -bottom-8 left-20 w-72 h-72 bg-tertiary-container rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+</div>
+<div class="max-w-container-max mx-auto text-center flex flex-col items-center gap-xl relative z-10">
+<div class="inline-flex items-center gap-sm px-md py-xs rounded-full border border-primary/20 bg-primary/5 text-primary font-label-sm text-label-sm mb-sm">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span>Plateforme Officielle de Préparation</span>
+</div>
+<h1 class="font-display-lg text-display-lg md:text-[72px] md:leading-[1.1] font-bold text-on-surface max-w-4xl tracking-tight">
+                    Maîtrisez le TCF. <br/>
+<span class="gradient-text">Le goût des C2 🍁</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto md:text-[20px]">
+                    L'entraînement immersif conçu pour maximiser votre score NCLC. Des simulations réelles, un feedback instantané, et votre passeport pour le Canada.
+                </p>
+<div class="flex flex-col sm:flex-row items-center gap-md mt-md">
+<button class="btn-primary font-label-md text-label-md px-xl py-md rounded-xl text-lg w-full sm:w-auto flex items-center justify-center gap-sm">
+                        Commencer gratuitement
+                        <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+<button class="btn-secondary font-label-md text-label-md px-xl py-md rounded-xl text-lg w-full sm:w-auto flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-[20px]">play_circle</span>
+                        Voir la démo
+                    </button>
+</div>
+<!-- Trust Stats Banner embedded in Hero -->
+<div class="mt-2xl glass-panel rounded-2xl p-lg w-full max-w-5xl flex flex-col md:flex-row justify-around items-center gap-lg">
+<div class="flex flex-col items-center text-center">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">12 000+</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Candidats accompagnés</span>
+</div>
+<div class="hidden md:block w-px h-12 bg-outline-variant"></div>
+<div class="flex flex-col items-center text-center">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">94%</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Taux de réussite (B2+)</span>
+</div>
+<div class="hidden md:block w-px h-12 bg-outline-variant"></div>
+<div class="flex flex-col items-center text-center">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">47</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Pays d'origine</span>
+</div>
+</div>
+</div>
+</section>
+<!-- FLAG CAROUSEL SECTION -->
+<section class="py-xl bg-surface-container-low border-y border-surface-variant overflow-hidden">
+<div class="max-w-container-max mx-auto px-md mb-md text-center">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Ils préparent leur avenir depuis</p>
+</div>
+<div class="relative w-full overflow-hidden whitespace-nowrap">
+<!-- Gradient Masks for smooth fading edges -->
+<div class="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-surface-container-low to-transparent z-10 pointer-events-none"></div>
+<div class="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-surface-container-low to-transparent z-10 pointer-events-none"></div>
+<div class="carousel-track inline-flex items-center gap-xl px-xl">
+<!-- Original List -->
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇨🇦</span> <span class="font-label-md text-label-md text-on-surface font-semibold">Canada</span>
+</div>
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇨🇩</span> <span class="font-label-md text-label-md text-on-surface font-semibold">RDC</span>
+</div>
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇨🇮</span> <span class="font-label-md text-label-md text-on-surface font-semibold">Côte d'Ivoire</span>
+</div>
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇸🇳</span> <span class="font-label-md text-label-md text-on-surface font-semibold">Sénégal</span>
+</div>
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇲🇦</span> <span class="font-label-md text-label-md text-on-surface font-semibold">Maroc</span>
+</div>
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇨🇲</span> <span class="font-label-md text-label-md text-on-surface font-semibold">Cameroun</span>
+</div>
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇲🇬</span> <span class="font-label-md text-label-md text-on-surface font-semibold">Madagascar</span>
+</div>
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇭🇹</span> <span class="font-label-md text-label-md text-on-surface font-semibold">Haïti</span>
+</div>
+<!-- Duplicate for infinite scroll loop effect -->
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇨🇦</span> <span class="font-label-md text-label-md text-on-surface font-semibold">Canada</span>
+</div>
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇨🇩</span> <span class="font-label-md text-label-md text-on-surface font-semibold">RDC</span>
+</div>
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇨🇮</span> <span class="font-label-md text-label-md text-on-surface font-semibold">Côte d'Ivoire</span>
+</div>
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇸🇳</span> <span class="font-label-md text-label-md text-on-surface font-semibold">Sénégal</span>
+</div>
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇲🇦</span> <span class="font-label-md text-label-md text-on-surface font-semibold">Maroc</span>
+</div>
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇨🇲</span> <span class="font-label-md text-label-md text-on-surface font-semibold">Cameroun</span>
+</div>
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇲🇬</span> <span class="font-label-md text-label-md text-on-surface font-semibold">Madagascar</span>
+</div>
+<div class="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center">
+<span class="text-2xl">🇭🇹</span> <span class="font-label-md text-label-md text-on-surface font-semibold">Haïti</span>
+</div>
+</div>
+</div>
+</section>
+<!-- ONBOARDING TEASER SECTION (Asymmetric Layout) -->
+<section class="py-2xl px-md md:px-lg max-w-container-max mx-auto">
+<div class="mb-xl text-center md:text-left">
+<h2 class="font-display-md text-display-md md:text-display-lg text-on-surface font-bold mb-sm">Votre chemin vers l'excellence</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Une méthode éprouvée en 5 étapes pour garantir votre niveau NCLC 7 et plus.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-lg items-center">
+<!-- Steps List -->
+<div class="md:col-span-5 flex flex-col gap-md relative">
+<!-- Connecting Line -->
+<div class="absolute left-6 top-6 bottom-6 w-0.5 bg-surface-variant z-0 hidden sm:block"></div>
+<!-- Step 1 -->
+<div class="relative z-10 flex gap-md items-start group">
+<div class="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center font-headline-lg shrink-0 shadow-md">1</div>
+<div class="pt-2">
+<h3 class="font-headline-lg text-[20px] text-on-surface font-bold mb-xs">Évaluation initiale</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Test diagnostique complet pour identifier vos forces et faiblesses.</p>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="relative z-10 flex gap-md items-start group opacity-70 hover:opacity-100 transition-opacity">
+<div class="w-12 h-12 rounded-full bg-surface border-2 border-surface-variant text-on-surface-variant flex items-center justify-center font-headline-lg shrink-0">2</div>
+<div class="pt-2">
+<h3 class="font-headline-lg text-[20px] text-on-surface font-bold mb-xs">Plan personnalisé</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Génération d'un calendrier d'étude adapté à votre date d'examen.</p>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="relative z-10 flex gap-md items-start group opacity-70 hover:opacity-100 transition-opacity">
+<div class="w-12 h-12 rounded-full bg-surface border-2 border-surface-variant text-on-surface-variant flex items-center justify-center font-headline-lg shrink-0">3</div>
+<div class="pt-2">
+<h3 class="font-headline-lg text-[20px] text-on-surface font-bold mb-xs">Entraînement ciblé</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Exercices spécifiques par compétence (CO, CE, EE, EO).</p>
+</div>
+</div>
+<!-- Step 4 -->
+<div class="relative z-10 flex gap-md items-start group opacity-70 hover:opacity-100 transition-opacity">
+<div class="w-12 h-12 rounded-full bg-surface border-2 border-surface-variant text-on-surface-variant flex items-center justify-center font-headline-lg shrink-0">4</div>
+<div class="pt-2">
+<h3 class="font-headline-lg text-[20px] text-on-surface font-bold mb-xs">Simulations réelles</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Examens blancs chronométrés dans les conditions du TCF.</p>
+</div>
+</div>
+<!-- Step 5 -->
+<div class="relative z-10 flex gap-md items-start group opacity-70 hover:opacity-100 transition-opacity">
+<div class="w-12 h-12 rounded-full bg-surface border-2 border-surface-variant text-on-surface-variant flex items-center justify-center font-headline-lg shrink-0">5</div>
+<div class="pt-2">
+<h3 class="font-headline-lg text-[20px] text-on-surface font-bold mb-xs">Validation C2</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Analyse des performances et feu vert pour l'examen officiel.</p>
+</div>
+</div>
+</div>
+<!-- Visual Mockup Area -->
+<div class="md:col-span-7 bg-surface-container rounded-2xl p-lg md:p-xl h-[500px] relative overflow-hidden flex items-center justify-center border border-outline-variant">
+<!-- Abstract representation of the UI dashboard -->
+<div class="absolute inset-0 bg-gradient-to-br from-surface to-surface-container-high opacity-50"></div>
+<!-- Mockup Card -->
+<div class="relative z-10 glass-panel w-full max-w-md rounded-2xl p-lg shadow-[0_20px_50px_-12px_rgba(79,55,138,0.25)] border border-white/50">
+<div class="flex justify-between items-center mb-md border-b border-outline-variant/30 pb-sm">
+<div>
+<h4 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wide">Compétence Active</h4>
+<span class="font-headline-lg text-[20px] text-on-surface font-bold">Compréhension Orale</span>
+</div>
+<span class="px-sm py-xs bg-tertiary-container text-on-tertiary-container rounded text-xs font-bold">C1 Visé</span>
+</div>
+<div class="space-y-md">
+<!-- Progress Bar -->
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-xs">
+<span class="text-on-surface">Progression globale</span>
+<span class="text-primary font-bold">78%</span>
+</div>
+<div class="w-full h-2 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[78%]"></div>
+</div>
+</div>
+<!-- Question Mockup -->
+<div class="bg-surface rounded-xl p-md border border-outline-variant/30">
+<div class="flex items-center gap-sm mb-sm text-primary">
+<span class="material-symbols-outlined">headphones</span>
+<span class="font-label-sm text-label-sm">Écoutez l'enregistrement (0:45)</span>
+</div>
+<div class="h-10 bg-surface-container-highest rounded-lg w-full mb-sm flex items-center px-sm">
+<div class="w-full h-1 bg-outline-variant/50 rounded-full">
+<div class="h-full bg-primary w-1/3 rounded-full relative">
+<div class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full shadow"></div>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full btn-primary py-sm rounded-lg font-label-md text-label-md flex justify-center items-center gap-xs">
+                                Continuer la série <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- FEATURES BENTO GRID -->
+<section class="py-2xl bg-surface">
+<div class="max-w-container-max mx-auto px-md md:px-lg">
+<div class="text-center mb-xl">
+<h2 class="font-display-md text-display-md md:text-display-lg text-on-surface font-bold mb-sm">Tout pour réussir. Sans superflu.</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">Une suite d'outils conçue spécifiquement pour les exigences de l'immigration canadienne.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-md">
+<!-- Feature 1 (Large) -->
+<div class="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 bg-surface-container-low border border-surface-variant rounded-2xl p-lg flex flex-col hover:border-primary/30 transition-colors group">
+<div class="w-12 h-12 bg-primary-container text-on-primary-container rounded-xl flex items-center justify-center mb-md group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[24px]">library_books</span>
+</div>
+<h3 class="font-headline-lg text-[24px] text-on-surface font-bold mb-xs">Banque de questions exhaustive</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg flex-grow">Plus de 2500 questions conformes aux annales récentes. Renouvelées mensuellement pour coller parfaitement aux tendances de l'examen officiel.</p>
+<div class="h-32 bg-surface rounded-xl border border-outline-variant/30 flex items-center justify-center opacity-70">
+<!-- Placeholder for mini-illustration -->
+<span class="text-on-surface-variant font-label-sm">Illustration Banque</span>
+</div>
+</div>
+<!-- Feature 2 -->
+<div class="bg-surface-container-low border border-surface-variant rounded-2xl p-lg hover:border-primary/30 transition-colors group">
+<div class="w-10 h-10 bg-secondary-container text-on-secondary-container rounded-lg flex items-center justify-center mb-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">record_voice_over</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface font-bold mb-xs text-lg">Labo d'Expression Orale</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Enregistrez vos réponses, chronométrez-vous et comparez avec des modèles C2.</p>
+</div>
+<!-- Feature 3 -->
+<div class="bg-surface-container-low border border-surface-variant rounded-2xl p-lg hover:border-primary/30 transition-colors group">
+<div class="w-10 h-10 bg-tertiary-container text-on-tertiary-container rounded-lg flex items-center justify-center mb-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">edit_document</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface font-bold mb-xs text-lg">Correction IA (Écrit)</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Feedback instantané sur la grammaire, le lexique et la structure de vos tâches.</p>
+</div>
+<!-- Feature 4 -->
+<div class="bg-surface-container-low border border-surface-variant rounded-2xl p-lg hover:border-primary/30 transition-colors group">
+<div class="w-10 h-10 bg-error-container text-on-error-container rounded-lg flex items-center justify-center mb-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">timer</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface font-bold mb-xs text-lg">Gestion du temps</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Interface d'examen reproduisant exactement le stress et le chronomètre officiels.</p>
+</div>
+<!-- Feature 5 -->
+<div class="bg-surface-container-low border border-surface-variant rounded-2xl p-lg hover:border-primary/30 transition-colors group">
+<div class="w-10 h-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center mb-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">monitoring</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface font-bold mb-xs text-lg">Analytiques NCLC</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Suivez votre progression convertie directement en niveaux canadiens.</p>
+</div>
+<!-- Feature 6 (Wide) -->
+<div class="col-span-1 md:col-span-2 lg:col-span-2 bg-surface-container-low border border-surface-variant rounded-2xl p-lg flex flex-col hover:border-primary/30 transition-colors group">
+<div class="flex items-center gap-md mb-md">
+<div class="w-12 h-12 bg-surface-variant text-on-surface rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[24px]">forum</span>
+</div>
+<h3 class="font-headline-lg text-[20px] text-on-surface font-bold">Communauté &amp; Support</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Ne préparez pas seul. Rejoignez des milliers d'autres candidats, échangez des astuces, et bénéficiez du support de nos professeurs experts certifiés.</p>
+</div>
+<!-- Feature 7 -->
+<div class="bg-surface-container-low border border-surface-variant rounded-2xl p-lg hover:border-primary/30 transition-colors group">
+<div class="w-10 h-10 bg-secondary/10 text-secondary rounded-lg flex items-center justify-center mb-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">phone_iphone</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface font-bold mb-xs text-lg">100% Mobile</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Révisez dans les transports. Interface optimisée pour smartphone et tablette.</p>
+</div>
+<!-- Feature 8 -->
+<div class="bg-surface-container-low border border-surface-variant rounded-2xl p-lg hover:border-primary/30 transition-colors group">
+<div class="w-10 h-10 bg-tertiary/10 text-tertiary rounded-lg flex items-center justify-center mb-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">verified_user</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface font-bold mb-xs text-lg">Garantie C2</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Atteignez vos objectifs ou nous prolongeons votre accès gratuitement.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- TESTIMONIALS SECTION -->
+<section class="py-2xl px-md md:px-lg max-w-container-max mx-auto bg-background">
+<div class="text-center mb-xl">
+<h2 class="font-display-md text-display-md md:text-display-lg text-on-surface font-bold mb-sm">Ils ont eu leur RP.</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">Des histoires de réussite de candidats qui ont fait confiance à Objectif Canada.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<!-- Testimonial 1 -->
+<div class="glass-panel p-lg rounded-2xl flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 transition-transform">
+<div class="absolute top-0 right-0 p-md opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-[64px] text-primary">format_quote</span>
+</div>
+<div class="flex items-center gap-md mb-md z-10">
+<img class="w-14 h-14 rounded-full object-cover border-2 border-surface shadow-sm" data-alt="A highly detailed professional headshot portrait of a young African professional woman with short natural hair, wearing a sleek modern blazer, smiling confidently against a minimal bright light-mode white background. Lighting is soft, high-key, and flattering, fitting a premium corporate SaaS aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1aPStS1FcgYTFya9L7jZNHwaW6kTIzRXgynI9VqXtryLL9LDTvPHOJhZ_sLJFt143BtPN-kfKPEWMgjvo8oLWNKmqBA5DFL8FIB6Dx7a4SWvpgZ9YCvi34KyYyF2inZKFmI1SXI96HtCgc-6vynNxKroxkuRoUh2M_qsW2mi52xNqREfOlr7uHwX7NXSpCzSEQu9O3Ydylv5AT9XIppLz-Zz0IYvEj6MCBVkAU7nzYR3s5B_omut96QZYnq-0JBZsdo5VJQCWsfQ"/>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface font-bold text-lg">Amina S.</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs">
+                                🇨🇮 Abidjan <span class="w-1 h-1 bg-outline-variant rounded-full"></span> Infirmière
+                            </span>
+</div>
+</div>
+<div class="mb-md z-10">
+<div class="inline-flex gap-sm">
+<span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold font-label-sm">CO: C2</span>
+<span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold font-label-sm">CE: C1</span>
+<span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold font-label-sm">EE: C2</span>
+<span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold font-label-sm">EO: C1</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant italic z-10 flex-grow">
+                        "La plateforme reproduit exactement l'interface de l'examen sur ordinateur. Le jour J, je n'étais pas stressée car j'avais fait plus de 20 simulations dans les mêmes conditions. Résultat: NCLC 9 atteint!"
+                    </p>
+</div>
+<!-- Testimonial 2 -->
+<div class="glass-panel p-lg rounded-2xl flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 transition-transform">
+<div class="absolute top-0 right-0 p-md opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-[64px] text-primary">format_quote</span>
+</div>
+<div class="flex items-center gap-md mb-md z-10">
+<img class="w-14 h-14 rounded-full object-cover border-2 border-surface shadow-sm" data-alt="A highly detailed professional portrait of a mid-30s North African man with a neatly trimmed beard, wearing a casual but smart button-down shirt. He has a warm, relaxed expression. The background is a clean, bright minimalist office environment, matching a premium educational software context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAuKhw3Kzh-2kOZWdQDqKqSlzv6m_h2CM_VmYZncKh6f5TTm13vWf-qqveCZq-Bl1Sw0M_en5Rz9D6bcf2etMGbjP-uJcWxiamoqFKMrEeAsWPoxmhK48Tce8zJuee6AnEAZRE26804VqykqpUF8ZflY9m-IA_RjNni5Ks3Yki1N-PoVbnWd75ALQYb6SHfRqestg4_3PE-6U3ZXz_5qkwiGENu0drpUtaL3lLU-qXWfEzuK0NkHS_HXyvucRTBqUP-SaI0eHQK50"/>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface font-bold text-lg">Karim M.</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs">
+                                🇲🇦 Casablanca <span class="w-1 h-1 bg-outline-variant rounded-full"></span> Ingénieur
+                            </span>
+</div>
+</div>
+<div class="mb-md z-10">
+<div class="inline-flex gap-sm">
+<span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold font-label-sm">CO: C1</span>
+<span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold font-label-sm">CE: C2</span>
+<span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold font-label-sm">EE: C1</span>
+<span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold font-label-sm">EO: B2</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant italic z-10 flex-grow">
+                        "L'outil de correction IA pour l'expression écrite est bluffant. Il a corrigé mes erreurs récurrentes de syntaxe en quelques jours. J'ai gagné les points qui me manquaient pour Entrée Express."
+                    </p>
+</div>
+<!-- Testimonial 3 -->
+<div class="glass-panel p-lg rounded-2xl flex flex-col h-full relative overflow-hidden group hover:-translate-y-1 transition-transform">
+<div class="absolute top-0 right-0 p-md opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-[64px] text-primary">format_quote</span>
+</div>
+<div class="flex items-center gap-md mb-md z-10">
+<img class="w-14 h-14 rounded-full object-cover border-2 border-surface shadow-sm" data-alt="A detailed candid portrait of a young Caucasian European man in his late 20s, wearing simple modern glasses and a dark crewneck sweater. He looks optimistic and intelligent. The setting is a minimalist cafe with ample natural sunlight, conveying a bright, modern, and clean aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8212HbjVdElQw0UcVkJcokt8l6DLV9dGJ6Wp181PMepCNGqgwNK3n5-riyrQHYJUhqD99QyLunUC62w4bAdPbTSiki1NTjKbT0uW-6hQWhJuhbT2j5nbEMMKSo08LcqhlTVPZw8yVg7aDYHp6OfblImnAKDXCldirLLMrhoMPX1InXQpKHYG_NSL9dgSZSmxIrZ8MvIIYskBs8mpsJZWwcyY37EJkRTlB3PE5vtGgGxHj6AJNptwz-5T6_C80sJXqumOBZ3PukRE"/>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface font-bold text-lg">Julien B.</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs">
+                                🇫🇷 Paris <span class="w-1 h-1 bg-outline-variant rounded-full"></span> Développeur
+                            </span>
+</div>
+</div>
+<div class="mb-md z-10">
+<div class="inline-flex gap-sm">
+<span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold font-label-sm">CO: C2</span>
+<span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold font-label-sm">CE: C2</span>
+<span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold font-label-sm">EE: C2</span>
+<span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold font-label-sm">EO: C2</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant italic z-10 flex-grow">
+                        "Même en étant francophone natif, le format du TCF est particulier. Objectif Canada m'a appris la 'méthodologie' de l'examen. J'ai sécurisé le score maximum sans mauvaise surprise."
+                    </p>
+</div>
+</div>
+</section>
+<!-- CTA SECTION -->
+<section class="py-2xl px-md md:px-lg max-w-container-max mx-auto mb-xl">
+<div class="bg-primary-container rounded-3xl p-xl md:p-2xl text-center relative overflow-hidden flex flex-col items-center">
+<!-- Decorative background elements -->
+<div class="absolute -top-24 -right-24 w-64 h-64 bg-primary rounded-full mix-blend-multiply opacity-20 filter blur-2xl"></div>
+<div class="absolute -bottom-24 -left-24 w-64 h-64 bg-secondary rounded-full mix-blend-multiply opacity-20 filter blur-2xl"></div>
+<h2 class="font-display-lg text-display-md md:text-[48px] text-on-primary-container font-bold mb-md relative z-10">Prêt à décrocher votre NCLC 9 ?</h2>
+<p class="font-body-lg text-body-lg text-on-primary-container/80 max-w-2xl mb-lg relative z-10">Rejoignez la plateforme la plus avancée pour la préparation aux tests de langue canadiens. Créez un compte gratuitement et commencez votre évaluation initiale.</p>
+<button class="btn-primary bg-primary text-on-primary font-label-md text-label-md px-xl py-md rounded-xl text-lg flex items-center gap-sm relative z-10 shadow-lg hover:shadow-xl transition-shadow">
+                    Commencer gratuitement
+                    <span class="material-symbols-outlined">rocket_launch</span>
+</button>
+</div>
+</section>
+</main>
+<!-- JSON: Footer -->
+<footer class="w-full py-xl px-lg flex flex-col md:flex-row justify-between items-center gap-lg bg-surface-container-lowest border-t border-outline-variant">
+<!-- Brand/Logo (Anchor styling) -->
+<div class="font-headline-lg text-headline-lg text-primary font-bold">
+            Objectif Canada
+        </div>
+<!-- Links -->
+<div class="flex flex-wrap justify-center gap-md md:gap-lg">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:underline opacity-80 hover:opacity-100 transition-opacity" href="#">Politique de confidentialité</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:underline opacity-80 hover:opacity-100 transition-opacity" href="#">Conditions d'utilisation</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:underline opacity-80 hover:opacity-100 transition-opacity" href="#">Contact</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:underline opacity-80 hover:opacity-100 transition-opacity" href="#">Blog</a>
+</div>
+<!-- Copyright -->
+<div class="font-body-md text-body-md text-on-surface-variant text-sm">
+            © 2024 Objectif Canada TCF. Tous droits réservés.
+        </div>
+</footer>
+<script>
+        // Simple script to handle nav background on scroll for premium feel
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('global-nav');
+            if (window.scrollY > 10) {
+                nav.classList.add('shadow-md');
+                nav.classList.remove('shadow-sm');
+                nav.style.backgroundColor = 'rgba(253, 247, 255, 0.95)'; // surface with more opacity
+            } else {
+                nav.classList.remove('shadow-md');
+                nav.classList.add('shadow-sm');
+                nav.style.backgroundColor = 'rgba(253, 247, 255, 0.8)'; // original surface/80
+            }
+        });
+    </script>
+</body></html>

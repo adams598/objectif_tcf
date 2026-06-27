@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr-CA"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gestion des Utilisateurs - Objectif Canada</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Geist:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#c9a74d",
+                    "secondary-fixed": "#e9ddff",
+                    "surface-container-low": "#f8f2fa",
+                    "secondary-container": "#e1d4fd",
+                    "on-error-container": "#93000a",
+                    "tertiary": "#765b00",
+                    "surface-bright": "#fdf7ff",
+                    "surface-tint": "#6750a4",
+                    "on-surface-variant": "#494551",
+                    "on-primary-fixed": "#22005d",
+                    "error-container": "#ffdad6",
+                    "surface-variant": "#e6e0e9",
+                    "on-surface": "#1d1b20",
+                    "on-tertiary-container": "#503d00",
+                    "primary-fixed": "#e9ddff",
+                    "on-tertiary-fixed": "#241a00",
+                    "outline": "#7a7582",
+                    "on-secondary-fixed": "#1f1635",
+                    "primary-container": "#6750a4",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed-dim": "#e7c365",
+                    "error": "#ba1a1a",
+                    "background": "#fdf7ff",
+                    "on-primary-container": "#e0d2ff",
+                    "tertiary-fixed": "#ffdf93",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-fixed-variant": "#594400",
+                    "on-primary-fixed-variant": "#4f378a",
+                    "inverse-on-surface": "#f5eff7",
+                    "primary": "#4f378a",
+                    "secondary-fixed-dim": "#cdc0e9",
+                    "surface-dim": "#ded8e0",
+                    "primary-fixed-dim": "#cfbcff",
+                    "outline-variant": "#cbc4d2",
+                    "surface-container-high": "#ece6ee",
+                    "on-secondary-fixed-variant": "#4b4263",
+                    "on-background": "#1d1b20",
+                    "on-secondary-container": "#645a7d",
+                    "surface": "#fdf7ff",
+                    "secondary": "#63597c",
+                    "surface-container": "#f2ecf4",
+                    "on-primary": "#ffffff",
+                    "inverse-primary": "#cfbcff",
+                    "inverse-surface": "#322f35",
+                    "surface-container-highest": "#e6e0e9",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max": "1280px",
+                    "sm": "0.5rem",
+                    "base": "4px",
+                    "xl": "2rem",
+                    "gutter": "24px",
+                    "md": "1rem",
+                    "xs": "0.25rem",
+                    "lg": "1.5rem",
+                    "2xl": "3rem"
+            },
+            "fontFamily": {
+                    "display-lg": [
+                            "Geist"
+                    ],
+                    "headline-lg": [
+                            "Geist"
+                    ],
+                    "headline-lg-mobile": [
+                            "Geist"
+                    ],
+                    "display-md": [
+                            "Geist"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "label-md": [
+                            "Inter"
+                    ],
+                    "label-sm": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "1.1",
+                                    "letterSpacing": "-0.04em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-lg": [
+                            "30px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "24px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-md": [
+                            "36px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "letterSpacing": "-0.03em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.5",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "1.4",
+                                    "letterSpacing": "0.01em",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "label-sm": [
+                            "12px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "letterSpacing": "0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md font-body-md flex min-h-screen">
+<!-- SideNavBar -->
+<nav class="hidden lg:flex flex-col w-[280px] h-screen p-md gap-sm fixed left-0 top-0 border-r border-outline-variant bg-surface shadow-md z-40">
+<div class="mb-lg px-md pt-md">
+<h1 class="font-headline-lg text-headline-lg text-primary">Objectif Canada</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-sm">Espace Admin</p>
+</div>
+<div class="flex-1 flex flex-col gap-xs overflow-y-auto">
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Tableau de bord</span>
+</a>
+<a class="flex items-center gap-md p-md bg-secondary-container text-on-secondary-container rounded-xl relative before:content-[''] before:absolute before:left-0 before:w-1 before:h-2/3 before:bg-primary before:rounded-full translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-md text-label-md">Utilisateurs</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-md text-label-md">Rapports</span>
+</a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Paramètres</span>
+</a>
+</div>
+<div class="mt-auto border-t border-outline-variant pt-md flex flex-col gap-xs">
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-sm px-md rounded-xl hover:opacity-90 transition-opacity">Ajouter Admin</button>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-md text-label-md">Déconnexion</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 lg:ml-[280px] p-md lg:p-xl w-full max-w-7xl mx-auto flex flex-col gap-lg">
+<!-- Header Section -->
+<header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
+<div>
+<h2 class="font-display-md text-display-md text-on-surface">Gestion des Utilisateurs</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Gérez les étudiants, correcteurs et administrateurs de la plateforme.</p>
+</div>
+<div class="flex items-center gap-md w-full md:w-auto">
+<div class="relative w-full md:w-64">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-sm pl-[36px] pr-sm font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Rechercher par nom, email..." type="text"/>
+</div>
+<button class="bg-surface border border-outline-variant text-on-surface font-label-md text-label-md py-sm px-md rounded-lg flex items-center gap-xs hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+                    Filtres
+                </button>
+</div>
+</header>
+<!-- Stats/KPI Row -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-md">
+<div class="bg-surface border border-outline-variant rounded-xl p-md shadow-[0_4px_20px_rgba(109,40,217,0.05)]">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Total Étudiants</p>
+<p class="font-display-md text-display-md text-on-surface mt-xs">12,450</p>
+<div class="flex items-center gap-xs text-primary mt-sm">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span class="font-label-sm text-label-sm">+5.2% ce mois</span>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-xl p-md shadow-[0_4px_20px_rgba(109,40,217,0.05)]">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Correcteurs Actifs</p>
+<p class="font-display-md text-display-md text-on-surface mt-xs">84</p>
+<div class="flex items-center gap-xs text-outline mt-sm">
+<span class="material-symbols-outlined text-[16px]">horizontal_rule</span>
+<span class="font-label-sm text-label-sm">Stable</span>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-xl p-md shadow-[0_4px_20px_rgba(109,40,217,0.05)]">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Abonnements Premium</p>
+<p class="font-display-md text-display-md text-on-surface mt-xs">3,120</p>
+<div class="flex items-center gap-xs text-primary mt-sm">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span class="font-label-sm text-label-sm">+12% ce mois</span>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-xl p-md shadow-[0_4px_20px_rgba(109,40,217,0.05)]">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Bannis (30 jours)</p>
+<p class="font-display-md text-display-md text-error mt-xs">42</p>
+<div class="flex items-center gap-xs text-error mt-sm">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+<span class="font-label-sm text-label-sm">Action requise</span>
+</div>
+</div>
+</div>
+<!-- Data Table Section -->
+<div class="bg-surface border border-outline-variant rounded-xl shadow-[0_4px_20px_rgba(109,40,217,0.05)] overflow-hidden">
+<div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface">Liste des Utilisateurs</h3>
+<div class="flex gap-sm">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-xs rounded hover:bg-surface-variant">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-xs rounded hover:bg-surface-variant">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-lowest font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">
+<tr>
+<th class="px-md py-sm font-medium w-[48px]">
+<input class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer" type="checkbox"/>
+</th>
+<th class="px-md py-sm font-medium">Utilisateur</th>
+<th class="px-md py-sm font-medium">Pays</th>
+<th class="px-md py-sm font-medium">Rôle</th>
+<th class="px-md py-sm font-medium">Abonnement</th>
+<th class="px-md py-sm font-medium">Statut</th>
+<th class="px-md py-sm font-medium text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-sm">
+<input class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity" type="checkbox"/>
+</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
+<img alt="Avatar" class="w-full h-full object-cover" data-alt="A highly detailed close-up portrait of a young professional woman with a soft smile. High-key lighting, modern corporate style. The background is a blurred bright office setting. Shot with a 85mm lens, sharp focus on the eyes." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH8Y-ZNponjY8uY8GZdrwHO9kluVXk-QLIXk4cxszXDRHY864ykSqDn0-ew6nGQ1qmlqpmWE3GVV16JzlnBRtqe3i4WYzX-FU6pGd32ScYSTf2L2mjvCKWithZJBvoKfWTWGwGf7FuDzOEUUgrvlBO5KEXDwPaqLMmDgQ9yIsGVuNx2ub2SnoV3OFI3d5pq5OgXVNi2v-NGUEgDF8qnl6UtdI2tuC590OHW9vSffjVX20zQ-kIReZYpz9HD0xqT8W9bwgAtuntL2A"/>
+</div>
+<div>
+<p class="font-medium text-on-surface">Amira Benali</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">amira.b@example.com</p>
+</div>
+</div>
+</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs bg-surface-variant px-sm py-xs rounded-full w-fit border border-outline-variant">
+<span class="text-[12px] leading-none">MA</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Maroc</span>
+</div>
+</td>
+<td class="px-md py-sm">
+<span class="bg-secondary-container text-on-secondary-container font-label-sm text-label-sm px-sm py-xs rounded-md">Étudiant</span>
+</td>
+<td class="px-md py-sm">
+<span class="font-medium text-primary">Premium 3M</span>
+</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-[#10b981]"></div>
+<span class="font-label-md text-label-md">Actif</span>
+</div>
+</td>
+<td class="px-md py-sm text-right">
+<div class="flex justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-xs text-on-surface-variant hover:text-primary rounded hover:bg-surface-variant" title="Modifier le rôle">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-tertiary-container rounded hover:bg-surface-variant" title="Rembourser">
+<span class="material-symbols-outlined text-[20px]" data-icon="payments">payments</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-error rounded hover:bg-surface-variant" title="Bannir">
+<span class="material-symbols-outlined text-[20px]" data-icon="block">block</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-sm">
+<input class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity" type="checkbox"/>
+</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
+<div class="w-full h-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-label-md">JL</div>
+</div>
+<div>
+<p class="font-medium text-on-surface">Jean-Luc Tremblay</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">jl.tremblay@univ.ca</p>
+</div>
+</div>
+</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs bg-surface-variant px-sm py-xs rounded-full w-fit border border-outline-variant">
+<span class="text-[12px] leading-none">CA</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Canada</span>
+</div>
+</td>
+<td class="px-md py-sm">
+<span class="bg-tertiary-container/30 text-tertiary font-label-sm text-label-sm px-sm py-xs rounded-md">Correcteur</span>
+</td>
+<td class="px-md py-sm">
+<span class="text-on-surface-variant">-</span>
+</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-[#10b981]"></div>
+<span class="font-label-md text-label-md">Actif</span>
+</div>
+</td>
+<td class="px-md py-sm text-right">
+<div class="flex justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-xs text-on-surface-variant hover:text-primary rounded hover:bg-surface-variant" title="Modifier le rôle">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-error rounded hover:bg-surface-variant" title="Bannir">
+<span class="material-symbols-outlined text-[20px]" data-icon="block">block</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors group bg-error-container/10">
+<td class="px-md py-sm">
+<input class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity" type="checkbox"/>
+</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
+<img alt="Avatar" class="w-full h-full object-cover grayscale" data-alt="A highly detailed close-up portrait of a man looking concerned. Moody lighting with strong shadows. The background is dark and out of focus. Shot with a 50mm lens." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJ8oLNNiCPdv2rMJ9ZrYYqItGC-ccP_6PmDmZX9skEcjr8s5CpkknvUanFmioGIzEbJf6erN3XRO_ax_0jWqZhabjdctkNd3PUGFh1UMGeIlNnxJQpPK5JReyRe87hTRIkgMO-JRelmurywf5NZrTIopgyNmG33hwmUAhSk-btzS5z1N6NBbHRLFZ9vGhTAmJGunDDP4uxOYoyXBonQDG_yCwgz97wjOf9Kz6_tUZKb4EtHfTrYJesXCpRtWNAwcE1Qy7eEMSJT1I"/>
+</div>
+<div>
+<p class="font-medium text-on-surface line-through opacity-70">Omar Sylla</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">omar.s99@test.fr</p>
+</div>
+</div>
+</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs bg-surface-variant px-sm py-xs rounded-full w-fit border border-outline-variant">
+<span class="text-[12px] leading-none">FR</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">France</span>
+</div>
+</td>
+<td class="px-md py-sm">
+<span class="bg-secondary-container text-on-secondary-container font-label-sm text-label-sm px-sm py-xs rounded-md">Étudiant</span>
+</td>
+<td class="px-md py-sm">
+<span class="font-medium text-on-surface-variant">Essai</span>
+</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+<span class="font-label-md text-label-md text-error">Banni</span>
+</div>
+</td>
+<td class="px-md py-sm text-right">
+<div class="flex justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-xs text-on-surface-variant hover:text-primary rounded hover:bg-surface-variant" title="Détails">
+<span class="material-symbols-outlined text-[20px]" data-icon="visibility">visibility</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-error rounded hover:bg-surface-variant" title="Révoquer Bannissement">
+<span class="material-symbols-outlined text-[20px]" data-icon="restore">restore</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="p-md border-t border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+<span class="font-label-md text-label-md text-on-surface-variant">Affichage 1-3 sur 12,450</span>
+<div class="flex gap-xs">
+<button class="p-sm rounded border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="p-sm rounded border border-outline-variant bg-primary text-on-primary transition-colors font-label-md text-label-md w-10">1</button>
+<button class="p-sm rounded border border-outline-variant text-on-surface hover:bg-surface-variant transition-colors font-label-md text-label-md w-10">2</button>
+<button class="p-sm rounded border border-outline-variant text-on-surface hover:bg-surface-variant transition-colors font-label-md text-label-md w-10">3</button>
+<span class="px-sm py-sm text-on-surface-variant">...</span>
+<button class="p-sm rounded border border-outline-variant text-on-surface hover:bg-surface-variant transition-colors font-label-md text-label-md w-10">124</button>
+<button class="p-sm rounded border border-outline-variant text-on-surface hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

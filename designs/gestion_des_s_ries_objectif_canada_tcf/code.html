@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Espace Étudiant - Gestion des séries</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-container": "#c9a74d",
+                      "secondary-fixed": "#e9ddff",
+                      "surface-container-low": "#f8f2fa",
+                      "secondary-container": "#e1d4fd",
+                      "on-error-container": "#93000a",
+                      "tertiary": "#765b00",
+                      "surface-bright": "#fdf7ff",
+                      "surface-tint": "#6750a4",
+                      "on-surface-variant": "#494551",
+                      "on-primary-fixed": "#22005d",
+                      "error-container": "#ffdad6",
+                      "surface-variant": "#e6e0e9",
+                      "on-surface": "#1d1b20",
+                      "on-tertiary-container": "#503d00",
+                      "primary-fixed": "#e9ddff",
+                      "on-tertiary-fixed": "#241a00",
+                      "outline": "#7a7582",
+                      "on-secondary-fixed": "#1f1635",
+                      "primary-container": "#6750a4",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "tertiary-fixed-dim": "#e7c365",
+                      "error": "#ba1a1a",
+                      "background": "#fdf7ff",
+                      "on-primary-container": "#e0d2ff",
+                      "tertiary-fixed": "#ffdf93",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-fixed-variant": "#594400",
+                      "on-primary-fixed-variant": "#4f378a",
+                      "inverse-on-surface": "#f5eff7",
+                      "primary": "#4f378a",
+                      "secondary-fixed-dim": "#cdc0e9",
+                      "surface-dim": "#ded8e0",
+                      "primary-fixed-dim": "#cfbcff",
+                      "outline-variant": "#cbc4d2",
+                      "surface-container-high": "#ece6ee",
+                      "on-secondary-fixed-variant": "#4b4263",
+                      "on-background": "#1d1b20",
+                      "on-secondary-container": "#645a7d",
+                      "surface": "#fdf7ff",
+                      "secondary": "#63597c",
+                      "surface-container": "#f2ecf4",
+                      "on-primary": "#ffffff",
+                      "inverse-primary": "#cfbcff",
+                      "inverse-surface": "#322f35",
+                      "surface-container-highest": "#e6e0e9",
+                      "on-error": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-max": "1280px",
+                      "sm": "0.5rem",
+                      "base": "4px",
+                      "xl": "2rem",
+                      "gutter": "24px",
+                      "md": "1rem",
+                      "xs": "0.25rem",
+                      "lg": "1.5rem",
+                      "2xl": "3rem"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Geist"
+                      ],
+                      "headline-lg": [
+                              "Geist"
+                      ],
+                      "headline-lg-mobile": [
+                              "Geist"
+                      ],
+                      "display-md": [
+                              "Geist"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.04em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "30px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-md": [
+                              "36px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.03em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .custom-shadow-level-1 {
+            box-shadow: 0 1px 2px 0 rgba(109, 40, 217, 0.05);
+        }
+        .custom-shadow-level-2 {
+            box-shadow: 0 4px 6px -1px rgba(109, 40, 217, 0.1), 0 2px 4px -1px rgba(109, 40, 217, 0.06);
+        }
+      </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md text-body-md flex min-h-screen">
+<!-- SideNavBar -->
+<nav class="hidden lg:flex flex-col w-[280px] h-screen p-md gap-sm bg-surface border-r border-outline-variant shadow-md shrink-0 fixed left-0 top-0">
+<!-- Brand/Header -->
+<div class="flex items-center gap-md p-sm mb-lg">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant">
+<img alt="Photo de profil étudiant" class="w-full h-full object-cover" data-alt="A professional headshot of a student focused on their studies. Bright lighting, modern corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBEBCuXB5VB-UrtrCxC4d1AO2eVoH9EMRI3HRoRVYgF30JZB06CptyQTJ4WYUuwWIgvxPA8ZTibXhAB1jE_83RRAiRUnTPSVgZKgSZEHO-THC4KwRRA6nOP7k23VmOzxogIk7RTM5J_LEwtmHQjz9w6UUR0ryGt-E87SlKEbLYEwrwenUoulKet4yejzd3HG32JF6A6q8HMkJ2FyUt411f3UUrj4gzEDedXeVDKLEXmE5LHoT3LZab3iC5L23cAtYbePOUpypaYfI"/>
+</div>
+<div>
+<h1 class="font-headline-lg text-headline-lg text-primary text-[20px]">Espace Étudiant</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Objectif: NCLC 9</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex flex-col gap-base flex-grow">
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-xl font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Tableau de bord
+            </a>
+<a class="flex items-center gap-md p-md bg-secondary-container text-on-secondary-container rounded-xl relative before:content-[''] before:absolute before:left-0 before:w-1 before:h-2/3 before:bg-primary before:rounded-full font-label-md text-label-md translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+                Mes séries
+            </a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-xl font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+                Résultats
+            </a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-xl font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+                Communauté
+            </a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-xl font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+                Messagerie
+            </a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-xl font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Paramètres
+            </a>
+</div>
+<!-- CTA -->
+<div class="mt-auto mb-md">
+<button class="w-full py-md px-lg bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-label-md text-label-md font-semibold custom-shadow-level-2 hover:opacity-90 transition-opacity">
+                Mode Examen
+            </button>
+</div>
+<!-- Footer Links -->
+<div class="flex flex-col gap-base border-t border-outline-variant pt-sm">
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-xl font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+                Aide
+            </a>
+<a class="flex items-center gap-md p-md text-on-surface-variant hover:bg-surface-container-high rounded-xl font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Déconnexion
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 lg:ml-[280px] p-md lg:p-[40px] bg-background w-full min-h-screen">
+<!-- Header Section -->
+<header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-lg mb-xl">
+<div>
+<h2 class="font-display-md text-display-md text-on-surface mb-xs">Gestion des Séries</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Créez, modifiez et analysez vos séries d'examens d'immigration.</p>
+</div>
+<button class="flex items-center gap-sm py-sm px-lg bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-label-md text-label-md font-semibold custom-shadow-level-2 hover:opacity-90 transition-opacity whitespace-nowrap">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                Nouvelle Série
+            </button>
+</header>
+<!-- Metrics & Search Layout -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-gutter mb-xl">
+<!-- Search -->
+<div class="md:col-span-6 lg:col-span-8 flex items-end">
+<div class="relative w-full">
+<div class="absolute inset-y-0 left-0 pl-md flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline" data-icon="search">search</span>
+</div>
+<input class="block w-full pl-[48px] pr-md py-md bg-surface border border-outline-variant rounded-xl font-body-md text-body-md text-on-surface placeholder-outline focus:ring-2 focus:ring-primary focus:border-primary transition-all custom-shadow-level-1" placeholder="Rechercher une série par nom, type ou niveau..." type="text"/>
+</div>
+</div>
+<!-- Metrics -->
+<div class="md:col-span-6 lg:col-span-4 flex gap-md">
+<div class="flex-1 bg-surface border border-outline-variant rounded-xl p-md custom-shadow-level-1 flex flex-col justify-center">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-base">Total Séries</p>
+<p class="font-headline-lg text-headline-lg text-on-surface">24</p>
+</div>
+<div class="flex-1 bg-surface border border-outline-variant rounded-xl p-md custom-shadow-level-1 flex flex-col justify-center">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-base">Questions Actives</p>
+<p class="font-headline-lg text-headline-lg text-primary">1,204</p>
+</div>
+</div>
+</section>
+<!-- Exam Series Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Card 1 -->
+<article class="bg-surface border border-outline-variant rounded-xl p-lg custom-shadow-level-1 hover:custom-shadow-level-2 transition-shadow flex flex-col group relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-surface-container to-transparent -mr-8 -mt-8 rounded-full opacity-50"></div>
+<div class="flex justify-between items-start mb-md relative z-10">
+<span class="inline-flex items-center px-sm py-xs rounded-full bg-primary-container text-on-primary-container font-label-sm text-label-sm font-semibold">
+                        TCF Canada
+                    </span>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-xs">Série Complète - Printemps 2024</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg flex-grow">Épreuve complète incluant compréhension écrite, orale et expression.</p>
+<div class="grid grid-cols-2 gap-sm mb-lg border-y border-outline-variant py-md">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Difficulté</p>
+<p class="font-label-md text-label-md text-on-surface">C1 - Avancé</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Questions</p>
+<p class="font-label-md text-label-md text-on-surface">120 items</p>
+</div>
+</div>
+<div class="flex justify-between items-center mt-auto">
+<span class="flex items-center gap-xs font-label-sm text-label-sm text-[#16a34a]">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_circle">check_circle</span>
+                        Publié
+                    </span>
+<button class="font-label-md text-label-md text-primary hover:underline">Modifier</button>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="bg-surface border border-outline-variant rounded-xl p-lg custom-shadow-level-1 hover:custom-shadow-level-2 transition-shadow flex flex-col group relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-surface-container to-transparent -mr-8 -mt-8 rounded-full opacity-50"></div>
+<div class="flex justify-between items-start mb-md relative z-10">
+<span class="inline-flex items-center px-sm py-xs rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">
+                        TEF Canada
+                    </span>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-xs">Module Lexique &amp; Structure</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg flex-grow">Focus intensif sur la grammaire et le vocabulaire spécifique.</p>
+<div class="grid grid-cols-2 gap-sm mb-lg border-y border-outline-variant py-md">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Difficulté</p>
+<p class="font-label-md text-label-md text-on-surface">B2 - Intermédiaire Fort</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Questions</p>
+<p class="font-label-md text-label-md text-on-surface">40 items</p>
+</div>
+</div>
+<div class="flex justify-between items-center mt-auto">
+<span class="flex items-center gap-xs font-label-sm text-label-sm text-tertiary">
+<span class="material-symbols-outlined text-[16px]" data-icon="edit_document">edit_document</span>
+                        Brouillon
+                    </span>
+<button class="font-label-md text-label-md text-primary hover:underline">Reprendre</button>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="bg-surface border border-outline-variant rounded-xl p-lg custom-shadow-level-1 hover:custom-shadow-level-2 transition-shadow flex flex-col group relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-surface-container to-transparent -mr-8 -mt-8 rounded-full opacity-50"></div>
+<div class="flex justify-between items-start mb-md relative z-10">
+<span class="inline-flex items-center px-sm py-xs rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold">
+                        IELTS General
+                    </span>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-xs">Reading Practice Test 1</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg flex-grow">Section lecture avec textes authentiques et questions types.</p>
+<div class="grid grid-cols-2 gap-sm mb-lg border-y border-outline-variant py-md">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Difficulté</p>
+<p class="font-label-md text-label-md text-on-surface">Band 7.0</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Questions</p>
+<p class="font-label-md text-label-md text-on-surface">40 items</p>
+</div>
+</div>
+<div class="flex justify-between items-center mt-auto">
+<span class="flex items-center gap-xs font-label-sm text-label-sm text-[#16a34a]">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_circle">check_circle</span>
+                        Publié
+                    </span>
+<button class="font-label-md text-label-md text-primary hover:underline">Modifier</button>
+</div>
+</article>
+</section>
+</main>
+<!-- Mobile Bottom NavBar (Hidden on Desktop) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-between items-center px-lg h-20 bg-surface/80 backdrop-blur-md border-t border-outline-variant">
+<a class="flex flex-col items-center gap-xs text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-sm text-label-sm">Accueil</span>
+</a>
+<a class="flex flex-col items-center gap-xs text-primary font-bold" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span class="font-label-sm text-label-sm">Séries</span>
+</a>
+<a class="flex flex-col items-center gap-xs text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-sm text-label-sm">Stats</span>
+</a>
+</nav>
+</body></html>

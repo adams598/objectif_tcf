@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html lang="fr-CA"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TCF Canada - Objectif Canada</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#494551",
+                        "surface-variant": "#e6e0e9",
+                        "surface-dim": "#ded8e0",
+                        "on-surface": "#1d1b20",
+                        "tertiary-fixed": "#ffdf93",
+                        "surface": "#fdf7ff",
+                        "on-tertiary-fixed": "#241a00",
+                        "secondary-fixed-dim": "#cdc0e9",
+                        "primary-fixed": "#e9ddff",
+                        "tertiary-fixed-dim": "#e7c365",
+                        "on-secondary-fixed-variant": "#4b4263",
+                        "surface-container-high": "#ece6ee",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#fdf7ff",
+                        "on-primary-fixed": "#22005d",
+                        "inverse-on-surface": "#f5eff7",
+                        "surface-tint": "#6750a4",
+                        "secondary": "#63597c",
+                        "primary": "#4f378a",
+                        "on-tertiary-container": "#503d00",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "tertiary-container": "#c9a74d",
+                        "on-primary-container": "#e0d2ff",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#4f378a",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#e9ddff",
+                        "outline": "#7a7582",
+                        "on-error": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-background": "#1d1b20",
+                        "inverse-primary": "#cfbcff",
+                        "secondary-container": "#e1d4fd",
+                        "outline-variant": "#cbc4d2",
+                        "surface-container-low": "#f8f2fa",
+                        "tertiary": "#765b00",
+                        "on-secondary-container": "#645a7d",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "background": "#fdf7ff",
+                        "surface-container": "#f2ecf4",
+                        "primary-container": "#6750a4",
+                        "surface-container-highest": "#e6e0e9",
+                        "inverse-surface": "#322f35",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed-dim": "#cfbcff",
+                        "on-secondary-fixed": "#1f1635"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "0.25rem",
+                        "2xl": "3rem",
+                        "sm": "0.5rem",
+                        "md": "1rem",
+                        "lg": "1.5rem",
+                        "xl": "2rem",
+                        "gutter": "24px",
+                        "base": "4px",
+                        "container-max": "1280px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "display-md": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "headline-lg-mobile": ["Geist"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "display-md": ["36px", { "lineHeight": "1.2", "letterSpacing": "-0.03em", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "headline-lg": ["30px", { "lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        };
+    </script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .primary-gradient {
+            background: linear-gradient(135deg, #4f378a 0%, #6750a4 100%);
+        }
+        .soft-violet-shadow {
+            box-shadow: 0 4px 20px rgba(109, 40, 217, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-lg h-20 bg-surface/80 backdrop-blur-md border-b border-outline-variant shadow-sm docked full-width top-0">
+<div class="flex items-center gap-xl">
+<a class="font-display-md text-display-md font-bold text-primary" href="#">Objectif Canada</a>
+<nav class="hidden md:flex gap-lg">
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-label-md text-label-md transition-transform scale-95" href="#">TCF</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">TEF</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">IELTS</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Professeurs</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<button class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors px-md py-sm rounded-xl border border-outline-variant">Connexion</button>
+<button class="font-label-md text-label-md text-on-primary bg-primary hover:bg-primary-container hover:text-on-primary-container transition-colors px-md py-sm rounded-xl shadow-sm">Commencer</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-[100px] pb-2xl px-md md:px-xl max-w-container-max mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Hero Section (Spans 12 cols) -->
+<section class="col-span-1 lg:col-span-12 mb-xl">
+<div class="bg-surface-container rounded-[24px] p-xl flex flex-col md:flex-row items-center gap-xl border border-outline-variant soft-violet-shadow relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-r from-surface-container-low to-transparent z-0"></div>
+<div class="relative z-10 md:w-2/3">
+<div class="inline-flex items-center gap-2 bg-surface rounded-full px-sm py-xs border border-outline-variant mb-md shadow-sm">
+<span class="w-6 h-6 rounded-full overflow-hidden inline-block flex-shrink-0 bg-gray-200">
+<img class="w-full h-full object-cover" data-alt="A macro shot of a crisp, stylized Canadian maple leaf flag icon, designed with sharp geometric lines and vibrant red on a pristine white background. The lighting is studio-quality, casting subtle drop shadows that emphasize a clean, modern corporate SaaS aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBt3odFz53G1RUlw3eIRqnBaiyxH5jlZ-cLEhoooFaDw3eF5a9RiY5m49lx-sCKl47-dLqfhau-7LXVpU8HOptlwGmMBTDD4OHGrCgv2Yr6LADPEcQhVnjDxGD7Ryqp6p7tJZ-eXAkU8A2BXd-rYIslZl9LpqiPTXoXfAgt25wRpo8you_ymzXjVZgR8MPXd01X0HtP9gYAYGBGU3ZcaN17dJFlsUpZn4iernMnMFt77-uA5hFTIXqUXOrsSa2vgeHQEQeDNMolU_g"/>
+</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider pr-2">Cible: Résidence Permanente</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-primary mb-md">TCF Canada : Votre passeport linguistique.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-lg max-w-2xl">Le Test de Connaissance du Français pour le Canada est l'examen officiel reconnu par IRCC. Maîtrisez les 4 compétences requises pour atteindre le niveau NCLC 7 et sécuriser vos points d'immigration.</p>
+<button class="primary-gradient text-on-primary font-label-md text-label-md px-xl py-md rounded-xl shadow-md hover:opacity-90 transition-opacity flex items-center gap-sm">
+                        S'inscrire pour s'entraîner
+                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">arrow_forward</span>
+</button>
+</div>
+<div class="relative z-10 md:w-1/3 flex justify-center">
+<!-- Decorative Graphic -->
+<div class="w-64 h-64 rounded-full bg-primary-container/20 flex items-center justify-center border-4 border-surface border-dashed">
+<span class="material-symbols-outlined text-[120px] text-primary">fact_check</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Structure des 4 épreuves (Bento Grid - Spans 12 cols) -->
+<section class="col-span-1 lg:col-span-12 mb-xl">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-lg">Structure de l'examen</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md">
+<!-- CO -->
+<div class="bg-surface rounded-xl p-md border border-outline-variant hover:border-primary transition-colors soft-violet-shadow flex flex-col h-full group">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center mb-md group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-secondary group-hover:text-on-primary-container">headphones</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface font-bold mb-xs">Compréhension Orale</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md flex-grow">39 questions QCM. Évalue votre capacité à comprendre le français parlé dans des situations quotidiennes.</p>
+<div class="flex items-center justify-between mt-auto pt-sm border-t border-surface-variant">
+<span class="font-label-sm text-label-sm text-secondary">35 minutes</span>
+<span class="font-label-sm text-label-sm text-secondary">39 items</span>
+</div>
+</div>
+<!-- CE -->
+<div class="bg-surface rounded-xl p-md border border-outline-variant hover:border-primary transition-colors soft-violet-shadow flex flex-col h-full group">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center mb-md group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-secondary group-hover:text-on-primary-container">menu_book</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface font-bold mb-xs">Compréhension Écrite</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md flex-grow">39 questions QCM. Teste votre habileté à lire et comprendre des documents écrits de la vie courante.</p>
+<div class="flex items-center justify-between mt-auto pt-sm border-t border-surface-variant">
+<span class="font-label-sm text-label-sm text-secondary">60 minutes</span>
+<span class="font-label-sm text-label-sm text-secondary">39 items</span>
+</div>
+</div>
+<!-- EE -->
+<div class="bg-surface rounded-xl p-md border border-outline-variant hover:border-primary transition-colors soft-violet-shadow flex flex-col h-full group">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center mb-md group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-secondary group-hover:text-on-primary-container">edit_document</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface font-bold mb-xs">Expression Écrite</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md flex-grow">3 tâches. Rédaction de messages, d'articles ou de lettres basées sur des consignes précises.</p>
+<div class="flex items-center justify-between mt-auto pt-sm border-t border-surface-variant">
+<span class="font-label-sm text-label-sm text-secondary">60 minutes</span>
+<span class="font-label-sm text-label-sm text-secondary">3 tâches</span>
+</div>
+</div>
+<!-- EO -->
+<div class="bg-surface rounded-xl p-md border border-outline-variant hover:border-primary transition-colors soft-violet-shadow flex flex-col h-full group">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center mb-md group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-secondary group-hover:text-on-primary-container">mic</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface font-bold mb-xs">Expression Orale</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md flex-grow">3 tâches en entretien. Échange dirigé, exercice en interaction et expression d'un point de vue.</p>
+<div class="flex items-center justify-between mt-auto pt-sm border-t border-surface-variant">
+<span class="font-label-sm text-label-sm text-secondary">12 minutes</span>
+<span class="font-label-sm text-label-sm text-secondary">3 tâches</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Scoring Section (Spans 8 cols) & Interactive Example (Spans 4 cols) -->
+<div class="col-span-1 lg:col-span-12 grid grid-cols-1 lg:grid-cols-12 gap-gutter mb-xl">
+<!-- Scoring NCLC -->
+<section class="col-span-1 lg:col-span-7 bg-surface rounded-xl p-lg border border-outline-variant soft-violet-shadow">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-md">Comprendre le score NCLC</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">Le Niveaux de Compétence Linguistique Canadiens (NCLC) détermine vos points pour l'immigration. Le niveau cible minimum pour Entrée Express est généralement NCLC 7.</p>
+<div class="space-y-md">
+<!-- NCLC 9+ -->
+<div class="bg-surface-container-low rounded-lg p-md border-l-4 border-primary">
+<div class="flex justify-between items-center mb-xs">
+<span class="font-label-md text-label-md font-bold text-primary">NCLC 9 et + (Avancé)</span>
+<span class="font-label-sm text-label-sm bg-primary-container text-on-primary-container px-2 py-1 rounded-full">Maximum de points</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-2 mt-sm">
+<div class="bg-emerald-500 h-2 rounded-full" style="width: 100%"></div>
+</div>
+</div>
+<!-- NCLC 7-8 -->
+<div class="bg-surface-container-low rounded-lg p-md border-l-4 border-secondary">
+<div class="flex justify-between items-center mb-xs">
+<span class="font-label-md text-label-md font-bold text-secondary">NCLC 7 - 8 (Intermédiaire Fort)</span>
+<span class="font-label-sm text-label-sm bg-secondary-container text-on-secondary-container px-2 py-1 rounded-full">Objectif Standard</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-2 mt-sm">
+<div class="primary-gradient h-2 rounded-full" style="width: 75%"></div>
+</div>
+</div>
+<!-- NCLC < 7 -->
+<div class="bg-surface-container-low rounded-lg p-md border-l-4 border-outline">
+<div class="flex justify-between items-center mb-xs">
+<span class="font-label-md text-label-md font-bold text-on-surface-variant">Moins de NCLC 7</span>
+<span class="font-label-sm text-label-sm text-outline">Points limités</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-2 mt-sm">
+<div class="bg-outline-variant h-2 rounded-full" style="width: 45%"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Interactive Example Snippet -->
+<section class="col-span-1 lg:col-span-5 bg-surface-container-low rounded-xl border border-outline-variant p-lg flex flex-col justify-between soft-violet-shadow">
+<div>
+<div class="flex items-center gap-sm mb-md text-primary">
+<span class="material-symbols-outlined">quiz</span>
+<h3 class="font-label-md text-label-md font-bold">Aperçu interactif</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface mb-sm">Compréhension Écrite : Lisez ce court extrait et répondez.</p>
+<div class="bg-surface p-sm rounded-lg border border-outline-variant mb-md text-sm italic text-on-surface-variant">
+                        "La bibliothèque municipale fermera exceptionnellement ses portes ce vendredi à 16h en raison de travaux de maintenance sur le réseau électrique."
+                    </div>
+<p class="font-label-md text-label-md font-bold mb-sm text-on-surface">Pourquoi la bibliothèque ferme-t-elle plus tôt ?</p>
+<div class="space-y-sm">
+<button class="w-full text-left p-sm rounded border border-outline-variant hover:border-primary hover:bg-surface-container font-body-md text-body-md transition-colors text-on-surface-variant">A. Pour un inventaire.</button>
+<button class="w-full text-left p-sm rounded border border-primary bg-primary-container/10 font-body-md text-body-md transition-colors text-primary relative">B. Pour des travaux électriques.
+                            <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-xl px-lg flex flex-col md:flex-row justify-between items-center gap-lg bg-surface-container-lowest border-t border-outline-variant mt-auto">
+<div class="font-headline-lg text-headline-lg text-primary">Objectif Canada</div>
+<div class="font-body-md text-body-md text-on-surface-variant">© 2024 Objectif Canada TCF. Tous droits réservés.</div>
+<div class="flex gap-md">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline opacity-80 hover:opacity-100 transition-opacity" href="#">Politique de confidentialité</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline opacity-80 hover:opacity-100 transition-opacity" href="#">Conditions d'utilisation</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline opacity-80 hover:opacity-100 transition-opacity" href="#">Contact</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline opacity-80 hover:opacity-100 transition-opacity" href="#">Blog</a>
+</div>
+</footer>
+</body></html>

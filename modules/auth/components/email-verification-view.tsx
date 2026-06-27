@@ -1,0 +1,154 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+export function EmailVerificationView() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+  const email = searchParams.get("email");
+  const [status, setStatus] = useState<"pending" | "verifying" | "success" | "error">(
+    token ? "verifying" : "pending"
+  );
+  const [isResending, setIsResending] = useState(false);
+
+  useEffect(() => {
+    if (token) {
+      verifyToken(token);
+    }
+  }, [token]);
+
+  const verifyToken = async (t: string) => {
+    try {
+      const response = await fetch("/api/auth/verification-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: t }),
+      });
+
+      setStatus(response.ok ? "success" : "error");
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  const resendEmail = async () => {
+    if (!email) return;
+    setIsResending(true);
+    try {
+      await fetch("/api/auth/verification-email", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  const configs = {
+    pending: {
+      icon: "mail_outline",
+      iconColor: "text-primary",
+      iconBg: "bg-primary/10",
+      title: "Vérifiez votre email",
+      description: `Un email de vérification a été envoyé à ${email || "votre adresse email"}. Cliquez sur le lien pour activer votre compte.`,
+      content: (
+        <>
+          <div className="bg-surface-container rounded-xl p-md text-center">
+            <p className="font-label-sm text-label-sm text-on-surface-variant">
+              Vous n&apos;avez pas reçu l&apos;email ?
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-sm text-primary"
+              onClick={resendEmail}
+              loading={isResending}
+            >
+              Renvoyer l&apos;email
+            </Button>
+          </div>
+          <Button asChild variant="secondary" size="lg" className="w-full">
+            <Link href="/connexion">Retour à la connexion</Link>
+          </Button>
+        </>
+      ),
+    },
+    verifying: {
+      icon: "hourglass_top",
+      iconColor: "text-primary",
+      iconBg: "bg-primary/10",
+      title: "Vérification en cours…",
+      description: "Nous vérifions votre email, veuillez patienter.",
+      content: (
+        <div className="flex justify-center">
+          <span className="material-symbols-outlined text-[48px] text-primary animate-spin">
+            autorenew
+          </span>
+        </div>
+      ),
+    },
+    success: {
+      icon: "check_circle",
+      iconColor: "text-success",
+      iconBg: "bg-success-container",
+      title: "Email vérifié !",
+      description: "Votre compte est maintenant activé. Vous pouvez vous connecter.",
+      content: (
+        <Button asChild size="lg" className="w-full">
+          <Link href="/connexion">
+            Accéder à mon espace
+            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </Link>
+        </Button>
+      ),
+    },
+    error: {
+      icon: "error_outline",
+      iconColor: "text-error",
+      iconBg: "bg-error-container",
+      title: "Lien expiré",
+      description: "Ce lien de vérification est invalide ou a expiré.",
+      content: (
+        <>
+          <Button asChild size="lg" className="w-full">
+            <Link href="/inscription">Créer un nouveau compte</Link>
+          </Button>
+          <Button asChild variant="secondary" size="default" className="w-full">
+            <Link href="/connexion">Se connecter</Link>
+          </Button>
+        </>
+      ),
+    },
+  };
+
+  const config = configs[status];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <Card variant="elevated" className="shadow-violet-lg">
+        <CardHeader className="text-center">
+          <div className={`w-16 h-16 ${config.iconBg} rounded-2xl mx-auto mb-md flex items-center justify-center`}>
+            <span className={`material-symbols-outlined text-[32px] ${config.iconColor}`}>
+              {config.icon}
+            </span>
+          </div>
+          <CardTitle className="text-[24px]">{config.title}</CardTitle>
+          <CardDescription>{config.description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-sm">{config.content}</div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}

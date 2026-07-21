@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useTranslation } from "@/components/providers/locale-provider";
 
 const COUNTRIES = [
@@ -16,13 +15,15 @@ const COUNTRIES = [
 
 function FlagIcon({ code }: { code: string }) {
   return (
-    <Image
-      src={`https://flagcdn.com/w40/${code}.png`}
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`/images/flags/${code}.png`}
       alt=""
       width={28}
       height={20}
+      loading="lazy"
+      decoding="async"
       className="h-5 w-7 shrink-0 rounded-sm object-cover shadow-sm"
-      unoptimized
     />
   );
 }

@@ -3,6 +3,8 @@ import { Geist, Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
 const geist = Geist({
   variable: "--font-geist",
   subsets: ["latin"],
@@ -16,6 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(appUrl),
   title: {
     default: "Objectif TCF",
     template: "%s | Objectif TCF",
@@ -87,6 +90,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr-FR" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body
         className={`${geist.variable} ${inter.variable} bg-background text-on-background font-sans overflow-x-hidden antialiased`}
       >

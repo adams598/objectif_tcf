@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const LOGO_FULL = "/images/logo-nav.png";
@@ -16,6 +19,25 @@ interface BrandLogoProps {
   priority?: boolean;
 }
 
+function LogoFallback({ variant }: { variant: "full" | "icon" }) {
+  if (variant === "icon") {
+    return (
+      <span
+        className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-primary text-on-primary font-bold text-sm"
+        aria-hidden
+      >
+        TCF
+      </span>
+    );
+  }
+
+  return (
+    <span className="font-display-md text-display-md font-bold text-primary whitespace-nowrap">
+      Objectif TCF
+    </span>
+  );
+}
+
 export function BrandLogo({
   variant = "full",
   href = "/",
@@ -23,21 +45,35 @@ export function BrandLogo({
   imageClassName,
   priority = false,
 }: BrandLogoProps) {
+  const [imgError, setImgError] = useState(false);
   const isFull = variant === "full";
 
-  const content = (
-    <Image
-      src={isFull ? LOGO_FULL : LOGO_ICON}
-      alt="Objectif TCF"
-      width={isFull ? LOGO_FULL_WIDTH : 40}
-      height={isFull ? LOGO_FULL_HEIGHT : 40}
-      priority={priority}
+  const content = imgError ? (
+    <LogoFallback variant={variant} />
+  ) : (
+    <span
       className={cn(
-        "w-auto object-contain",
-        isFull ? "h-12 sm:h-14 md:h-16 w-auto max-w-[min(100%,220px)] sm:max-w-[260px] md:max-w-[280px]" : "h-9 w-9 sm:h-10 sm:w-10",
-        imageClassName
+        "inline-flex items-center",
+        isFull && "rounded-lg bg-white px-2 py-1 shadow-sm"
       )}
-    />
+    >
+      <Image
+        src={isFull ? LOGO_FULL : LOGO_ICON}
+        alt="Objectif TCF"
+        width={isFull ? LOGO_FULL_WIDTH : 40}
+        height={isFull ? LOGO_FULL_HEIGHT : 40}
+        priority={priority}
+        unoptimized
+        onError={() => setImgError(true)}
+        className={cn(
+          "w-auto object-contain",
+          isFull
+            ? "h-12 sm:h-14 md:h-16 w-auto max-w-[min(100%,220px)] sm:max-w-[260px] md:max-w-[280px]"
+            : "h-9 w-9 sm:h-10 sm:w-10",
+          imageClassName
+        )}
+      />
+    </span>
   );
 
   if (href == null || href === "") {

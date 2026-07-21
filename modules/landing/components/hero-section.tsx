@@ -177,10 +177,11 @@ export function HeroSection() {
 
           <div className="w-full h-48 mt-lg rounded-2xl overflow-hidden shadow-violet-md border border-outline-variant relative">
             <Image
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOGaa5xOCfBAz3bv_-Nat00-RxPMRM-ubS3WUJEcT5pmmVMsGWn2BwSCfnAZiPiaTSxRYTxNNS-txKGqQ8rcgEpxrWri_QrRlK9EoeVUbBoHcQ8CAJLW5IlVjKoCkWyhvR-gRIxrTu9-ycbgOYCPQP1VHPDCQ_2wQlIjeBrX3aVhHXkEeUTuiuLT-sKNuRXCwqJdHrxqsK0G7cuY0Un_62xQiiHwFKpeAAZux5F_p7TPKsJwKIbyv16v8ReJBC83smTKzczx4a0vg"
+              src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80"
               alt={t("landing.studentAlt")}
               fill
               className="object-cover"
+              sizes="(max-width: 768px) 100vw, 400px"
             />
             <div className="absolute bottom-md left-md bg-surface-container-lowest/90 backdrop-blur-sm p-sm rounded-lg border border-outline-variant flex items-center gap-sm">
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">

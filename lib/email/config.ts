@@ -1,12 +1,10 @@
 const DEFAULT_FROM_NAME = "Objectif TCF";
 const DEV_FROM_ADDRESS = "onboarding@resend.dev";
 
+import { resolveAppUrl } from "@/lib/env/app-url";
+
 export function getAppUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.APP_URL ??
-    "http://localhost:3000"
-  );
+  return resolveAppUrl();
 }
 
 /** Adresse expéditeur no-reply formatée pour Resend. */

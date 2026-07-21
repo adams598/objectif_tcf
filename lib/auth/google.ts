@@ -1,7 +1,9 @@
 import { randomUUID } from "crypto";
+import { getGoogleCallbackUriFromOrigin, resolveAppUrl } from "@/lib/env/app-url";
 
 export const GOOGLE_OAUTH_STATE_COOKIE = "oc_google_oauth_state";
 export const GOOGLE_OAUTH_ACTION_COOKIE = "oc_google_oauth_action";
+export const GOOGLE_OAUTH_REDIRECT_URI_COOKIE = "oc_google_redirect_uri";
 
 export interface GoogleUserInfo {
   id: string;
@@ -21,16 +23,14 @@ interface GoogleTokenResponse {
 }
 
 export function getAppUrl(): string {
-  const url =
-    process.env.APP_URL ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    "http://localhost:3000";
-  return url.replace(/\/$/, "");
+  return resolveAppUrl();
 }
 
 export function getGoogleRedirectUri(): string {
   return `${getAppUrl()}/api/auth/google/callback`;
 }
+
+export { getGoogleCallbackUriFromOrigin };
 
 export function getGoogleCredentials(): {
   clientId: string;
@@ -56,7 +56,7 @@ export function isGoogleOAuthConfigured(): boolean {
   return getGoogleCredentials() !== null;
 }
 
-export function buildGoogleAuthUrl(state: string): string {
+export function buildGoogleAuthUrl(state: string, redirectUri: string): string {
   const credentials = getGoogleCredentials();
   if (!credentials) {
     throw new Error("GOOGLE_CLIENT_ID is not configured");
@@ -66,7 +66,7 @@ export function buildGoogleAuthUrl(state: string): string {
 
   const params = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: getGoogleRedirectUri(),
+    redirect_uri: redirectUri,
     response_type: "code",
     scope: "openid email profile",
     state,
@@ -78,7 +78,8 @@ export function buildGoogleAuthUrl(state: string): string {
 }
 
 export async function exchangeGoogleCode(
-  code: string
+  code: string,
+  redirectUri: string
 ): Promise<GoogleTokenResponse> {
   const credentials = getGoogleCredentials();
   if (!credentials) {
@@ -94,7 +95,7 @@ export async function exchangeGoogleCode(
       code,
       client_id: clientId,
       client_secret: clientSecret,
-      redirect_uri: getGoogleRedirectUri(),
+      redirect_uri: redirectUri,
       grant_type: "authorization_code",
     }),
   });

@@ -1,23 +1,35 @@
 "use client";
 
-import React from "react";
+import Image from "next/image";
 import { useTranslation } from "@/components/providers/locale-provider";
+
+const COUNTRIES = [
+  { code: "ca", nameKey: "landingFeatures.countryCanada" as const },
+  { code: "cd", nameKey: "landingFeatures.countryRdc" as const },
+  { code: "ci", nameKey: "landingFeatures.countryCoteIvoire" as const },
+  { code: "sn", nameKey: "landingFeatures.countrySenegal" as const },
+  { code: "ma", nameKey: "landingFeatures.countryMaroc" as const },
+  { code: "cm", nameKey: "landingFeatures.countryCameroun" as const },
+  { code: "mg", nameKey: "landingFeatures.countryMadagascar" as const },
+  { code: "ht", nameKey: "landingFeatures.countryHaiti" as const },
+];
+
+function FlagIcon({ code }: { code: string }) {
+  return (
+    <Image
+      src={`https://flagcdn.com/w40/${code}.png`}
+      alt=""
+      width={28}
+      height={20}
+      className="h-5 w-7 shrink-0 rounded-sm object-cover shadow-sm"
+      unoptimized
+    />
+  );
+}
 
 export function FlagCarousel() {
   const { t } = useTranslation();
-
-  const countries = [
-    { flag: "🇨🇦", nameKey: "landingFeatures.countryCanada" as const },
-    { flag: "🇨🇩", nameKey: "landingFeatures.countryRdc" as const },
-    { flag: "🇨🇮", nameKey: "landingFeatures.countryCoteIvoire" as const },
-    { flag: "🇸🇳", nameKey: "landingFeatures.countrySenegal" as const },
-    { flag: "🇲🇦", nameKey: "landingFeatures.countryMaroc" as const },
-    { flag: "🇨🇲", nameKey: "landingFeatures.countryCameroun" as const },
-    { flag: "🇲🇬", nameKey: "landingFeatures.countryMadagascar" as const },
-    { flag: "🇭🇹", nameKey: "landingFeatures.countryHaiti" as const },
-  ];
-
-  const doubled = [...countries, ...countries];
+  const doubled = [...COUNTRIES, ...COUNTRIES];
 
   return (
     <section className="py-xl bg-surface-container-low border-y border-surface-variant overflow-hidden">
@@ -33,11 +45,11 @@ export function FlagCarousel() {
         <div className="carousel-track inline-flex items-center gap-xl px-xl">
           {doubled.map((country, index) => (
             <div
-              key={`${country.nameKey}-${index}`}
+              key={`${country.code}-${index}`}
               className="flex items-center gap-sm px-md py-sm bg-surface rounded-full border border-surface-variant shadow-sm w-[180px] justify-center shrink-0"
             >
-              <span className="text-2xl">{country.flag}</span>
-              <span className="font-label-md text-label-md text-on-surface font-semibold">
+              <FlagIcon code={country.code} />
+              <span className="font-label-md text-label-md text-on-surface font-semibold truncate">
                 {t(country.nameKey)}
               </span>
             </div>

@@ -7,7 +7,9 @@ import { setAuthCookies } from "@/lib/auth/cookies";
 import {
   exchangeGoogleCode,
   fetchGoogleUserInfo,
+  getGoogleRedirectUri,
   GOOGLE_OAUTH_ACTION_COOKIE,
+  GOOGLE_OAUTH_REDIRECT_URI_COOKIE,
   GOOGLE_OAUTH_STATE_COOKIE,
 } from "@/lib/auth/google";
 
@@ -101,6 +103,11 @@ export async function GET(request: NextRequest) {
   cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE);
   cookieStore.delete(GOOGLE_OAUTH_ACTION_COOKIE);
 
+  const redirectUri =
+    cookieStore.get(GOOGLE_OAUTH_REDIRECT_URI_COOKIE)?.value ??
+    getGoogleRedirectUri();
+  cookieStore.delete(GOOGLE_OAUTH_REDIRECT_URI_COOKIE);
+
   if (oauthError) {
     console.error("[Google OAuth] Provider error:", oauthError);
     return redirectWithError(request, "google_denied", action);
@@ -111,7 +118,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const tokens = await exchangeGoogleCode(code);
+    const tokens = await exchangeGoogleCode(code, redirectUri);
     const googleUser = await fetchGoogleUserInfo(tokens.access_token);
 
     if (!googleUser.email || !googleUser.verified_email) {

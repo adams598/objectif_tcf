@@ -6,8 +6,11 @@ import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/components/providers/locale-provider";
+import { toast } from "sonner";
 
 export function EmailVerificationView() {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const email = searchParams.get("email");
@@ -22,12 +25,12 @@ export function EmailVerificationView() {
     }
   }, [token]);
 
-  const verifyToken = async (t: string) => {
+  const verifyToken = async (verifyToken: string) => {
     try {
       const response = await fetch("/api/auth/verification-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: t }),
+        body: JSON.stringify({ token: verifyToken }),
       });
 
       setStatus(response.ok ? "success" : "error");
@@ -40,11 +43,19 @@ export function EmailVerificationView() {
     if (!email) return;
     setIsResending(true);
     try {
-      await fetch("/api/auth/verification-email", {
+      const response = await fetch("/api/auth/verification-email", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
+
+      if (response.ok) {
+        toast.success(t("auth.resendEmailSuccess"));
+      } else {
+        toast.error(t("auth.resendEmailError"));
+      }
+    } catch {
+      toast.error(t("auth.resendEmailError"));
     } finally {
       setIsResending(false);
     }
@@ -55,13 +66,15 @@ export function EmailVerificationView() {
       icon: "mail_outline",
       iconColor: "text-primary",
       iconBg: "bg-primary/10",
-      title: "Vérifiez votre email",
-      description: `Un email de vérification a été envoyé à ${email || "votre adresse email"}. Cliquez sur le lien pour activer votre compte.`,
+      title: t("auth.verifyEmailTitle"),
+      description: t("auth.verifyPendingDesc", {
+        email: email || t("auth.verifyPendingEmailFallback"),
+      }),
       content: (
         <>
           <div className="bg-surface-container rounded-xl p-md text-center">
             <p className="font-label-sm text-label-sm text-on-surface-variant">
-              Vous n&apos;avez pas reçu l&apos;email ?
+              {t("auth.resendPrompt")}
             </p>
             <Button
               variant="ghost"
@@ -70,11 +83,11 @@ export function EmailVerificationView() {
               onClick={resendEmail}
               loading={isResending}
             >
-              Renvoyer l&apos;email
+              {t("auth.resendEmail")}
             </Button>
           </div>
           <Button asChild variant="secondary" size="lg" className="w-full">
-            <Link href="/connexion">Retour à la connexion</Link>
+            <Link href="/connexion">{t("auth.backToLogin")}</Link>
           </Button>
         </>
       ),
@@ -83,8 +96,8 @@ export function EmailVerificationView() {
       icon: "hourglass_top",
       iconColor: "text-primary",
       iconBg: "bg-primary/10",
-      title: "Vérification en cours…",
-      description: "Nous vérifions votre email, veuillez patienter.",
+      title: t("auth.verifyingTitle"),
+      description: t("auth.verifyingDesc"),
       content: (
         <div className="flex justify-center">
           <span className="material-symbols-outlined text-[48px] text-primary animate-spin">
@@ -97,12 +110,12 @@ export function EmailVerificationView() {
       icon: "check_circle",
       iconColor: "text-success",
       iconBg: "bg-success-container",
-      title: "Email vérifié !",
-      description: "Votre compte est maintenant activé. Vous pouvez vous connecter.",
+      title: t("auth.verifySuccessTitle"),
+      description: t("auth.verifySuccessDesc"),
       content: (
         <Button asChild size="lg" className="w-full">
           <Link href="/connexion">
-            Accéder à mon espace
+            {t("auth.accessSpace")}
             <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
           </Link>
         </Button>
@@ -112,15 +125,31 @@ export function EmailVerificationView() {
       icon: "error_outline",
       iconColor: "text-error",
       iconBg: "bg-error-container",
-      title: "Lien expiré",
-      description: "Ce lien de vérification est invalide ou a expiré.",
+      title: t("auth.linkExpired"),
+      description: t("auth.linkExpiredDesc"),
       content: (
         <>
+          {email ? (
+            <div className="bg-surface-container rounded-xl p-md text-center">
+              <p className="font-label-sm text-label-sm text-on-surface-variant">
+                {t("auth.resendPrompt")}
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-sm text-primary"
+                onClick={resendEmail}
+                loading={isResending}
+              >
+                {t("auth.resendEmail")}
+              </Button>
+            </div>
+          ) : null}
           <Button asChild size="lg" className="w-full">
-            <Link href="/inscription">Créer un nouveau compte</Link>
+            <Link href="/inscription">{t("auth.createNewAccount")}</Link>
           </Button>
           <Button asChild variant="secondary" size="default" className="w-full">
-            <Link href="/connexion">Se connecter</Link>
+            <Link href="/connexion">{t("auth.login")}</Link>
           </Button>
         </>
       ),

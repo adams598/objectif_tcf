@@ -2,12 +2,13 @@ import { HeroSection } from "@/modules/landing/components/hero-section";
 import { FlagCarousel } from "@/modules/landing/components/flag-carousel";
 import { OnboardingTeaser } from "@/modules/landing/components/onboarding-teaser";
 import { FeaturesBento } from "@/modules/landing/components/features-bento";
+import { PricingTeaser } from "@/modules/landing/components/pricing-teaser";
 import { Testimonials } from "@/modules/landing/components/testimonials";
 import { CtaSection } from "@/modules/landing/components/cta-section";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Objectif Canada TCF — Le goût des C2 🍁",
+  title: "Objectif TCF — Le goût des C2 🍁",
   description:
     "L'entraînement immersif conçu pour maximiser votre score NCLC. Des simulations réelles, un feedback instantané, et votre passeport pour le Canada.",
 };
@@ -19,6 +20,7 @@ export default function HomePage() {
       <FlagCarousel />
       <OnboardingTeaser />
       <FeaturesBento />
+      <PricingTeaser />
       <Testimonials />
       <CtaSection />
     </div>

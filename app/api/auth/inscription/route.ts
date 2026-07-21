@@ -8,6 +8,7 @@ import {
   serverErrorResponse,
 } from "@/lib/utils/api-response";
 import { randomUUID } from "crypto";
+import { sendVerificationEmail } from "@/lib/email/send-verification-email";
 
 const registerSchema = z.object({
   firstName: z.string().min(2),
@@ -74,50 +75,26 @@ export async function POST(request: NextRequest) {
       data: { userId: user.id },
     });
 
-    // Send verification email (non-blocking)
-    void sendVerificationEmail(user.email, user.name, verificationToken).catch(
-      console.error
+    const sendResult = await sendVerificationEmail(
+      user.email,
+      user.name,
+      verificationToken
     );
+    if (!sendResult.ok) {
+      console.error("[Inscription] Email verification failed:", sendResult.error);
+    }
 
     return createdResponse(
-      { userId: user.id, email: user.email },
-      "Compte créé avec succès. Vérifiez votre email."
+      {
+        userId: user.id,
+        email: user.email,
+        emailSent: sendResult.ok,
+      },
+      sendResult.ok
+        ? "Compte créé avec succès. Vérifiez votre email."
+        : "Compte créé. L'envoi de l'email a échoué — utilisez « Renvoyer l'email » sur la page de vérification."
     );
   } catch (error) {
     return serverErrorResponse(error);
   }
-}
-
-async function sendVerificationEmail(
-  email: string,
-  name: string,
-  token: string
-) {
-  const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verification-email?token=${token}`;
-
-  if (!process.env.RESEND_API_KEY) {
-    console.log(`[DEV] Verification URL for ${email}: ${verificationUrl}`);
-    return;
-  }
-
-  const { Resend } = await import("resend");
-  const resend = new Resend(process.env.RESEND_API_KEY);
-
-  await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL ?? "noreply@objectifcanada.ca",
-    to: email,
-    subject: "Vérifiez votre email — Objectif Canada",
-    html: `
-      <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #4f378a;">Bienvenue sur Objectif Canada, ${name} !</h1>
-        <p>Cliquez sur le lien ci-dessous pour vérifier votre email :</p>
-        <a href="${verificationUrl}" style="display: inline-block; background: linear-gradient(135deg, #4f378a, #6750a4); color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: 600;">
-          Vérifier mon email
-        </a>
-        <p style="color: #7a7582; font-size: 14px; margin-top: 24px;">
-          Ce lien expire dans 24 heures.
-        </p>
-      </div>
-    `,
-  });
 }

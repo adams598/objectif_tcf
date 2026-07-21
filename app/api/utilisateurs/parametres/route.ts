@@ -6,14 +6,18 @@ import {
   successResponse,
   serverErrorResponse,
   validationErrorResponse,
+  unauthorizedResponse,
 } from "@/lib/utils/api-response";
+import { normalizeUserSettings } from "@/lib/types/user-settings";
 
 const settingsSchema = z.object({
   language: z.string().max(10).optional(),
-  theme: z.string().max(20).optional(),
+  theme: z.enum(["light", "dark"]).optional(),
   emailNotifications: z.boolean().optional(),
   pushNotifications: z.boolean().optional(),
   studyReminders: z.boolean().optional(),
+  examResultNotifications: z.boolean().optional(),
+  weeklyReportNotifications: z.boolean().optional(),
   reminderTime: z.string().max(10).optional(),
   weeklyGoalDays: z.number().int().min(1).max(7).optional(),
   dailyGoalMinutes: z.number().int().min(5).max(480).optional(),
@@ -29,8 +33,22 @@ export async function GET(_req: NextRequest) {
       where: { userId: user.userId },
     });
 
-    return successResponse(settings);
+    if (!settings) {
+      const created = await prisma.userSettings.create({
+        data: { userId: user.userId },
+      });
+      return successResponse(
+        normalizeUserSettings(created as Record<string, unknown>)
+      );
+    }
+
+    return successResponse(
+      normalizeUserSettings(settings as Record<string, unknown>)
+    );
   } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return unauthorizedResponse();
+    }
     return serverErrorResponse(error);
   }
 }
@@ -51,8 +69,11 @@ export async function PATCH(req: NextRequest) {
       update: parsed.data,
     });
 
-    return successResponse(settings);
+    return successResponse(normalizeUserSettings(settings as Record<string, unknown>));
   } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return unauthorizedResponse();
+    }
     return serverErrorResponse(error);
   }
 }

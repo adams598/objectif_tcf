@@ -23,6 +23,10 @@ enum ExamType {
   TCF_CANADA
   TEF_CANADA
   IELTS
+  DELF
+  DALF
+  TOEFL
+  AUTRE
 }
 
 enum Skill {
@@ -80,6 +84,13 @@ enum CorrectionStatus {
   DISPUTED
 }
 
+enum WritingCorrectionJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 enum NotificationType {
   EXAM_RESULT
   NEW_MESSAGE
@@ -106,9 +117,42 @@ enum SubscriptionStatus {
 
 enum PaymentStatus {
   PENDING
+  PROCESSING
   SUCCEEDED
   FAILED
   REFUNDED
+  CANCELLED
+}
+
+enum PaymentProvider {
+  PAWAPAY
+  CINETPAY
+  FLUTTERWAVE
+  STRIPE
+  PAYPAL
+  MOCK
+}
+
+enum PaymentMethod {
+  CARD
+  MOBILE_MONEY
+  MOBILE_MONEY_MTN
+  MOBILE_MONEY_ORANGE
+  MOBILE_MONEY_AIRTEL
+  MOBILE_MONEY_WAVE
+  MOBILE_MONEY_MOOV
+  PAYPAL
+  GOOGLE_PAY
+  BANK_TRANSFER
+  SEPA
+  UNKNOWN
+}
+
+enum PaymentCurrency {
+  XAF
+  XOF
+  USD
+  EUR
 }
 
 enum ImmigrationObjective {
@@ -180,6 +224,7 @@ model User {
   communityLikes    CommunityLike[]
   corrections       Correction[]       @relation("CorrectorCorrections")
   submittedWork     Correction[]       @relation("StudentCorrections")
+  writingCorrectionJobs WritingCorrectionJob[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -264,6 +309,7 @@ model EmailVerification {
 model Subscription {
   id              String             @id @default(uuid())
   userId          String
+  examType        ExamType           @default(TCF_CANADA)
   plan            SubscriptionPlan   @default(FREE)
   status          SubscriptionStatus @default(ACTIVE)
   currentPeriodStart DateTime
@@ -278,20 +324,37 @@ model Subscription {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([userId, examType])
   @@index([userId])
   @@index([status])
+  @@index([userId, examType, status])
   @@index([stripeCustomerId])
 }
 
 model Payment {
-  id               String        @id @default(uuid())
+  id               String           @id @default(uuid())
   userId           String
   subscriptionId   String?
-  amount           Int           // centimes
-  currency         String        @default("CAD")
-  status           PaymentStatus @default(PENDING)
-  stripePaymentId  String?       @unique
+  amount           Int
+  currency         PaymentCurrency  @default(XAF)
+  status           PaymentStatus    @default(PENDING)
+  provider         PaymentProvider?
+  method           PaymentMethod?
+  providerReference String?         @unique
+  externalId       String?          @unique
+  checkoutUrl      String?
+  stripePaymentId  String?          @unique
   description      String?
+  examType         ExamType?
+  offerId          String?
+  subscriptionDays Int?
+  amountXaf        Int?
+  amountXof        Int?
+  amountUsd        Int?
+  amountEur        Int?
+  metadata         Json?
+  failureReason    String?
+  paidAt           DateTime?
 
   user         User          @relation(fields: [userId], references: [id])
   subscription Subscription? @relation(fields: [subscriptionId], references: [id])
@@ -302,6 +365,8 @@ model Payment {
   @@index([userId])
   @@index([subscriptionId])
   @@index([status])
+  @@index([provider])
+  @@index([createdAt])
 }
 
 // ===========================
@@ -528,6 +593,32 @@ model Correction {
   @@index([status])
 }
 
+model WritingCorrectionJob {
+  id               String                     @id @default(uuid())
+  status           WritingCorrectionJobStatus @default(PENDING)
+  seriesId         String
+  userId           String?
+  accessToken      String                     @unique
+  tasksPayload     Json
+  provisionalScore Json
+  result           Json?
+  resultSource     String?
+  attempts         Int                        @default(0)
+  lastError        String?
+  expiresAt        DateTime
+  completedAt      DateTime?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([accessToken])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 // ===========================
 // COMMUNITY & MESSAGING
 // ===========================
@@ -604,6 +695,46 @@ model Message {
 }
 
 // ===========================
+// PRICING & OFFERS
+// ===========================
+
+model ExamPricingConfig {
+  id             String   @id @default(uuid())
+  examType       ExamType @unique
+  pricePerDayXaf Int      @default(1000)
+  pricePerDayUsd Int      @default(2)
+  pricePerDayXof Int      @default(1250)
+  isActive       Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SubscriptionOffer {
+  id         String    @id @default(uuid())
+  examType   ExamType
+  name       String
+  slug       String
+  subtitle   String?
+  priceXaf   Int
+  priceUsd   Int
+  priceXof   Int
+  baseDays   Int
+  bonusDays  Int       @default(0)
+  features   Json      @default("[]")
+  sortOrder  Int       @default(0)
+  isFeatured Boolean   @default(true)
+  isActive   Boolean   @default(true)
+  deletedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([examType, slug])
+  @@index([examType, isFeatured, isActive])
+}
+
+// ===========================
 // NOTIFICATIONS & SETTINGS
 // ===========================
 
@@ -627,11 +758,13 @@ model Notification {
 model UserSettings {
   id                   String  @id @default(uuid())
   userId               String  @unique
-  language             String  @default("fr-CA")
+  language             String  @default("fr-FR")
   theme                String  @default("light")
-  emailNotifications   Boolean @default(true)
-  pushNotifications    Boolean @default(false)
-  studyReminders       Boolean @default(true)
+  emailNotifications        Boolean @default(true)
+  pushNotifications         Boolean @default(false)
+  studyReminders            Boolean @default(true)
+  examResultNotifications   Boolean @default(true)
+  weeklyReportNotifications Boolean @default(true)
   reminderTime         String  @default("09:00")
   weeklyGoalDays       Int     @default(5)
   dailyGoalMinutes     Int     @default(30)

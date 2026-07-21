@@ -3,18 +3,22 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/session";
 import {
+  EXAM_TAB_TO_TYPE,
+  type ExamTab,
+} from "@/lib/pricing/constants";
+import { resolveExamTypeFromQuery } from "@/lib/exams/catalog";
+import { getActiveExamEntitlements } from "@/lib/subscriptions/access";
+import { buildSeriesGroups } from "@/lib/series/build-series-groups";
+import {
   successResponse,
   serverErrorResponse,
   validationErrorResponse,
+  unauthorizedResponse,
 } from "@/lib/utils/api-response";
 
 const querySchema = z.object({
-  skill: z
-    .enum(["COMPREHENSION_ORALE", "COMPREHENSION_ECRITE", "EXPRESSION_ECRITE", "EXPRESSION_ORALE", "LEXIQUE"])
-    .optional(),
-  difficulty: z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]).optional(),
-  page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(50).default(12),
+  examen: z.string().optional(),
+  examType: z.string().optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -27,39 +31,70 @@ export async function GET(req: NextRequest) {
       return validationErrorResponse(parsed.error.flatten().fieldErrors);
     }
 
-    const { skill, difficulty, page, limit } = parsed.data;
-    const skip = (page - 1) * limit;
+    const { examen, examType: examTypeParam } = parsed.data;
+    const examType =
+      resolveExamTypeFromQuery(examen, examTypeParam) ?? EXAM_TAB_TO_TYPE.tcf;
 
-    const where = {
-      ...(skill ? { skill } : {}),
-      ...(difficulty ? { difficulty } : {}),
-      deletedAt: null,
-    };
+    const entitlements = await getActiveExamEntitlements(user.userId);
+    const entitledExamTypes = new Set(entitlements.map((e) => e.examType));
 
-    const [series, total] = await Promise.all([
-      prisma.examSeries.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-        include: {
-          _count: { select: { questions: true } },
-          attempts: {
-            where: { userId: user.userId },
-            orderBy: { createdAt: "desc" },
-            take: 1,
-            select: { status: true, score: true, percentage: true },
-          },
+    const series = await prisma.examSeries.findMany({
+      where: {
+        exam: { type: examType, isActive: true, deletedAt: null },
+        isPublished: true,
+        deletedAt: null,
+        skill: {
+          in: [
+            "COMPREHENSION_ORALE",
+            "COMPREHENSION_ECRITE",
+            "EXPRESSION_ECRITE",
+            "EXPRESSION_ORALE",
+          ],
         },
-      }),
-      prisma.examSeries.count({ where }),
-    ]);
+      },
+      orderBy: [{ order: "asc" }, { skill: "asc" }],
+      include: {
+        exam: { select: { type: true, title: true } },
+        _count: { select: { questions: true } },
+        attempts: {
+          where: { userId: user.userId },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { status: true, score: true, percentage: true },
+        },
+      },
+    });
+
+    const mapped = series.map((item) => {
+      const hasAccess =
+        item.isFree ||
+        user.role === "ADMIN" ||
+        user.role === "SUPER_ADMIN" ||
+        entitledExamTypes.has(item.exam.type);
+
+      return {
+        ...item,
+        isAccessible: hasAccess,
+        isLocked: !hasAccess,
+      };
+    });
+
+    const groups = buildSeriesGroups(
+      mapped,
+      entitledExamTypes,
+      examType,
+      user.role
+    );
 
     return successResponse({
-      series,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      groups,
+      series: mapped,
+      entitlements,
     });
   } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return unauthorizedResponse();
+    }
     return serverErrorResponse(error);
   }
 }

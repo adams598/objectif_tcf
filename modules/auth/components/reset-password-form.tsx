@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -11,29 +11,35 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useTranslation } from "@/components/providers/locale-provider";
 
-const schema = z
-  .object({
-    password: z
-      .string()
-      .min(8, "Mot de passe trop court (min 8 caractères)")
-      .regex(/[A-Z]/, "Doit contenir au moins une majuscule")
-      .regex(/[0-9]/, "Doit contenir au moins un chiffre"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Les mots de passe ne correspondent pas",
-    path: ["confirmPassword"],
-  });
-
-type FormData = z.infer<typeof schema>;
+type FormData = { password: string; confirmPassword: string };
 
 export function ResetPasswordForm() {
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const schema = useMemo(
+    () =>
+      z
+        .object({
+          password: z
+            .string()
+            .min(8, t("auth.passwordMin"))
+            .regex(/[A-Z]/, t("auth.passwordUppercase"))
+            .regex(/[0-9]/, t("auth.passwordDigit")),
+          confirmPassword: z.string(),
+        })
+        .refine((data) => data.password === data.confirmPassword, {
+          message: t("auth.passwordsMismatch"),
+          path: ["confirmPassword"],
+        }),
+    [t]
+  );
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -41,7 +47,7 @@ export function ResetPasswordForm() {
 
   const onSubmit = async (data: FormData) => {
     if (!token) {
-      toast.error("Lien invalide ou expiré");
+      toast.error(t("auth.invalidLink"));
       return;
     }
 
@@ -56,14 +62,14 @@ export function ResetPasswordForm() {
       const result = await response.json();
 
       if (!response.ok) {
-        toast.error(result.error || "Erreur lors de la réinitialisation");
+        toast.error(result.error || t("auth.resetError"));
         return;
       }
 
-      toast.success("Mot de passe mis à jour avec succès !");
+      toast.success(t("auth.passwordUpdated"));
       router.push("/connexion");
     } catch {
-      toast.error("Une erreur est survenue. Veuillez réessayer.");
+      toast.error(t("auth.genericError"));
     } finally {
       setIsLoading(false);
     }
@@ -77,13 +83,13 @@ export function ResetPasswordForm() {
             link_off
           </span>
           <h2 className="font-headline-lg text-[20px] text-on-surface font-bold mb-sm">
-            Lien invalide
+            {t("auth.invalidLinkTitle")}
           </h2>
           <p className="font-body-md text-body-md text-on-surface-variant mb-lg">
-            Ce lien de réinitialisation est invalide ou a expiré.
+            {t("auth.invalidLinkDescExtended")}
           </p>
           <Button asChild size="default">
-            <Link href="/mot-de-passe-oublie">Demander un nouveau lien</Link>
+            <Link href="/mot-de-passe-oublie">{t("auth.requestNewLink")}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -101,16 +107,16 @@ export function ResetPasswordForm() {
           <div className="w-12 h-12 bg-primary/10 rounded-2xl mx-auto mb-md flex items-center justify-center">
             <span className="material-symbols-outlined text-[24px] text-primary">lock</span>
           </div>
-          <CardTitle className="text-[24px]">Nouveau mot de passe</CardTitle>
-          <CardDescription>Choisissez un mot de passe sécurisé</CardDescription>
+          <CardTitle className="text-[24px]">{t("auth.resetTitle")}</CardTitle>
+          <CardDescription>{t("auth.resetSubtitle")}</CardDescription>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
             <Input
-              label="Nouveau mot de passe"
+              label={t("auth.newPassword")}
               type={showPassword ? "text" : "password"}
-              placeholder="Min. 8 caractères"
+              placeholder={t("auth.passwordPlaceholder")}
               autoComplete="new-password"
               leftIcon={<span className="material-symbols-outlined text-[20px]">lock</span>}
               rightIcon={
@@ -121,14 +127,14 @@ export function ResetPasswordForm() {
                 </button>
               }
               error={errors.password?.message}
-              hint="Min. 8 caractères, 1 majuscule, 1 chiffre"
+              hint={t("auth.passwordHint")}
               {...register("password")}
             />
 
             <Input
-              label="Confirmer le mot de passe"
+              label={t("auth.confirmPassword")}
               type={showPassword ? "text" : "password"}
-              placeholder="Répétez votre mot de passe"
+              placeholder={t("auth.repeatPassword")}
               autoComplete="new-password"
               leftIcon={<span className="material-symbols-outlined text-[20px]">lock</span>}
               error={errors.confirmPassword?.message}
@@ -136,7 +142,7 @@ export function ResetPasswordForm() {
             />
 
             <Button type="submit" size="lg" className="w-full" loading={isLoading}>
-              Réinitialiser le mot de passe
+              {t("auth.resetPasswordBtn")}
               <span className="material-symbols-outlined text-[18px]">check</span>
             </Button>
           </form>

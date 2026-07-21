@@ -7,6 +7,7 @@ import {
   serverErrorResponse,
 } from "@/lib/utils/api-response";
 import { randomUUID } from "crypto";
+import { sendVerificationEmail } from "@/lib/email/send-verification-email";
 
 // POST: verify token
 export async function POST(request: NextRequest) {
@@ -61,6 +62,14 @@ export async function PUT(request: NextRequest) {
     await prisma.emailVerification.create({
       data: { userId: user.id, token, expiresAt },
     });
+
+    const sendResult = await sendVerificationEmail(user.email, user.name, token);
+    if (!sendResult.ok) {
+      return errorResponse(
+        "Impossible d'envoyer l'email de vérification. Réessayez plus tard.",
+        502
+      );
+    }
 
     return successResponse(null, "Email de vérification renvoyé");
   } catch (error) {

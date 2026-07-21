@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyAccessToken } from "@/lib/auth/jwt";
 import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/cookies";
 
-// Routes that require authentication
 const PROTECTED_ROUTES = [
   "/tableau-de-bord",
   "/series",
@@ -17,13 +16,9 @@ const PROTECTED_ROUTES = [
   "/correcteur",
 ];
 
-// Admin-only routes
 const ADMIN_ROUTES = ["/admin"];
-
-// Corrector routes
 const CORRECTOR_ROUTES = ["/correcteur"];
 
-// Auth routes (redirect if already logged in)
 const AUTH_ROUTES = [
   "/connexion",
   "/inscription",
@@ -31,37 +26,55 @@ const AUTH_ROUTES = [
   "/reinitialisation-mot-de-passe",
 ];
 
+async function resolveUser(accessToken: string) {
+  try {
+    return await verifyAccessToken(accessToken);
+  } catch {
+    return null;
+  }
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // Get access token from cookies
   const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
 
-  let user = null;
-  if (accessToken) {
-    try {
-      user = await verifyAccessToken(accessToken);
-    } catch {
-      // Token invalid or expired - will be handled below
-    }
-  }
+  const isProtected = PROTECTED_ROUTES.some((route) =>
+    pathname.startsWith(route)
+  );
+  const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
 
-  // Redirect authenticated users away from auth pages
-  if (AUTH_ROUTES.some((route) => pathname.startsWith(route))) {
-    if (user) {
+  if (!accessToken) {
+    if (isProtected) {
       const url = request.nextUrl.clone();
-      url.pathname = user.role === "ADMIN" || user.role === "SUPER_ADMIN"
-        ? "/admin"
-        : "/tableau-de-bord";
+      url.pathname = "/connexion";
+      url.searchParams.set("redirect", pathname);
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
   }
 
-  // Check protected routes
-  const isProtected = PROTECTED_ROUTES.some((route) =>
-    pathname.startsWith(route)
-  );
+  if (!isProtected && !isAuthRoute) {
+    return NextResponse.next();
+  }
+
+  const user = await resolveUser(accessToken);
+
+  if (isAuthRoute) {
+    if (user) {
+      const savedRedirect = request.nextUrl.searchParams.get("redirect");
+      if (savedRedirect?.startsWith("/")) {
+        return NextResponse.redirect(new URL(savedRedirect, request.url));
+      }
+
+      const url = request.nextUrl.clone();
+      url.pathname =
+        user.role === "ADMIN" || user.role === "SUPER_ADMIN"
+          ? "/admin"
+          : "/tableau-de-bord";
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  }
 
   if (isProtected) {
     if (!user) {
@@ -71,7 +84,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Check admin routes
     if (
       ADMIN_ROUTES.some((route) => pathname.startsWith(route)) &&
       user.role !== "ADMIN" &&
@@ -80,7 +92,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/tableau-de-bord", request.url));
     }
 
-    // Check corrector routes
     if (
       CORRECTOR_ROUTES.some((route) => pathname.startsWith(route)) &&
       user.role !== "CORRECTOR" &&
@@ -89,16 +100,6 @@ export async function middleware(request: NextRequest) {
     ) {
       return NextResponse.redirect(new URL("/tableau-de-bord", request.url));
     }
-
-    // Check onboarding completion
-    if (
-      pathname !== "/onboarding" &&
-      !pathname.startsWith("/admin") &&
-      !pathname.startsWith("/correcteur") &&
-      user.role === "USER"
-    ) {
-      // Will be checked client-side for better UX
-    }
   }
 
   return NextResponse.next();
@@ -106,6 +107,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|fonts|images).*)",
+    "/((?!api|_next/static|_next/image|favicon|apple-icon|logo\\.png|fonts|images|uploads).*)",
   ],
 };

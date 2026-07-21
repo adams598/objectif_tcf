@@ -1,0 +1,13 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "regions": ["cdg1"],
+  "functions": {
+    "app/api/paiement/webhook/**/*.ts": {
+      "maxDuration": 30
+    },
+    "app/api/paiement/**/*.ts": {
+      "maxDuration": 30
+    }
+  }
+}

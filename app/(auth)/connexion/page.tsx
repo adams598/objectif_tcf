@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Connexion",
-  description: "Connectez-vous à votre espace Objectif Canada.",
+  description: "Connectez-vous à votre espace Objectif TCF.",
 };
 
 export default function LoginPage() {

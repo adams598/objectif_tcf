@@ -3,18 +3,33 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { CompetencyRadar } from "./competency-radar";
+import { SkillGapsCard } from "./skill-gaps-card";
 import { CountdownCard } from "./countdown-card";
 import { DailyGoalCard } from "./daily-goal-card";
 import { ResumeTrainingCard } from "./resume-training-card";
+import { WeeklyReportCard } from "./weekly-report-card";
+import { StudyReminderBanner } from "./study-reminder-banner";
+import { NotificationBell } from "@/components/notifications/notification-bell";
+import { useUserPreferences } from "@/components/providers/user-preferences-provider";
+import { useCurrentUser } from "@/lib/hooks/use-current-user";
+import { useTranslation } from "@/components/providers/locale-provider";
+import { IMMIGRATION_LABELS, TARGET_COUNTRY_LABELS } from "@/lib/user/profile";
 
-interface DashboardViewProps {
-  userName: string;
-}
+export function DashboardView() {
+  const { notificationPreferences } = useUserPreferences();
+  const { firstName, profile, isLoading } = useCurrentUser();
+  const { t } = useTranslation();
 
-export function DashboardView({ userName }: DashboardViewProps) {
+  const targetLabel = profile?.targetCountry
+    ? TARGET_COUNTRY_LABELS[profile.targetCountry] ?? profile.targetCountry
+    : profile?.immigrationObjective
+      ? IMMIGRATION_LABELS[profile.immigrationObjective]
+      : "Canada";
+
   return (
     <div className="flex flex-col gap-xl">
-      {/* Header */}
+      {notificationPreferences.studyReminders && <StudyReminderBanner />}
+
       <motion.header
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -23,36 +38,33 @@ export function DashboardView({ userName }: DashboardViewProps) {
       >
         <div>
           <h1 className="font-display-md text-display-md text-on-surface">
-            Bonjour, {userName} 👋
+            {isLoading
+              ? t("dashboard.greetingLoading")
+              : t("dashboard.greeting", { name: firstName })}
           </h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-1">
-            Prêt pour votre session d&apos;entraînement du jour ?
+            {t("dashboard.subtitle")}
           </p>
         </div>
 
-        {/* Actions bar */}
         <div className="flex items-center gap-md">
-          {/* Notifications */}
-          <button className="p-sm rounded-full bg-surface border border-outline-variant text-on-surface-variant hover:text-primary transition-colors relative">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-error rounded-full border-2 border-surface" />
-          </button>
+          <NotificationBell />
 
-          {/* Target badge */}
           <div className="flex items-center gap-sm bg-surface px-md py-sm rounded-full border border-outline-variant shadow-sm">
             <span className="text-lg">🇨🇦</span>
             <span className="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant">
-              Cible: Canada
+              {t("dashboard.target")}: {targetLabel}
             </span>
           </div>
         </div>
       </motion.header>
 
-      {/* Bento Grid */}
+      {notificationPreferences.weeklyReportNotifications && (
+        <WeeklyReportCard />
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-12 gap-lg">
-        {/* Left Column: 8 cols */}
         <div className="md:col-span-8 flex flex-col gap-lg">
-          {/* Competency Profile */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -61,7 +73,14 @@ export function DashboardView({ userName }: DashboardViewProps) {
             <CompetencyRadar />
           </motion.div>
 
-          {/* Resume Training */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.15 }}
+          >
+            <SkillGapsCard />
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -71,7 +90,6 @@ export function DashboardView({ userName }: DashboardViewProps) {
           </motion.div>
         </div>
 
-        {/* Right Column: 4 cols */}
         <div className="md:col-span-4 flex flex-col gap-lg">
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -86,7 +104,7 @@ export function DashboardView({ userName }: DashboardViewProps) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.25 }}
           >
-            <DailyGoalCard />
+            <DailyGoalCard showReminder={notificationPreferences.studyReminders} />
           </motion.div>
         </div>
       </div>

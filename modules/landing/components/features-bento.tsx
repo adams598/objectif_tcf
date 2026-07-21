@@ -2,119 +2,135 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-
-const features = [
-  {
-    id: "banque",
-    icon: "library_books",
-    title: "Banque de questions exhaustive",
-    description:
-      "Plus de 2500 questions conformes aux annales récentes. Renouvelées mensuellement pour coller parfaitement aux tendances de l'examen officiel.",
-    bgColor: "bg-primary-container",
-    textColor: "text-on-primary-container",
-    colSpan: "col-span-1 md:col-span-2 lg:col-span-2",
-    rowSpan: "row-span-2",
-    size: "large",
-  },
-  {
-    id: "oral",
-    icon: "record_voice_over",
-    title: "Labo d'Expression Orale",
-    description:
-      "Enregistrez vos réponses, chronométrez-vous et comparez avec des modèles C2.",
-    bgColor: "bg-secondary-container",
-    textColor: "text-on-secondary-container",
-    colSpan: "",
-    rowSpan: "",
-    size: "small",
-  },
-  {
-    id: "ia",
-    icon: "edit_document",
-    title: "Correction IA (Écrit)",
-    description:
-      "Feedback instantané sur la grammaire, le lexique et la structure de vos tâches.",
-    bgColor: "bg-tertiary-container",
-    textColor: "text-on-tertiary-container",
-    colSpan: "",
-    rowSpan: "",
-    size: "small",
-  },
-  {
-    id: "timer",
-    icon: "timer",
-    title: "Gestion du temps",
-    description:
-      "Interface d'examen reproduisant exactement le stress et le chronomètre officiels.",
-    bgColor: "bg-error-container",
-    textColor: "text-on-error-container",
-    colSpan: "",
-    rowSpan: "",
-    size: "small",
-  },
-  {
-    id: "analytics",
-    icon: "monitoring",
-    title: "Analytiques NCLC",
-    description:
-      "Suivez votre progression convertie directement en niveaux canadiens.",
-    bgColor: "bg-primary/10",
-    textColor: "text-primary",
-    colSpan: "",
-    rowSpan: "",
-    size: "small",
-  },
-  {
-    id: "community",
-    icon: "forum",
-    title: "Communauté & Support",
-    description:
-      "Ne préparez pas seul. Rejoignez des milliers d'autres candidats, échangez des astuces, et bénéficiez du support de nos professeurs experts certifiés.",
-    bgColor: "bg-surface-variant",
-    textColor: "text-on-surface",
-    colSpan: "col-span-1 md:col-span-2 lg:col-span-2",
-    rowSpan: "",
-    size: "wide",
-  },
-  {
-    id: "mobile",
-    icon: "phone_iphone",
-    title: "100% Mobile",
-    description:
-      "Révisez dans les transports. Interface optimisée pour smartphone et tablette.",
-    bgColor: "bg-secondary/10",
-    textColor: "text-secondary",
-    colSpan: "",
-    rowSpan: "",
-    size: "small",
-  },
-  {
-    id: "garantie",
-    icon: "verified_user",
-    title: "Garantie C2",
-    description:
-      "Atteignez vos objectifs ou nous prolongeons votre accès gratuitement.",
-    bgColor: "bg-tertiary/10",
-    textColor: "text-tertiary",
-    colSpan: "",
-    rowSpan: "",
-    size: "small",
-  },
-];
+import { useTranslation } from "@/components/providers/locale-provider";
 
 export function FeaturesBento() {
+  const { t } = useTranslation();
+
+  const features = [
+    {
+      id: "banque",
+      icon: "library_books",
+      titleKey: "landingFeatures.banqueTitle" as const,
+      descKey: "landingFeatures.banqueDesc" as const,
+      bgColor: "bg-primary-container",
+      textColor: "text-on-primary-container",
+      colSpan: "col-span-1 md:col-span-2 lg:col-span-2",
+      rowSpan: "row-span-2",
+      size: "large" as const,
+    },
+    {
+      id: "oral",
+      icon: "record_voice_over",
+      titleKey: "landingFeatures.oralTitle" as const,
+      descKey: "landingFeatures.oralDesc" as const,
+      bgColor: "bg-secondary-container",
+      textColor: "text-on-secondary-container",
+      colSpan: "",
+      rowSpan: "",
+      size: "small" as const,
+    },
+    {
+      id: "ia",
+      icon: "edit_document",
+      titleKey: "landingFeatures.iaTitle" as const,
+      descKey: "landingFeatures.iaDesc" as const,
+      bgColor: "bg-tertiary-container",
+      textColor: "text-on-tertiary-container",
+      colSpan: "",
+      rowSpan: "",
+      size: "small" as const,
+    },
+    {
+      id: "timer",
+      icon: "timer",
+      titleKey: "landingFeatures.timerTitle" as const,
+      descKey: "landingFeatures.timerDesc" as const,
+      bgColor: "bg-error-container",
+      textColor: "text-on-error-container",
+      colSpan: "",
+      rowSpan: "",
+      size: "small" as const,
+    },
+    {
+      id: "analytics",
+      icon: "monitoring",
+      titleKey: "landingFeatures.analyticsTitle" as const,
+      descKey: "landingFeatures.analyticsDesc" as const,
+      bgColor: "bg-primary/10",
+      textColor: "text-primary",
+      colSpan: "",
+      rowSpan: "",
+      size: "small" as const,
+    },
+    {
+      id: "community",
+      icon: "forum",
+      titleKey: "landingFeatures.communityTitle" as const,
+      descKey: "landingFeatures.communityDesc" as const,
+      bgColor: "bg-surface-variant",
+      textColor: "text-on-surface",
+      colSpan: "col-span-1 md:col-span-2 lg:col-span-2",
+      rowSpan: "",
+      size: "wide" as const,
+    },
+    {
+      id: "mobile",
+      icon: "phone_iphone",
+      titleKey: "landingFeatures.mobileTitle" as const,
+      descKey: "landingFeatures.mobileDesc" as const,
+      bgColor: "bg-secondary/10",
+      textColor: "text-secondary",
+      colSpan: "",
+      rowSpan: "",
+      size: "small" as const,
+    },
+    {
+      id: "garantie",
+      icon: "verified_user",
+      titleKey: "landingFeatures.garantieTitle" as const,
+      descKey: "landingFeatures.garantieDesc" as const,
+      bgColor: "bg-tertiary/10",
+      textColor: "text-tertiary",
+      colSpan: "",
+      rowSpan: "",
+      size: "small" as const,
+    },
+  ];
+
+  const mobileSkills = [
+    {
+      icon: "headphones",
+      titleKey: "landingFeatures.mobileCoTitle" as const,
+      descKey: "landingFeatures.mobileCoDesc" as const,
+    },
+    {
+      icon: "mic",
+      titleKey: "landingFeatures.mobileEoTitle" as const,
+      descKey: "landingFeatures.mobileEoDesc" as const,
+    },
+    {
+      icon: "menu_book",
+      titleKey: "landingFeatures.mobileCeTitle" as const,
+      descKey: "landingFeatures.mobileCeDesc" as const,
+    },
+    {
+      icon: "edit_document",
+      titleKey: "landingFeatures.mobileEeTitle" as const,
+      descKey: "landingFeatures.mobileEeDesc" as const,
+    },
+  ];
+
   return (
     <>
-      {/* === DESKTOP === */}
       <section className="hidden md:block py-2xl bg-surface">
         <div className="max-w-container-max mx-auto px-md md:px-lg">
           <div className="text-center mb-xl">
             <h2 className="font-display-md text-display-md md:text-display-lg text-on-surface font-bold mb-sm">
-              Tout pour réussir. Sans superflu.
+              {t("landingFeatures.bentoTitle")}
             </h2>
             <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">
-              Une suite d&apos;outils conçue spécifiquement pour les exigences de
-              l&apos;immigration canadienne.
+              {t("landingFeatures.bentoSubtitle")}
             </p>
           </div>
 
@@ -153,7 +169,7 @@ export function FeaturesBento() {
                       : "font-label-md text-label-md text-lg"
                   }`}
                 >
-                  {feature.title}
+                  {t(feature.titleKey)}
                 </h3>
 
                 <p
@@ -163,13 +179,13 @@ export function FeaturesBento() {
                       : "font-body-md text-body-md text-sm"
                   }`}
                 >
-                  {feature.description}
+                  {t(feature.descKey)}
                 </p>
 
                 {feature.size === "large" && (
                   <div className="h-32 bg-surface rounded-xl border border-outline-variant/30 flex items-center justify-center opacity-70">
                     <span className="text-on-surface-variant font-label-sm">
-                      Illustration Banque
+                      {t("landingFeatures.banqueIllustration")}
                     </span>
                   </div>
                 )}
@@ -179,34 +195,12 @@ export function FeaturesBento() {
         </div>
       </section>
 
-      {/* === MOBILE === */}
       <section className="md:hidden py-xl px-md bg-surface-container-lowest">
         <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-on-surface mb-lg text-center">
-          Maîtrisez les 4 compétences
+          {t("landingFeatures.mobileSkillsTitle")}
         </h2>
         <div className="grid grid-cols-1 gap-md">
-          {[
-            {
-              icon: "headphones",
-              title: "Compréhension Orale",
-              desc: "Simulations d'écoute avec accents québécois et français. Exercices chronométrés.",
-            },
-            {
-              icon: "mic",
-              title: "Expression Orale",
-              desc: "Outils d'enregistrement et feedback automatisé sur la prononciation et la fluidité.",
-            },
-            {
-              icon: "menu_book",
-              title: "Compréhension Écrite",
-              desc: "Textes d'actualité canadiens, questions QCM progressives du niveau A2 au C2.",
-            },
-            {
-              icon: "edit_document",
-              title: "Expression Écrite",
-              desc: "Correction IA instantanée. Modèles de réponse C2 détaillés par type de tâche.",
-            },
-          ].map((skill) => (
+          {mobileSkills.map((skill) => (
             <div
               key={skill.icon}
               className="bg-surface p-md rounded-2xl border border-outline-variant shadow-violet-sm flex flex-col gap-md"
@@ -218,10 +212,10 @@ export function FeaturesBento() {
               </div>
               <div>
                 <h3 className="font-label-md text-label-md font-bold text-on-surface mb-xs">
-                  {skill.title}
+                  {t(skill.titleKey)}
                 </h3>
                 <p className="font-body-md text-[14px] text-on-surface-variant">
-                  {skill.desc}
+                  {t(skill.descKey)}
                 </p>
               </div>
             </div>

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { BrandLogo } from "@/components/layout/brand-logo";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Objectif Canada",
-    default: "Authentification | Objectif Canada",
+    template: "%s | Objectif TCF",
+    default: "Authentification | Objectif TCF",
   },
 };
 
@@ -17,9 +18,7 @@ export default function AuthLayout({
     <div className="min-h-screen bg-surface flex flex-col">
       {/* Minimal header */}
       <header className="flex justify-between items-center px-lg h-16 border-b border-outline-variant bg-surface/80 backdrop-blur-md">
-        <Link href="/" className="font-display-md text-[20px] font-bold text-primary">
-          Objectif Canada
-        </Link>
+        <BrandLogo variant="full" href="/" imageClassName="h-12 max-w-[220px]" />
         <Link
           href="/"
           className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors flex items-center gap-xs"

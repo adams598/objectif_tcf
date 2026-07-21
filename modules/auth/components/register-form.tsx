@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,31 +12,47 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTranslation } from "@/components/providers/locale-provider";
+import { BrandLogo } from "@/components/layout/brand-logo";
 
-const registerSchema = z
-  .object({
-    firstName: z.string().min(2, "Prénom requis (min 2 caractères)"),
-    lastName: z.string().min(2, "Nom requis (min 2 caractères)"),
-    email: z.string().email("Email invalide"),
-    password: z
-      .string()
-      .min(8, "Mot de passe trop court (min 8 caractères)")
-      .regex(/[A-Z]/, "Doit contenir au moins une majuscule")
-      .regex(/[0-9]/, "Doit contenir au moins un chiffre"),
-    confirmPassword: z.string(),
-    acceptTerms: z.boolean().refine((v) => v, "Vous devez accepter les conditions"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Les mots de passe ne correspondent pas",
-    path: ["confirmPassword"],
-  });
-
-type RegisterFormData = z.infer<typeof registerSchema>;
+type RegisterFormData = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  acceptTerms: boolean;
+};
 
 export function RegisterForm() {
+  const { t } = useTranslation();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const registerSchema = useMemo(
+    () =>
+      z
+        .object({
+          firstName: z.string().min(2, t("auth.firstNameMin")),
+          lastName: z.string().min(2, t("auth.lastNameMin")),
+          email: z.string().email(t("auth.invalidEmail")),
+          password: z
+            .string()
+            .min(8, t("auth.passwordMin"))
+            .regex(/[A-Z]/, t("auth.passwordUppercase"))
+            .regex(/[0-9]/, t("auth.passwordDigit")),
+          confirmPassword: z.string(),
+          acceptTerms: z.boolean().refine((v) => v, t("auth.mustAcceptTerms")),
+        })
+        .refine((data) => data.password === data.confirmPassword, {
+          message: t("auth.passwordsMismatch"),
+          path: ["confirmPassword"],
+        }),
+    [t]
+  );
 
   const {
     register,
@@ -68,21 +84,25 @@ export function RegisterForm() {
       const result = await response.json();
 
       if (!response.ok) {
-        toast.error(result.error || "Erreur lors de l'inscription");
+        toast.error(result.error || t("auth.registerError"));
         return;
       }
 
-      toast.success("Compte créé ! Vérifiez votre email.");
+      toast.success(t("auth.accountCreated"));
       router.push(`/verification-email?email=${encodeURIComponent(data.email)}`);
     } catch {
-      toast.error("Une erreur est survenue. Veuillez réessayer.");
+      toast.error(t("auth.genericError"));
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleRegister = () => {
-    window.location.href = "/api/auth/google?action=register";
+    const params = new URLSearchParams({ action: "register" });
+    if (redirectTo?.startsWith("/")) {
+      params.set("redirect", redirectTo);
+    }
+    window.location.href = `/api/auth/google?${params.toString()}`;
   };
 
   return (
@@ -93,18 +113,17 @@ export function RegisterForm() {
     >
       <Card variant="elevated" className="shadow-violet-lg">
         <CardHeader className="text-center">
-          <div className="w-12 h-12 bg-gradient-primary rounded-2xl mx-auto mb-md flex items-center justify-center">
-            <span className="text-on-primary text-xl font-bold">OC</span>
-          </div>
-          <CardTitle className="text-[24px]">Créer un compte</CardTitle>
+          <BrandLogo variant="icon" href={null} className="mx-auto mb-md" imageClassName="h-12 w-12" />
+          <CardTitle className="text-[24px]">{t("auth.createAccount")}</CardTitle>
           <CardDescription>
-            Rejoignez 12 000+ candidats qui préparent leur TCF
+            {redirectTo?.startsWith("/offres")
+              ? t("auth.registerForSubscription")
+              : t("auth.registerJoinTcf")}
           </CardDescription>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
-            {/* Google SSO */}
             <button
               type="button"
               onClick={handleGoogleRegister}
@@ -116,26 +135,27 @@ export function RegisterForm() {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
-              Continuer avec Google
+              {t("auth.continueGoogle")}
             </button>
 
             <div className="relative flex items-center">
               <div className="flex-1 h-px bg-outline-variant" />
-              <span className="px-md font-label-sm text-label-sm text-on-surface-variant">ou</span>
+              <span className="px-md font-label-sm text-label-sm text-on-surface-variant">
+                {t("auth.or")}
+              </span>
               <div className="flex-1 h-px bg-outline-variant" />
             </div>
 
-            {/* Name */}
             <div className="grid grid-cols-2 gap-sm">
               <Input
-                label="Prénom"
+                label={t("auth.firstName")}
                 placeholder="Marie"
                 autoComplete="given-name"
                 error={errors.firstName?.message}
                 {...register("firstName")}
               />
               <Input
-                label="Nom"
+                label={t("auth.lastName")}
                 placeholder="Dupont"
                 autoComplete="family-name"
                 error={errors.lastName?.message}
@@ -143,22 +163,20 @@ export function RegisterForm() {
               />
             </div>
 
-            {/* Email */}
             <Input
-              label="Adresse email"
+              label={t("auth.email")}
               type="email"
-              placeholder="vous@exemple.com"
+              placeholder={t("auth.emailPlaceholder")}
               autoComplete="email"
               leftIcon={<span className="material-symbols-outlined text-[20px]">mail</span>}
               error={errors.email?.message}
               {...register("email")}
             />
 
-            {/* Password */}
             <Input
-              label="Mot de passe"
+              label={t("auth.password")}
               type={showPassword ? "text" : "password"}
-              placeholder="Min. 8 caractères"
+              placeholder={t("auth.passwordPlaceholder")}
               autoComplete="new-password"
               leftIcon={<span className="material-symbols-outlined text-[20px]">lock</span>}
               rightIcon={
@@ -169,22 +187,20 @@ export function RegisterForm() {
                 </button>
               }
               error={errors.password?.message}
-              hint="Min. 8 caractères, 1 majuscule, 1 chiffre"
+              hint={t("auth.passwordHint")}
               {...register("password")}
             />
 
-            {/* Confirm Password */}
             <Input
-              label="Confirmer le mot de passe"
+              label={t("auth.confirmPassword")}
               type={showPassword ? "text" : "password"}
-              placeholder="Répétez votre mot de passe"
+              placeholder={t("auth.repeatPassword")}
               autoComplete="new-password"
               leftIcon={<span className="material-symbols-outlined text-[20px]">lock</span>}
               error={errors.confirmPassword?.message}
               {...register("confirmPassword")}
             />
 
-            {/* Terms */}
             <div>
               <div className="flex items-start gap-sm">
                 <Checkbox
@@ -195,10 +211,14 @@ export function RegisterForm() {
                   }
                 />
                 <label htmlFor="acceptTerms" className="font-label-sm text-label-sm text-on-surface-variant cursor-pointer leading-relaxed">
-                  J&apos;accepte les{" "}
-                  <Link href="/conditions" className="text-primary hover:underline">conditions d&apos;utilisation</Link>{" "}
-                  et la{" "}
-                  <Link href="/confidentialite" className="text-primary hover:underline">politique de confidentialité</Link>
+                  {t("auth.acceptTermsPrefix")}{" "}
+                  <Link href="/conditions" className="text-primary hover:underline">
+                    {t("auth.termsLink")}
+                  </Link>{" "}
+                  {t("auth.acceptTermsAnd")}{" "}
+                  <Link href="/confidentialite" className="text-primary hover:underline">
+                    {t("auth.privacyLink")}
+                  </Link>
                 </label>
               </div>
               {errors.acceptTerms && (
@@ -209,17 +229,23 @@ export function RegisterForm() {
               )}
             </div>
 
-            {/* Submit */}
             <Button type="submit" size="lg" className="w-full" loading={isLoading}>
-              Créer mon compte gratuitement
+              {t("auth.createFreeAccount")}
               <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
             </Button>
           </form>
 
           <p className="text-center font-label-sm text-label-sm text-on-surface-variant mt-lg">
-            Déjà un compte ?{" "}
-            <Link href="/connexion" className="text-primary font-semibold hover:underline">
-              Se connecter
+            {t("auth.hasAccount")}{" "}
+            <Link
+              href={
+                redirectTo?.startsWith("/")
+                  ? `/connexion?redirect=${encodeURIComponent(redirectTo)}`
+                  : "/connexion"
+              }
+              className="text-primary font-semibold hover:underline"
+            >
+              {t("auth.login")}
             </Link>
           </p>
         </CardContent>

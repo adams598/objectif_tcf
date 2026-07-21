@@ -26,10 +26,12 @@ yarn-error.log*
 # Local env files
 .env*.local
 .env
+.env.vercel
+.env.vercel.example
 
 # Vercel
 .vercel
 
-# TypeScript
-*.tsbuildinfo
-next-env.d.ts
+  // Uploads utilisateur (avatars locaux)
+/public/uploads/avatars/*
+!/public/uploads/avatars/.gitkeep

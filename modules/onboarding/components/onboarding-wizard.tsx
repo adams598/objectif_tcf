@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/components/providers/locale-provider";
 
 const TOTAL_STEPS = 5;
 
@@ -18,28 +19,27 @@ interface OnboardingData {
   targetCountry?: string;
 }
 
-function validateStep(step: number, data: OnboardingData): string | null {
+type TranslateFn = (
+  key: string,
+  params?: Record<string, string | number>
+) => string;
+
+function validateStep(
+  step: number,
+  data: OnboardingData,
+  t: TranslateFn
+): string | null {
   switch (step) {
     case 1:
-      return data.immigrationObjective
-        ? null
-        : "Sélectionnez votre objectif pour continuer.";
+      return data.immigrationObjective ? null : t("onboarding.errorObjective");
     case 2:
-      return data.currentLevel
-        ? null
-        : "Sélectionnez votre niveau actuel pour continuer.";
+      return data.currentLevel ? null : t("onboarding.errorLevel");
     case 3:
-      return data.targetExamDate
-        ? null
-        : "Choisissez une date d'examen ou cliquez sur « Passer cette étape ».";
+      return data.targetExamDate ? null : t("onboarding.errorExamDate");
     case 4:
-      return data.nativeLanguage
-        ? null
-        : "Sélectionnez votre langue maternelle pour continuer.";
+      return data.nativeLanguage ? null : t("onboarding.errorLanguage");
     case 5:
-      return data.targetCountry
-        ? null
-        : "Sélectionnez votre destination pour continuer.";
+      return data.targetCountry ? null : t("onboarding.errorCountry");
     default:
       return null;
   }
@@ -54,54 +54,20 @@ function getFirstIncompleteStep(data: OnboardingData): number | null {
   return null;
 }
 
-// Step 1: Immigration Objective
-const objectives = [
-  {
-    id: "RESIDENCE_PERMANENTE",
-    icon: "home_work",
-    title: "Résidence Permanente",
-    desc: "Immigrer et s'installer durablement au Canada.",
-  },
-  {
-    id: "ETUDES",
-    icon: "school",
-    title: "Études",
-    desc: "Poursuivre des études supérieures dans une institution canadienne.",
-  },
-  {
-    id: "TRAVAIL",
-    icon: "work",
-    title: "Travail",
-    desc: "Obtenir un permis de travail ou faire avancer sa carrière.",
-  },
-];
-
-// Step 2: Current level
-const levels = ["A1", "A2", "B1", "B2", "C1", "C2"];
-
-// Step 4: Native language
-const languages = [
-  { code: "ar", flag: "🇸🇦", label: "Arabe" },
-  { code: "fr", flag: "🇫🇷", label: "Français" },
-  { code: "en", flag: "🇬🇧", label: "Anglais" },
-  { code: "es", flag: "🇪🇸", label: "Espagnol" },
-  { code: "pt", flag: "🇧🇷", label: "Portugais" },
-  { code: "zh", flag: "🇨🇳", label: "Mandarin" },
-  { code: "ha", flag: "🇳🇬", label: "Haoussa" },
-  { code: "sw", flag: "🇰🇪", label: "Swahili" },
-  { code: "other", flag: "🌍", label: "Autre" },
-];
-
-// Step 5: Target country
-const countries = [
-  { code: "CA", flag: "🇨🇦", label: "Canada" },
-  { code: "QC", flag: "🏔️", label: "Québec" },
-  { code: "ON", flag: "🏙️", label: "Ontario" },
-  { code: "BC", flag: "🌊", label: "Colombie-Britannique" },
-];
+function getStepTitle(step: number, t: TranslateFn): string {
+  const titles: Record<number, string> = {
+    1: t("onboarding.stepTitle1"),
+    2: t("onboarding.stepTitle2"),
+    3: t("onboarding.stepTitle3"),
+    4: t("onboarding.stepTitle4"),
+    5: t("onboarding.stepTitle5"),
+  };
+  return titles[step] ?? "";
+}
 
 export function OnboardingWizard() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<OnboardingData>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -121,7 +87,7 @@ export function OnboardingWizard() {
   };
 
   const next = () => {
-    const error = validateStep(step, data);
+    const error = validateStep(step, data, t);
     if (error) {
       toast.error(error);
       return;
@@ -134,7 +100,7 @@ export function OnboardingWizard() {
     defaultDate.setMonth(defaultDate.getMonth() + 6);
     updateData({ targetExamDate: defaultDate.toISOString().split("T")[0] });
     setStep((s) => s + 1);
-    toast.message("Date fixée à dans 6 mois — modifiable dans les paramètres.");
+    toast.message(t("onboarding.skipDateToast"));
   };
 
   const prev = () => {
@@ -144,8 +110,8 @@ export function OnboardingWizard() {
   const submit = async () => {
     const incompleteStep = getFirstIncompleteStep(data);
     if (incompleteStep !== null) {
-      const message = validateStep(incompleteStep, data);
-      toast.error(message ?? "Veuillez compléter toutes les étapes.");
+      const message = validateStep(incompleteStep, data, t);
+      toast.error(message ?? t("onboarding.errorIncomplete"));
       setStep(incompleteStep);
       return;
     }
@@ -159,15 +125,15 @@ export function OnboardingWizard() {
       });
 
       if (response.ok) {
-        toast.success("Profil configuré ! Bienvenue sur Objectif Canada 🍁");
+        toast.success(t("onboarding.successToast"));
         router.push("/tableau-de-bord");
         router.refresh();
       } else {
         const result = await response.json().catch(() => null);
-        toast.error(result?.error ?? "Erreur lors de la configuration. Veuillez réessayer.");
+        toast.error(result?.error ?? t("onboarding.errorConfig"));
       }
     } catch {
-      toast.error("Une erreur est survenue.");
+      toast.error(t("onboarding.genericError"));
     } finally {
       setIsLoading(false);
     }
@@ -176,20 +142,18 @@ export function OnboardingWizard() {
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-md">
       <div className="w-full max-w-2xl mx-auto flex flex-col min-h-[600px]">
-        {/* Progress */}
         <div className="w-full pt-8 pb-6">
           <div className="flex justify-between items-center mb-2">
             <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
-              Étape {step} sur {TOTAL_STEPS}
+              {t("onboarding.stepOf", { step, total: TOTAL_STEPS })}
             </span>
             <span className="font-label-sm text-label-sm text-primary font-bold">
-              {getStepTitle(step)}
+              {getStepTitle(step, t)}
             </span>
           </div>
           <Progress value={progress} size="default" />
         </div>
 
-        {/* Step Content */}
         <AnimatePresence mode="wait">
           <motion.main
             key={step}
@@ -233,7 +197,6 @@ export function OnboardingWizard() {
           </motion.main>
         </AnimatePresence>
 
-        {/* Navigation */}
         <div className="flex justify-between items-center mt-8 pb-8">
           <Button
             variant="secondary"
@@ -243,17 +206,17 @@ export function OnboardingWizard() {
             className={step === 1 ? "invisible" : ""}
           >
             <span className="material-symbols-outlined">arrow_back</span>
-            Précédent
+            {t("onboarding.prev")}
           </Button>
 
           {step < TOTAL_STEPS ? (
             <Button size="default" onClick={next}>
-              Suivant
+              {t("onboarding.next")}
               <span className="material-symbols-outlined">arrow_forward</span>
             </Button>
           ) : (
             <Button size="default" onClick={submit} loading={isLoading}>
-              Commencer mon parcours
+              {t("onboarding.startJourney")}
               <span className="material-symbols-outlined">rocket_launch</span>
             </Button>
           )}
@@ -263,17 +226,6 @@ export function OnboardingWizard() {
   );
 }
 
-function getStepTitle(step: number): string {
-  const titles: Record<number, string> = {
-    1: "Définition de l'objectif",
-    2: "Niveau actuel",
-    3: "Date de l'examen",
-    4: "Langue maternelle",
-    5: "Destination visée",
-  };
-  return titles[step] ?? "";
-}
-
 function StepObjective({
   selected,
   onSelect,
@@ -281,14 +233,37 @@ function StepObjective({
   selected?: string;
   onSelect: (v: string) => void;
 }) {
+  const { t } = useTranslation();
+
+  const objectives = [
+    {
+      id: "RESIDENCE_PERMANENTE",
+      icon: "home_work",
+      titleKey: "onboarding.objectiveResidence" as const,
+      descKey: "onboarding.objectiveResidenceDesc" as const,
+    },
+    {
+      id: "ETUDES",
+      icon: "school",
+      titleKey: "onboarding.objectiveStudies" as const,
+      descKey: "onboarding.objectiveStudiesDesc" as const,
+    },
+    {
+      id: "TRAVAIL",
+      icon: "work",
+      titleKey: "onboarding.objectiveWork" as const,
+      descKey: "onboarding.objectiveWorkDesc" as const,
+    },
+  ];
+
   return (
     <div className="w-full">
       <div className="text-center mb-10">
         <h1 className="font-display-md text-display-md text-on-surface mb-4">
-          Quel est votre objectif principal au Canada ?
+          {t("onboarding.objectiveTitle")}
         </h1>
         <p className="font-body-lg text-body-lg text-on-surface-variant">
-          Cela nous aidera à personnaliser votre parcours de préparation.
+          {t("onboarding.objectiveSubtitle")}
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-md w-full">
@@ -323,10 +298,10 @@ function StepObjective({
               </span>
             </div>
             <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">
-              {obj.title}
+              {t(obj.titleKey)}
             </h3>
             <p className="font-body-md text-body-md text-on-surface-variant">
-              {obj.desc}
+              {t(obj.descKey)}
             </p>
           </button>
         ))}
@@ -342,14 +317,23 @@ function StepLevel({
   selected?: string;
   onSelect: (v: string) => void;
 }) {
+  const { t } = useTranslation();
+  const levels = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+  const getLevelLabel = (level: string) => {
+    if (level === "A1" || level === "A2") return t("onboarding.levelBeginner");
+    if (level === "B1" || level === "B2") return t("onboarding.levelIntermediate");
+    return t("onboarding.levelAdvanced");
+  };
+
   return (
     <div className="w-full">
       <div className="text-center mb-10">
         <h1 className="font-display-md text-display-md text-on-surface mb-4">
-          Quel est votre niveau actuel en français ?
+          {t("onboarding.levelTitle")}
         </h1>
         <p className="font-body-lg text-body-lg text-on-surface-variant">
-          Soyez honnête — cela nous aidera à calibrer votre plan.
+          {t("onboarding.levelSubtitle")}
         </p>
       </div>
       <div className="grid grid-cols-3 md:grid-cols-6 gap-md w-full">
@@ -366,11 +350,7 @@ function StepLevel({
           >
             {level}
             <span className="text-xs font-label-sm font-normal mt-1 text-on-surface-variant">
-              {level === "A1" || level === "A2"
-                ? "Débutant"
-                : level === "B1" || level === "B2"
-                ? "Intermédiaire"
-                : "Avancé"}
+              {getLevelLabel(level)}
             </span>
           </button>
         ))}
@@ -388,19 +368,21 @@ function StepExamDate({
   onChange: (v: string) => void;
   onSkip: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-10">
         <h1 className="font-display-md text-display-md text-on-surface mb-4">
-          Quand passez-vous votre examen ?
+          {t("onboarding.examDateTitle")}
         </h1>
         <p className="font-body-lg text-body-lg text-on-surface-variant">
-          Nous adapterons votre planning en fonction de cette date.
+          {t("onboarding.examDateSubtitle")}
         </p>
       </div>
       <div className="bg-surface border border-outline-variant rounded-2xl p-xl shadow-violet-sm">
         <label className="block font-label-md text-label-md text-on-surface-variant mb-sm">
-          Date d&apos;examen prévue
+          {t("onboarding.examDateLabel")}
         </label>
         <input
           type="date"
@@ -410,14 +392,14 @@ function StepExamDate({
           className="w-full h-12 px-md rounded-xl border border-outline-variant bg-surface text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
         />
         <p className="mt-sm font-label-sm text-label-sm text-on-surface-variant">
-          Vous ne connaissez pas encore la date ? Choisissez une date approximative.
+          {t("onboarding.examDateHint")}
         </p>
         <button
           type="button"
           onClick={onSkip}
           className="mt-md w-full text-center font-label-md text-label-md text-primary hover:underline"
         >
-          Passer cette étape (date dans 6 mois)
+          {t("onboarding.skipExamDate")}
         </button>
       </div>
     </div>
@@ -431,14 +413,28 @@ function StepLanguage({
   selected?: string;
   onSelect: (v: string) => void;
 }) {
+  const { t } = useTranslation();
+
+  const languages = [
+    { code: "ar", flag: "🇸🇦", labelKey: "onboarding.langArabic" as const },
+    { code: "fr", flag: "🇫🇷", labelKey: "onboarding.langFrench" as const },
+    { code: "en", flag: "🇬🇧", labelKey: "onboarding.langEnglish" as const },
+    { code: "es", flag: "🇪🇸", labelKey: "onboarding.langSpanish" as const },
+    { code: "pt", flag: "🇧🇷", labelKey: "onboarding.langPortuguese" as const },
+    { code: "zh", flag: "🇨🇳", labelKey: "onboarding.langMandarin" as const },
+    { code: "ha", flag: "🇳🇬", labelKey: "onboarding.langHausa" as const },
+    { code: "sw", flag: "🇰🇪", labelKey: "onboarding.langSwahili" as const },
+    { code: "other", flag: "🌍", labelKey: "onboarding.langOther" as const },
+  ];
+
   return (
     <div className="w-full">
       <div className="text-center mb-10">
         <h1 className="font-display-md text-display-md text-on-surface mb-4">
-          Quelle est votre langue maternelle ?
+          {t("onboarding.languageTitle")}
         </h1>
         <p className="font-body-lg text-body-lg text-on-surface-variant">
-          Cela nous aide à anticiper vos difficultés spécifiques.
+          {t("onboarding.languageSubtitle")}
         </p>
       </div>
       <div className="grid grid-cols-3 md:grid-cols-4 gap-md w-full">
@@ -455,7 +451,7 @@ function StepLanguage({
           >
             <span className="text-3xl mb-sm">{lang.flag}</span>
             <span className="font-label-md text-label-md text-on-surface">
-              {lang.label}
+              {t(lang.labelKey)}
             </span>
           </button>
         ))}
@@ -471,14 +467,23 @@ function StepCountry({
   selected?: string;
   onSelect: (v: string) => void;
 }) {
+  const { t } = useTranslation();
+
+  const countries = [
+    { code: "CA", flag: "🇨🇦", labelKey: "onboarding.countryCanada" as const },
+    { code: "QC", flag: "🏔️", labelKey: "onboarding.countryQuebec" as const },
+    { code: "ON", flag: "🏙️", labelKey: "onboarding.countryOntario" as const },
+    { code: "BC", flag: "🌊", labelKey: "onboarding.countryBc" as const },
+  ];
+
   return (
     <div className="w-full">
       <div className="text-center mb-10">
         <h1 className="font-display-md text-display-md text-on-surface mb-4">
-          Quelle est votre destination au Canada ?
+          {t("onboarding.countryTitle")}
         </h1>
         <p className="font-body-lg text-body-lg text-on-surface-variant">
-          Les exigences linguistiques varient selon les provinces.
+          {t("onboarding.countrySubtitle")}
         </p>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-md w-full">
@@ -495,13 +500,13 @@ function StepCountry({
           >
             <span className="text-4xl mb-sm">{country.flag}</span>
             <span className="font-label-md text-label-md text-on-surface font-semibold">
-              {country.label}
+              {t(country.labelKey)}
             </span>
           </button>
         ))}
       </div>
       <p className="text-center font-label-sm text-label-sm text-on-surface-variant mt-lg">
-        Vous pouvez modifier ces préférences à tout moment dans vos paramètres.
+        {t("onboarding.countryHint")}
       </p>
     </div>
   );

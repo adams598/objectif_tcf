@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,17 +10,23 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useTranslation } from "@/components/providers/locale-provider";
 
-const schema = z.object({
-  email: z.string().email("Email invalide"),
-});
-
-type FormData = z.infer<typeof schema>;
+type FormData = { email: string };
 
 export function ForgotPasswordForm() {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        email: z.string().email(t("auth.invalidEmail")),
+      }),
+    [t]
+  );
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -40,10 +46,10 @@ export function ForgotPasswordForm() {
         setSent(true);
       } else {
         const result = await response.json();
-        toast.error(result.error || "Erreur lors de l'envoi");
+        toast.error(result.error || t("auth.sendError"));
       }
     } catch {
-      toast.error("Une erreur est survenue. Veuillez réessayer.");
+      toast.error(t("auth.genericError"));
     } finally {
       setIsLoading(false);
     }
@@ -63,12 +69,12 @@ export function ForgotPasswordForm() {
             </span>
           </div>
           <CardTitle className="text-[24px]">
-            {sent ? "Email envoyé !" : "Mot de passe oublié ?"}
+            {sent ? t("auth.emailSent") : t("auth.forgotTitle")}
           </CardTitle>
           <CardDescription>
             {sent
-              ? `Un lien de réinitialisation a été envoyé à ${sentEmail}`
-              : "Entrez votre email pour recevoir un lien de réinitialisation."}
+              ? t("auth.forgotSentTo", { email: sentEmail })
+              : t("auth.forgotSubtitle")}
           </CardDescription>
         </CardHeader>
 
@@ -84,9 +90,9 @@ export function ForgotPasswordForm() {
                 className="space-y-md"
               >
                 <Input
-                  label="Adresse email"
+                  label={t("auth.email")}
                   type="email"
-                  placeholder="vous@exemple.com"
+                  placeholder={t("auth.emailPlaceholder")}
                   autoComplete="email"
                   leftIcon={<span className="material-symbols-outlined text-[20px]">mail</span>}
                   error={errors.email?.message}
@@ -94,7 +100,7 @@ export function ForgotPasswordForm() {
                 />
 
                 <Button type="submit" size="lg" className="w-full" loading={isLoading}>
-                  Envoyer le lien
+                  {t("auth.sendLink")}
                   <span className="material-symbols-outlined text-[18px]">send</span>
                 </Button>
               </motion.form>
@@ -107,8 +113,7 @@ export function ForgotPasswordForm() {
               >
                 <div className="bg-success-container rounded-xl p-md">
                   <p className="font-body-md text-body-md text-success">
-                    Vérifiez votre boîte de réception et vos spams.
-                    Le lien est valide pendant 1 heure.
+                    {t("auth.checkInboxSpam")}
                   </p>
                 </div>
                 <Button
@@ -117,7 +122,7 @@ export function ForgotPasswordForm() {
                   className="w-full"
                   onClick={() => setSent(false)}
                 >
-                  Renvoyer l&apos;email
+                  {t("auth.resendEmail")}
                 </Button>
               </motion.div>
             )}
@@ -126,7 +131,7 @@ export function ForgotPasswordForm() {
           <p className="text-center font-label-sm text-label-sm text-on-surface-variant mt-lg">
             <Link href="/connexion" className="text-primary font-semibold hover:underline flex items-center justify-center gap-xs">
               <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-              Retour à la connexion
+              {t("auth.backToLogin")}
             </Link>
           </p>
         </CardContent>

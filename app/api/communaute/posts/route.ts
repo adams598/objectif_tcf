@@ -22,7 +22,7 @@ const querySchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const { searchParams } = new URL(req.url);
     const parsed = querySchema.safeParse(Object.fromEntries(searchParams));
     if (!parsed.success) {
@@ -44,15 +44,32 @@ export async function GET(req: NextRequest) {
         take: limit,
         orderBy: { createdAt: "desc" },
         include: {
-          author: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+          author: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+            },
+          },
           _count: { select: { likes: true, comments: true } },
+          likes: {
+            where: { userId: user.userId },
+            select: { id: true },
+            take: 1,
+          },
         },
       }),
       prisma.communityPost.count({ where }),
     ]);
 
+    const mapped = posts.map(({ likes, ...post }) => ({
+      ...post,
+      likedByMe: likes.length > 0,
+    }));
+
     return successResponse({
-      posts,
+      posts: mapped,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
@@ -77,12 +94,19 @@ export async function POST(req: NextRequest) {
         tags: parsed.data.tags,
       },
       include: {
-        author: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
         _count: { select: { likes: true, comments: true } },
       },
     });
 
-    return createdResponse(post);
+    return createdResponse({ ...post, likedByMe: false });
   } catch (error) {
     return serverErrorResponse(error);
   }

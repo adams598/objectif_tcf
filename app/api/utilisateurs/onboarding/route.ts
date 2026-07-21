@@ -2,11 +2,12 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/session";
+import { parseDateInput } from "@/lib/user/exam-date";
 import {
   successResponse,
+  validationErrorResponse,
   unauthorizedResponse,
   serverErrorResponse,
-  validationErrorResponse,
 } from "@/lib/utils/api-response";
 
 const onboardingSchema = z.object({
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
     const { immigrationObjective, currentLevel, targetExamDate, nativeLanguage, targetCountry } =
       parsed.data;
 
-    const examDate = new Date(targetExamDate);
+    const examDate = parseDateInput(targetExamDate);
     if (Number.isNaN(examDate.getTime())) {
       return validationErrorResponse({
         targetExamDate: ["Date d'examen invalide"],

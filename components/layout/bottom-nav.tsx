@@ -5,35 +5,39 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/components/providers/locale-provider";
 
 const bottomNavItems = [
-  { href: "/tableau-de-bord", label: "Accueil", icon: "home" },
-  { href: "/series", label: "Séries", icon: "library_books" },
-  { href: "/communaute", label: "Forum", icon: "forum" },
-  { href: "/profil", label: "Profil", icon: "person" },
+  { href: "/tableau-de-bord", labelKey: "nav.home", icon: "home" },
+  { href: "/series", labelKey: "nav.series", icon: "library_books" },
+  { href: "/communaute", labelKey: "nav.forum", icon: "forum" },
+  { href: "/profil", labelKey: "nav.profile", icon: "person" },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-surface border-t border-outline-variant safe-bottom">
       <div className="flex items-center justify-around px-md py-sm relative">
-        {/* Left items */}
         {bottomNavItems.slice(0, 2).map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
           return (
-            <BottomNavItem key={item.href} item={item} isActive={isActive} />
+            <BottomNavItem
+              key={item.href}
+              item={{ ...item, label: t(item.labelKey) }}
+              isActive={isActive}
+            />
           );
         })}
 
-        {/* FAB - Mode Examen */}
         <div className="relative -top-6">
           <Link
             href="/examen"
             className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-gradient-primary text-on-primary shadow-violet-lg hover:shadow-violet-xl transition-all active:scale-95"
-            aria-label="Mode Examen"
+            aria-label={t("nav.examMode")}
           >
             <span className="material-symbols-outlined text-[28px]">
               play_circle
@@ -41,12 +45,15 @@ export function BottomNav() {
           </Link>
         </div>
 
-        {/* Right items */}
         {bottomNavItems.slice(2).map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
           return (
-            <BottomNavItem key={item.href} item={item} isActive={isActive} />
+            <BottomNavItem
+              key={item.href}
+              item={{ ...item, label: t(item.labelKey) }}
+              isActive={isActive}
+            />
           );
         })}
       </div>

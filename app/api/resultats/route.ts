@@ -24,12 +24,11 @@ export async function GET(_req: NextRequest) {
       },
     });
 
-    // Averages per skill
     const skillAverages: Record<string, number[]> = {};
     for (const attempt of attempts) {
       const skill = attempt.series.skill;
       if (!skillAverages[skill]) skillAverages[skill] = [];
-      if (attempt.score !== null) skillAverages[skill].push(attempt.score);
+      if (attempt.percentage !== null) skillAverages[skill].push(attempt.percentage);
     }
 
     const skillStats = Object.entries(skillAverages).map(([skill, scores]) => ({

@@ -11,6 +11,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useTranslation } from "@/components/providers/locale-provider";
+import { BrandLogo } from "@/components/layout/brand-logo";
+import { useQueryClient } from "@tanstack/react-query";
 
 const loginSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -31,8 +34,13 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 };
 
 export function LoginForm() {
+  const { t } = useTranslation();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
+  const safeRedirect =
+    redirectTo?.startsWith("/") ? redirectTo : "/tableau-de-bord";
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -68,7 +76,8 @@ export function LoginForm() {
       }
 
       toast.success("Connexion réussie !");
-      router.push("/tableau-de-bord");
+      queryClient.invalidateQueries({ queryKey: ["auth-session"] });
+      router.push(safeRedirect);
       router.refresh();
     } catch {
       toast.error("Une erreur est survenue. Veuillez réessayer.");
@@ -78,7 +87,12 @@ export function LoginForm() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = "/api/auth/google";
+    const params = new URLSearchParams();
+    if (redirectTo?.startsWith("/")) {
+      params.set("redirect", redirectTo);
+    }
+    const query = params.toString();
+    window.location.href = query ? `/api/auth/google?${query}` : "/api/auth/google";
   };
 
   return (
@@ -89,12 +103,12 @@ export function LoginForm() {
     >
       <Card variant="elevated" className="shadow-violet-lg">
         <CardHeader className="text-center">
-          <div className="w-12 h-12 bg-gradient-primary rounded-2xl mx-auto mb-md flex items-center justify-center">
-            <span className="text-on-primary text-xl font-bold">OC</span>
-          </div>
-          <CardTitle className="text-[24px]">Bon retour !</CardTitle>
+          <BrandLogo variant="icon" href={null} className="mx-auto mb-md" imageClassName="h-12 w-12" />
+          <CardTitle className="text-[24px]">{t("auth.welcomeBack")}</CardTitle>
           <CardDescription>
-            Connectez-vous pour continuer votre préparation
+            {redirectTo?.startsWith("/offres")
+              ? t("auth.loginForSubscription")
+              : t("auth.loginSubtitle")}
           </CardDescription>
         </CardHeader>
 
@@ -124,7 +138,7 @@ export function LoginForm() {
                   fill="#EA4335"
                 />
               </svg>
-              Continuer avec Google
+              {t("auth.continueGoogle")}
             </button>
 
             <div className="relative flex items-center">
@@ -137,7 +151,7 @@ export function LoginForm() {
 
             {/* Email */}
             <Input
-              label="Adresse email"
+              label={t("auth.email")}
               type="email"
               placeholder="vous@exemple.com"
               autoComplete="email"
@@ -153,7 +167,7 @@ export function LoginForm() {
             {/* Password */}
             <div>
               <Input
-                label="Mot de passe"
+                label={t("auth.password")}
                 type={showPassword ? "text" : "password"}
                 placeholder="Votre mot de passe"
                 autoComplete="current-password"
@@ -181,7 +195,7 @@ export function LoginForm() {
                   href="/mot-de-passe-oublie"
                   className="font-label-sm text-label-sm text-primary hover:underline"
                 >
-                  Mot de passe oublié ?
+                  {t("auth.forgotPassword")}
                 </Link>
               </div>
             </div>
@@ -193,7 +207,7 @@ export function LoginForm() {
               className="w-full"
               loading={isLoading}
             >
-              Se connecter
+              {t("auth.login")}
               <span className="material-symbols-outlined text-[18px]">
                 arrow_forward
               </span>
@@ -202,12 +216,16 @@ export function LoginForm() {
 
           {/* Register link */}
           <p className="text-center font-label-sm text-label-sm text-on-surface-variant mt-lg">
-            Pas encore de compte ?{" "}
+            {t("auth.noAccount")}{" "}
             <Link
-              href="/inscription"
+              href={
+                redirectTo?.startsWith("/")
+                  ? `/inscription?redirect=${encodeURIComponent(redirectTo)}`
+                  : "/inscription"
+              }
               className="text-primary font-semibold hover:underline"
             >
-              S&apos;inscrire gratuitement
+              {t("auth.registerFree")}
             </Link>
           </p>
         </CardContent>

@@ -1,4 +1,4 @@
-# Maquettes — Objectif Canada TCF
+# Maquettes — Objectif TCF
 
 Dossiers de référence pour le développement écran par écran.
 

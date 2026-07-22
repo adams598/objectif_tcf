@@ -47,8 +47,10 @@ export function buildProviderReference(): string {
   return `oc_${randomUUID().replace(/-/g, "").slice(0, 20)}`;
 }
 
+import { resolveAppUrl } from "@/lib/env/app-url";
+
 export function getAppUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? "http://localhost:3000";
+  return resolveAppUrl();
 }
 
 function buildAmounts(

@@ -1,3 +1,5 @@
+import { resolveAppUrl } from "@/lib/env/app-url";
+
 function envStripeConfigured(): boolean {
   const key = process.env.STRIPE_SECRET_KEY?.trim();
   if (!key || key === "..." || key.length < 12) return false;
@@ -31,7 +33,7 @@ export function validateProductionEnv(): ProductionValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? "";
+  const appUrl = resolveAppUrl();
   if (
     !appUrl ||
     appUrl.includes("localhost") ||
@@ -121,8 +123,6 @@ export function validateProductionEnv(): ProductionValidationResult {
 
   return { ok: errors.length === 0, errors, warnings };
 }
-
-import { resolveAppUrl } from "@/lib/env/app-url";
 
 export function getPublicAppUrl(): string {
   return resolveAppUrl();

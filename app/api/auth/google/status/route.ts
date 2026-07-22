@@ -3,29 +3,40 @@ import {
   getGoogleCredentials,
   getGoogleRedirectUri,
 } from "@/lib/auth/google";
+import {
+  getGoogleCallbackUriForCurrentEnv,
+  resolveAppUrl,
+} from "@/lib/env/app-url";
+import { getAppRuntime, getRuntimeLabel } from "@/lib/env/runtime";
 
-/** Diagnostic dev — compare avec Google Cloud Console */
+/** Diagnostic local — URLs OAuth à comparer avec Google Cloud Console */
 export async function GET() {
-  if (process.env.NODE_ENV === "production") {
-    return NextResponse.json({ error: "Non disponible" }, { status: 404 });
+  if (process.env.NODE_ENV === "production" && process.env.VERCEL === "1") {
+    return NextResponse.json({ error: "Non disponible en production" }, { status: 404 });
   }
 
   const credentials = getGoogleCredentials();
   const clientId = credentials?.clientId ?? process.env.GOOGLE_CLIENT_ID?.trim() ?? "";
 
   return NextResponse.json({
+    runtime: getAppRuntime(),
+    runtimeLabel: getRuntimeLabel(),
+    appUrl: resolveAppUrl(),
     configured: credentials !== null,
-    redirectUri: getGoogleRedirectUri(),
+    redirectUriFromEnv: getGoogleRedirectUri(),
+    redirectUriAtRuntime: getGoogleCallbackUriForCurrentEnv(),
+    redirectUriUsedByBrowser:
+      "http://localhost:3000/api/auth/google/callback (connexion depuis localhost)",
+    googleConsoleRedirectUris: [
+      "http://localhost:3000/api/auth/google/callback",
+      "https://objectif-tcf-blue.vercel.app/api/auth/google/callback",
+    ],
     clientIdPreview: clientId
       ? `${clientId.slice(0, 24)}…${clientId.slice(-20)}`
       : null,
-    clientIdLength: clientId.length,
-    secretLength: credentials?.clientSecret.length ?? 0,
-    secretFormatOk: credentials?.clientSecret.startsWith("GOCSPX") ?? false,
-    envSource: "Next.js charge .env.local en priorité sur .env",
     hint:
       credentials === null
-        ? "GOOGLE_CLIENT_ID ou GOOGLE_CLIENT_SECRET invalide dans .env.local"
-        : "Comparez clientIdPreview avec Google Cloud → Credentials → OAuth 2.0 (Web)",
+        ? "Renseignez GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET dans .env.local"
+        : "Les deux redirect URI ci-dessus doivent être dans Google Cloud → Credentials",
   });
 }

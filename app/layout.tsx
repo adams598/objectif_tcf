@@ -3,7 +3,9 @@ import { Geist, Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+import { resolveAppUrl } from "@/lib/env/app-url";
+
+const appUrl = resolveAppUrl();
 
 const geist = Geist({
   variable: "--font-geist",
@@ -40,7 +42,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "fr_FR",
-    url: process.env.NEXT_PUBLIC_APP_URL,
+    url: appUrl,
     title: "Objectif TCF — Le goût des C2 🍁",
     description:
       "La plateforme d'entraînement la plus avancée pour le TCF Canada, TEF Canada et IELTS.",

@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import type { PaymentMethod } from "@prisma/client";
+import { resolveAppUrl } from "@/lib/env/app-url";
 import type { ProviderChargeParams } from "../types";
 
 export function isStripeConfigured(): boolean {
@@ -31,7 +32,7 @@ export async function createStripeCheckout(
   body.set("success_url", `${params.redirectUrl}?session_id={CHECKOUT_SESSION_ID}`);
   body.set(
     "cancel_url",
-    `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/offres/paiement/annule?paymentId=${params.paymentId}`
+    `${resolveAppUrl()}/offres/paiement/annule?paymentId=${params.paymentId}`
   );
   body.set("client_reference_id", params.paymentId);
   body.set("customer_email", params.customerEmail);

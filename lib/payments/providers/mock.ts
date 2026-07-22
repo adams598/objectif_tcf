@@ -1,4 +1,5 @@
 import type { ProviderChargeParams } from "../types";
+import { resolveAppUrl } from "@/lib/env/app-url";
 import { isPawaPayConfigured } from "./pawapay";
 import { isStripeConfigured } from "./stripe";
 
@@ -15,7 +16,7 @@ export function createMockCheckout(params: ProviderChargeParams): {
   checkoutUrl: string;
   externalId: string;
 } {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = resolveAppUrl();
   const checkoutUrl = `${baseUrl}/offres/paiement/${params.paymentId}/simuler?ref=${params.providerReference}`;
 
   return {

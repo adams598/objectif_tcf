@@ -36,6 +36,8 @@ vercel link
 
 ## 3. Variables d'environnement
 
+Voir le guide complet : **[environnements-local-prod.md](./environnements-local-prod.md)** (local + prod sans reconfig à chaque push).
+
 ### Préparer le fichier
 
 Le fichier **`.env.vercel`** est déjà rempli (gitignored). Sinon utilisez **`.env.vercel.example`** (même contenu).

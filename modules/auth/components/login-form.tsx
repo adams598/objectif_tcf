@@ -27,6 +27,8 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
     "La connexion Google n'est pas configurée sur le serveur.",
   google_auth_failed:
     "La connexion Google a échoué. Vérifiez l'URI de redirection dans Google Cloud Console.",
+  server_config:
+    "Configuration serveur incomplète (JWT_SECRET manquant sur Vercel). Contactez l'administrateur.",
   google_denied: "Connexion Google annulée.",
   google_invalid_state: "Session Google expirée. Veuillez réessayer.",
   google_email_unverified: "Votre email Google n'est pas vérifié.",

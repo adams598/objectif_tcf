@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
 import prisma from "@/lib/db/prisma";
 import { signAccessToken, signRefreshToken } from "@/lib/auth/jwt";
-import { setAuthCookies } from "@/lib/auth/cookies";
+import { applyAuthCookiesToResponse } from "@/lib/auth/cookies";
 import {
   exchangeGoogleCode,
   fetchGoogleUserInfo,
@@ -13,6 +13,8 @@ import {
   GOOGLE_OAUTH_STATE_COOKIE,
 } from "@/lib/auth/google";
 
+export const runtime = "nodejs";
+
 function redirectWithError(
   request: NextRequest,
   error: string,
@@ -20,6 +22,18 @@ function redirectWithError(
 ) {
   const basePath = action === "register" ? "/inscription" : "/connexion";
   return NextResponse.redirect(new URL(`${basePath}?error=${error}`, request.url));
+}
+
+function hasProductionJwtSecrets(): boolean {
+  if (process.env.NODE_ENV !== "production") return true;
+  const access = process.env.JWT_SECRET?.trim() ?? "";
+  const refresh = process.env.JWT_REFRESH_SECRET?.trim() ?? "";
+  return (
+    access.length >= 32 &&
+    refresh.length >= 32 &&
+    !access.includes("your-super-secret") &&
+    !refresh.includes("your-super-secret")
+  );
 }
 
 async function createSessionForUser(
@@ -61,8 +75,6 @@ async function createSessionForUser(
     },
   });
 
-  await setAuthCookies(accessToken, refreshToken);
-
   void prisma.auditLog
     .create({
       data: {
@@ -87,37 +99,45 @@ async function createSessionForUser(
     destination = "/onboarding";
   }
 
-  return NextResponse.redirect(new URL(destination, request.url));
+  const response = NextResponse.redirect(new URL(destination, request.url));
+  return applyAuthCookiesToResponse(response, accessToken, refreshToken);
 }
 
 export async function GET(request: NextRequest) {
-  const cookieStore = await cookies();
-  const { searchParams } = request.nextUrl;
-  const code = searchParams.get("code");
-  const state = searchParams.get("state");
-  const oauthError = searchParams.get("error");
-
-  const savedState = cookieStore.get(GOOGLE_OAUTH_STATE_COOKIE)?.value;
-  const action = cookieStore.get(GOOGLE_OAUTH_ACTION_COOKIE)?.value ?? "login";
-
-  cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE);
-  cookieStore.delete(GOOGLE_OAUTH_ACTION_COOKIE);
-
-  const redirectUri =
-    cookieStore.get(GOOGLE_OAUTH_REDIRECT_URI_COOKIE)?.value ??
-    getGoogleRedirectUri();
-  cookieStore.delete(GOOGLE_OAUTH_REDIRECT_URI_COOKIE);
-
-  if (oauthError) {
-    console.error("[Google OAuth] Provider error:", oauthError);
-    return redirectWithError(request, "google_denied", action);
-  }
-
-  if (!code || !state || !savedState || state !== savedState) {
-    return redirectWithError(request, "google_invalid_state", action);
-  }
+  let action = "login";
 
   try {
+    if (!hasProductionJwtSecrets()) {
+      console.error("[Google OAuth] JWT_SECRET ou JWT_REFRESH_SECRET manquant en production");
+      return redirectWithError(request, "server_config", action);
+    }
+
+    const cookieStore = await cookies();
+    const { searchParams } = request.nextUrl;
+    const code = searchParams.get("code");
+    const state = searchParams.get("state");
+    const oauthError = searchParams.get("error");
+
+    const savedState = cookieStore.get(GOOGLE_OAUTH_STATE_COOKIE)?.value;
+    action = cookieStore.get(GOOGLE_OAUTH_ACTION_COOKIE)?.value ?? "login";
+
+    cookieStore.delete(GOOGLE_OAUTH_STATE_COOKIE);
+    cookieStore.delete(GOOGLE_OAUTH_ACTION_COOKIE);
+
+    const redirectUri =
+      cookieStore.get(GOOGLE_OAUTH_REDIRECT_URI_COOKIE)?.value ??
+      getGoogleRedirectUri();
+    cookieStore.delete(GOOGLE_OAUTH_REDIRECT_URI_COOKIE);
+
+    if (oauthError) {
+      console.error("[Google OAuth] Provider error:", oauthError);
+      return redirectWithError(request, "google_denied", action);
+    }
+
+    if (!code || !state || !savedState || state !== savedState) {
+      return redirectWithError(request, "google_invalid_state", action);
+    }
+
     const tokens = await exchangeGoogleCode(code, redirectUri);
     const googleUser = await fetchGoogleUserInfo(tokens.access_token);
 

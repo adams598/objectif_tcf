@@ -9,6 +9,13 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { fetchJson } from "@/lib/api/fetch-json";
 import { AdminMediaUpload } from "@/modules/admin/components/admin-media-upload";
+import {
+  buildQcmInstruction,
+  buildTaskInstructionPayload,
+  parseQcmInstructionForForm,
+  parseTaskInstructionForForm,
+  type AdminSkill,
+} from "@/lib/admin/question-instruction";
 
 interface AdminExam {
   id: string;
@@ -27,6 +34,7 @@ interface AdminSeries {
   order: number;
   isPublished: boolean;
   isFree: boolean;
+  isCustomContent?: boolean;
   exam: { type: string; title: string };
   _count: { questions: number; attempts: number };
 }
@@ -71,6 +79,7 @@ type QcmFormState = {
   correctIndex: number;
   audioUrl: string;
   imageUrl: string;
+  documentTag: string;
 };
 
 type TaskFormState = {
@@ -78,6 +87,12 @@ type TaskFormState = {
   instruction: string;
   explanation: string;
   order: number;
+  audioUrl: string;
+  imageUrl: string;
+  minWords: number;
+  maxWords: number;
+  preparationTime: number;
+  speakingTime: number;
 };
 
 const emptyQcmForm = (): QcmFormState => ({
@@ -92,6 +107,7 @@ const emptyQcmForm = (): QcmFormState => ({
   correctIndex: 0,
   audioUrl: "",
   imageUrl: "",
+  documentTag: "",
 });
 
 const emptyTaskForm = (): TaskFormState => ({
@@ -99,6 +115,12 @@ const emptyTaskForm = (): TaskFormState => ({
   instruction: "",
   explanation: "",
   order: 1,
+  audioUrl: "",
+  imageUrl: "",
+  minWords: 60,
+  maxWords: 120,
+  preparationTime: 120,
+  speakingTime: 120,
 });
 
 const emptySeriesForm = {
@@ -113,14 +135,15 @@ const emptySeriesForm = {
   isFree: false,
 };
 
-function questionToQcmForm(q: AdminQuestion): QcmFormState {
+function questionToQcmForm(q: AdminQuestion, skill: AdminSkill): QcmFormState {
   const choices = q.choices.slice(0, 4);
   while (choices.length < 4) {
     choices.push({ id: "", content: "", isCorrect: false, order: choices.length });
   }
+  const parsed = parseQcmInstructionForForm(skill, q.instruction);
   return {
     content: q.content,
-    instruction: q.instruction ?? "",
+    instruction: parsed.instruction,
     explanation: q.explanation ?? "",
     order: q.order,
     choiceA: choices[0]?.content ?? "",
@@ -130,15 +153,23 @@ function questionToQcmForm(q: AdminQuestion): QcmFormState {
     correctIndex: Math.max(0, choices.findIndex((c) => c.isCorrect)),
     audioUrl: q.audioUrl ?? "",
     imageUrl: q.imageUrl ?? "",
+    documentTag: parsed.documentTag,
   };
 }
 
 function questionToTaskForm(q: AdminQuestion): TaskFormState {
+  const parsed = parseTaskInstructionForForm(q.instruction);
   return {
     content: q.content,
-    instruction: q.instruction ?? "",
+    instruction: parsed.instruction,
     explanation: q.explanation ?? "",
     order: q.order,
+    audioUrl: q.audioUrl ?? "",
+    imageUrl: q.imageUrl ?? "",
+    minWords: parsed.minWords,
+    maxWords: parsed.maxWords,
+    preparationTime: parsed.preparationTime,
+    speakingTime: parsed.speakingTime,
   };
 }
 
@@ -333,7 +364,9 @@ export function SeriesAdminView() {
   const openEditQuestion = (q: AdminQuestion) => {
     setEditingQuestionId(q.id);
     if (q.type === "QCM") {
-      setQcmForm(questionToQcmForm(q));
+      setQcmForm(
+        questionToQcmForm(q, (selectedDetail?.skill ?? "COMPREHENSION_ORALE") as AdminSkill)
+      );
     } else {
       setTaskForm(questionToTaskForm(q));
     }
@@ -341,6 +374,7 @@ export function SeriesAdminView() {
   };
 
   const buildQcmPayload = (form: QcmFormState) => {
+    const skill = (selectedDetail?.skill ?? "COMPREHENSION_ORALE") as AdminSkill;
     const choices = [form.choiceA, form.choiceB, form.choiceC, form.choiceD].map(
       (content, order) => ({
         content,
@@ -352,7 +386,9 @@ export function SeriesAdminView() {
     return {
       type: "QCM" as const,
       content: form.content,
-      instruction: form.instruction || null,
+      instruction:
+        buildQcmInstruction(skill, form.instruction, form.documentTag) ||
+        null,
       explanation: form.explanation || null,
       order: form.order,
       audioUrl: form.audioUrl || null,
@@ -367,9 +403,11 @@ export function SeriesAdminView() {
         ? ("SPEAKING_TASK" as const)
         : ("WRITING_TASK" as const),
     content: form.content,
-    instruction: form.instruction || null,
+    instruction: buildTaskInstructionPayload(form),
     explanation: form.explanation || null,
     order: form.order,
+    audioUrl: form.audioUrl || null,
+    imageUrl: form.imageUrl || null,
   });
 
   const handleSaveQuestion = () => {
@@ -404,9 +442,10 @@ export function SeriesAdminView() {
           </h1>
           <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl">
             Créez, modifiez et publiez vos séries et questions sans intervention
-            technique. Les changements en base sont conservés — évitez de relancer{" "}
-            <code className="text-primary">npm run db:seed</code> après vos
-            modifications (le seed réinitialise le contenu depuis le code).
+            technique. Les séries modifiées ici sont marquées « contenu admin » et
+            ne sont plus écrasées par{" "}
+            <code className="text-primary">npm run db:seed</code> (le seed ne
+            remplace que les séries issues du code non personnalisées).
           </p>
         </div>
         <Button onClick={() => setShowCreateSeries(true)} className="shrink-0">
@@ -498,6 +537,11 @@ export function SeriesAdminView() {
                         Publié
                       </span>
                     )}
+                    {s.isCustomContent && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-200 font-bold">
+                        Admin
+                      </span>
+                    )}
                   </div>
                 </button>
               ))}
@@ -518,6 +562,11 @@ export function SeriesAdminView() {
                 <div className="flex flex-wrap items-start justify-between gap-md">
                   <h2 className="font-headline-lg text-headline-lg font-bold text-on-surface">
                     Paramètres de la série
+                    {selectedDetail.isCustomContent && (
+                      <span className="ml-sm text-[12px] font-label-sm font-bold px-sm py-xs rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-200 align-middle">
+                        Contenu admin (protégé du seed)
+                      </span>
+                    )}
                   </h2>
                   <div className="flex gap-sm">
                     <Button size="sm" onClick={openAddQuestion}>
@@ -647,12 +696,26 @@ export function SeriesAdminView() {
                     <>
                       <textarea
                         className="w-full rounded-xl border border-outline-variant p-md font-body-md min-h-[80px] bg-surface"
-                        placeholder="Texte / passage / consigne d'écoute"
+                        placeholder={
+                          selectedDetail?.skill === "COMPREHENSION_ORALE"
+                            ? "Consigne d'écoute (texte affiché à l'élève)"
+                            : "Passage / document texte (CE)"
+                        }
                         value={qcmForm.instruction}
                         onChange={(e) =>
                           setQcmForm((f) => ({ ...f, instruction: e.target.value }))
                         }
                       />
+                      {(selectedDetail?.skill === "COMPREHENSION_ORALE" ||
+                        selectedDetail?.skill === "COMPREHENSION_ECRITE") && (
+                        <Input
+                          placeholder="Étiquette document (ex. Annonce, Email…)"
+                          value={qcmForm.documentTag}
+                          onChange={(e) =>
+                            setQcmForm((f) => ({ ...f, documentTag: e.target.value }))
+                          }
+                        />
+                      )}
                       <textarea
                         className="w-full rounded-xl border border-outline-variant p-md font-body-md min-h-[60px] bg-surface"
                         placeholder="Question"
@@ -720,6 +783,86 @@ export function SeriesAdminView() {
                           setTaskForm((f) => ({ ...f, content: e.target.value }))
                         }
                       />
+                      {selectedDetail?.skill === "EXPRESSION_ECRITE" && (
+                        <div className="grid grid-cols-2 gap-md">
+                          <Input
+                            type="number"
+                            min={1}
+                            placeholder="Min. mots"
+                            value={taskForm.minWords}
+                            onChange={(e) =>
+                              setTaskForm((f) => ({
+                                ...f,
+                                minWords: parseInt(e.target.value, 10) || 0,
+                              }))
+                            }
+                          />
+                          <Input
+                            type="number"
+                            min={1}
+                            placeholder="Max. mots"
+                            value={taskForm.maxWords}
+                            onChange={(e) =>
+                              setTaskForm((f) => ({
+                                ...f,
+                                maxWords: parseInt(e.target.value, 10) || 0,
+                              }))
+                            }
+                          />
+                        </div>
+                      )}
+                      {selectedDetail?.skill === "EXPRESSION_ORALE" && (
+                        <div className="grid grid-cols-2 gap-md">
+                          <Input
+                            type="number"
+                            min={0}
+                            placeholder="Préparation (secondes)"
+                            value={taskForm.preparationTime}
+                            onChange={(e) =>
+                              setTaskForm((f) => ({
+                                ...f,
+                                preparationTime: parseInt(e.target.value, 10) || 0,
+                              }))
+                            }
+                          />
+                          <Input
+                            type="number"
+                            min={1}
+                            placeholder="Temps de parole (secondes)"
+                            value={taskForm.speakingTime}
+                            onChange={(e) =>
+                              setTaskForm((f) => ({
+                                ...f,
+                                speakingTime: parseInt(e.target.value, 10) || 0,
+                              }))
+                            }
+                          />
+                        </div>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                        {selectedDetail?.skill === "EXPRESSION_ORALE" && (
+                          <AdminMediaUpload
+                            kind="audio"
+                            label="Consigne audio (EO)"
+                            value={taskForm.audioUrl}
+                            onChange={(url) =>
+                              setTaskForm((f) => ({ ...f, audioUrl: url }))
+                            }
+                          />
+                        )}
+                        <AdminMediaUpload
+                          kind="image"
+                          label={
+                            selectedDetail?.skill === "EXPRESSION_ECRITE"
+                              ? "Document / image (EE)"
+                              : "Image (EO, optionnel)"
+                          }
+                          value={taskForm.imageUrl}
+                          onChange={(url) =>
+                            setTaskForm((f) => ({ ...f, imageUrl: url }))
+                          }
+                        />
+                      </div>
                     </>
                   )}
 

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ExamShell, useExamTimer } from "./shared/exam-shell";
 import { TaskTabs } from "./shared/task-tabs";
+import { ExamMediaPanel } from "./shared/exam-media-panel";
 import { FrenchKeyboard } from "./shared/french-keyboard";
 import { WRITING_TASKS } from "@/lib/examen/mock/tasks";
 import { submitExamScore } from "@/lib/examen/submit-exam";
@@ -31,6 +32,7 @@ type TaskItem = {
   minWords: number;
   maxWords: number;
   prompt: string;
+  imageUrl?: string | null;
 };
 
 export function WritingExamView({
@@ -54,6 +56,7 @@ export function WritingExamView({
           minWords: meta.minWords ?? 60,
           maxWords: meta.maxWords ?? 120,
           prompt: q.content,
+          imageUrl: q.imageUrl ?? null,
         };
       })
     : WRITING_TASKS.map((t) => ({
@@ -63,6 +66,7 @@ export function WritingExamView({
         minWords: t.minWords,
         maxWords: t.maxWords,
         prompt: t.prompt,
+        imageUrl: null,
       }));
 
   const [activeTask, setActiveTask] = useState(tasks[0]?.id ?? 1);
@@ -196,6 +200,10 @@ export function WritingExamView({
     >
       <div className="max-w-4xl mx-auto flex flex-col gap-lg">
         <TaskTabs tasks={taskTabs} activeId={activeTask} onChange={setActiveTask} />
+
+        {task.imageUrl ? (
+          <ExamMediaPanel imageUrl={task.imageUrl} fallbackLabel={t("exam.subject")} />
+        ) : null}
 
         <div className="text-center">
           <p className="font-label-sm text-label-sm text-on-surface-variant">

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import { markSeriesAsCustomContent } from "@/lib/admin/series-content";
 import { requireRole } from "@/lib/auth/session";
 import {
   successResponse,
@@ -90,6 +91,8 @@ export async function PATCH(
       });
     });
 
+    await markSeriesAsCustomContent(existing.seriesId);
+
     return successResponse(question);
   } catch (error) {
     return handleAuthError(error) ?? serverErrorResponse(error);
@@ -104,10 +107,18 @@ export async function DELETE(
     await requireRole("ADMIN", "SUPER_ADMIN");
     const { id } = await params;
 
+    const existing = await prisma.question.findFirst({
+      where: { id, deletedAt: null },
+      select: { seriesId: true },
+    });
+    if (!existing) return notFoundResponse("Question introuvable");
+
     await prisma.question.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
+
+    await markSeriesAsCustomContent(existing.seriesId);
 
     return successResponse({ deleted: true });
   } catch (error) {

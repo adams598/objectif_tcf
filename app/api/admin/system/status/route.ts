@@ -7,6 +7,7 @@ import {
   isPawaPayConfigured,
   testPawaPayConnection,
 } from "@/lib/payments/providers/pawapay";
+import { getBlobStorageBackend } from "@/lib/media/blob-storage";
 import { isStripeConfigured } from "@/lib/payments/providers/stripe";
 import {
   successResponse,
@@ -51,6 +52,12 @@ export async function GET() {
       webhooks: {
         stripe: `${resolveAppUrl()}/api/paiement/webhook/stripe`,
         pawapay: `${resolveAppUrl()}/api/paiement/webhook/pawapay`,
+      },
+      storage: {
+        backend: getBlobStorageBackend(),
+        blobConfigured: getBlobStorageBackend() === "vercel-blob",
+        hint:
+          "Vercel Dashboard → Storage → Blob → connecter le projet → BLOB_READ_WRITE_TOKEN",
       },
     });
   } catch (error) {

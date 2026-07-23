@@ -103,6 +103,18 @@ async function seedExamFromConfig(prisma: PrismaClient, config: ExamSeedConfig) 
     const bank = bankSeries[index];
     const seriesId = `${config.prefix}-${bank.order}-${bank.skill.toLowerCase().replace(/_/g, "-")}`;
 
+    const existingSeries = await prisma.examSeries.findUnique({
+      where: { id: seriesId },
+      select: { isCustomContent: true },
+    });
+
+    if (existingSeries?.isCustomContent) {
+      console.log(
+        `    ⏭ ${seriesId} ignorée (contenu personnalisé admin — non écrasé par le seed)`
+      );
+      continue;
+    }
+
     const series = await prisma.examSeries.upsert({
       where: { id: seriesId },
       update: {
@@ -115,6 +127,7 @@ async function seedExamFromConfig(prisma: PrismaClient, config: ExamSeedConfig) 
         isFree: bank.isFree,
         deletedAt: null,
         totalPoints: bank.questions.length,
+        isCustomContent: false,
       },
       create: {
         id: seriesId,
@@ -128,6 +141,7 @@ async function seedExamFromConfig(prisma: PrismaClient, config: ExamSeedConfig) 
         isPublished: true,
         isFree: bank.isFree,
         totalPoints: bank.questions.length,
+        isCustomContent: false,
       },
     });
 

@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     }
 
     const series = await prisma.examSeries.create({
-      data: parsed.data,
+      data: { ...parsed.data, isCustomContent: true },
       include: {
         exam: { select: { type: true, title: true } },
         _count: { select: { questions: true } },

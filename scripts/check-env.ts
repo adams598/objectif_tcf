@@ -75,6 +75,15 @@ if (mode === "local") {
     ok.push("APP_URL (local)");
   }
 
+  const blob = get("BLOB_READ_WRITE_TOKEN");
+  if (!blob) {
+    warnings.push(
+      "BLOB_READ_WRITE_TOKEN absent — uploads locaux dans public/uploads/ ; en prod Vercel, créez un Blob store"
+    );
+  } else {
+    ok.push("BLOB_READ_WRITE_TOKEN");
+  }
+
   console.log("Google OAuth — ajoutez une fois dans Google Cloud Console :");
   console.log("  http://localhost:3000/api/auth/google/callback");
   console.log("  https://objectif-tcf-blue.vercel.app/api/auth/google/callback\n");
@@ -91,6 +100,7 @@ if (mode === "local") {
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET",
     "RESEND_API_KEY",
+    "BLOB_READ_WRITE_TOKEN",
     "PAYMENTS_MOCK_MODE=false",
   ];
   for (const k of prodKeys) console.log(`  • ${k}`);

@@ -12,6 +12,7 @@ import {
   type CorrectionMode,
 } from "./shared/correction-mode-dialog";
 import { ExamAudioPlayer } from "./shared/exam-audio-player";
+import { ExamMediaPanel } from "./shared/exam-media-panel";
 import { OralRecorder } from "./shared/oral-recorder";
 import { getEoPromptScript } from "@/lib/examen/media/assets";
 import { ORAL_TASKS } from "@/lib/examen/mock/tasks";
@@ -35,6 +36,8 @@ type OralTaskItem = {
   instruction: string;
   prompt: string;
   promptAudioScript: string;
+  promptAudioUrl?: string | null;
+  imageUrl?: string | null;
   preparationTime: number;
   speakingTime: number;
 };
@@ -72,6 +75,8 @@ export function OralExamView({
             q.audioScript ??
             meta.promptAudioScript ??
             getEoPromptScript(q.order),
+          promptAudioUrl: q.audioUrl ?? null,
+          imageUrl: q.imageUrl ?? null,
           preparationTime: meta.preparationTime ?? 120,
           speakingTime: meta.speakingTime ?? 120,
         };
@@ -84,6 +89,8 @@ export function OralExamView({
       instruction: t.instruction,
       prompt: t.prompt,
       promptAudioScript: getEoPromptScript(t.id),
+      promptAudioUrl: null,
+      imageUrl: null,
       preparationTime: t.preparationTime,
       speakingTime: t.speakingTime,
     }));
@@ -303,10 +310,19 @@ export function OralExamView({
             </p>
 
             <ExamAudioPlayer
+              audioUrl={task.promptAudioUrl}
               audioScript={task.promptAudioScript}
               label={t("exam.examinerInstruction")}
               className="mb-xl text-left"
             />
+
+            {task.imageUrl ? (
+              <ExamMediaPanel
+                imageUrl={task.imageUrl}
+                className="mb-xl"
+                fallbackLabel={t("exam.subject")}
+              />
+            ) : null}
 
             {phase === "speak" && (
               <div className="flex flex-col items-center gap-md mb-lg">

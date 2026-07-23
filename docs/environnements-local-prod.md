@@ -97,7 +97,30 @@ pawaPay sandbox : callback `{APP_URL}/api/paiement/webhook/pawapay` (local ou pr
 
 ---
 
-## 7. Fichiers du repo
+## 8. Fichiers uploadés (Vercel Blob)
+
+Images/audio admin, avatars et enregistrements EO passent par **Vercel Blob** (pas Neon, pas le disque Vercel).
+
+### Production
+
+1. [Vercel Dashboard](https://vercel.com) → projet **objectif-tcf** → **Storage** → **Create Database** → **Blob**
+2. Connecter le store au projet (Vercel ajoute `BLOB_READ_WRITE_TOKEN` automatiquement)
+3. **Redeploy**
+
+### Local (optionnel)
+
+Pour tester l’upload comme en prod :
+
+```bash
+vercel env pull .env.local   # récupère BLOB_READ_WRITE_TOKEN depuis Vercel
+# ou copiez le token manuellement dans .env.local
+```
+
+Sans token en local, les fichiers vont dans `public/uploads/` (dev uniquement).
+
+---
+
+## 9. Fichiers du repo
 
 | Fichier | Rôle |
 |---------|------|

@@ -113,12 +113,10 @@ export function validateProductionEnv(): ProductionValidationResult {
     );
   }
 
-  if (
-    isPlaceholder(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, [
-      "your-cloud",
-    ])
-  ) {
-    warnings.push("Cloudinary non configuré — uploads médias admin limités");
+  if (!process.env.BLOB_READ_WRITE_TOKEN?.trim()) {
+    warnings.push(
+      "BLOB_READ_WRITE_TOKEN absent — uploads médias (admin, avatars, EO) nécessitent Vercel Blob en production"
+    );
   }
 
   return { ok: errors.length === 0, errors, warnings };

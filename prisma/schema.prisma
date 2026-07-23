@@ -402,6 +402,7 @@ model ExamSeries {
   order        Int             @default(0)
   isPublished  Boolean         @default(false)
   isFree       Boolean         @default(false)
+  isCustomContent Boolean      @default(false)
   audioUrl     String?
   imageUrl     String?
   deletedAt    DateTime?

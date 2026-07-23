@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import { markSeriesAsCustomContent } from "@/lib/admin/series-content";
 import { requireRole } from "@/lib/auth/session";
 import {
   successResponse,
@@ -76,6 +77,8 @@ export async function PATCH(
       where: { id },
       data: parsed.data,
     });
+
+    await markSeriesAsCustomContent(id);
 
     return successResponse(series);
   } catch (error) {

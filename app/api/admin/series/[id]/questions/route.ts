@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
+import { markSeriesAsCustomContent } from "@/lib/admin/series-content";
 import { requireRole } from "@/lib/auth/session";
 import {
   successResponse,
@@ -97,6 +98,8 @@ export async function POST(
       where: { id: seriesId },
       data: { totalPoints: { increment: questionData.points } },
     });
+
+    await markSeriesAsCustomContent(seriesId);
 
     return createdResponse(question);
   } catch (error) {

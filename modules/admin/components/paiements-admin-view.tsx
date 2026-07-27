@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { fetchJson } from "@/lib/api/fetch-json";
 import { formatPaymentAmount } from "@/lib/payments/methods";
 import { Button } from "@/components/ui/button";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { PaymentCurrency, PaymentMethod, PaymentProvider, PaymentStatus } from "@prisma/client";
 
 interface AdminPaymentRow {
@@ -102,6 +103,8 @@ export function PaiementsAdminView() {
       toast.error(message);
     },
   });
+
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const { stats, payments, meta } = query.data ?? {
     stats: { total: 0, succeeded: 0, pending: 0, failed: 0, revenueXaf: 0 },
@@ -242,15 +245,17 @@ export function PaiementsAdminView() {
                           variant="secondary"
                           size="sm"
                           disabled={refundMutation.isPending}
-                          onClick={() => {
-                            if (
-                              window.confirm(
-                                "Confirmer le remboursement de ce paiement ? L'abonnement associé sera révoqué."
-                              )
-                            ) {
-                              refundMutation.mutate(payment.id);
-                            }
-                          }}
+                          onClick={() =>
+                            confirm({
+                              title: "Rembourser ce paiement ?",
+                              description:
+                                "L'abonnement associé sera révoqué. Cette action est définitive.",
+                              confirmLabel: "Rembourser",
+                              destructive: true,
+                              onConfirm: () =>
+                                refundMutation.mutateAsync(payment.id),
+                            })
+                          }
                         >
                           Rembourser
                         </Button>
@@ -287,6 +292,7 @@ export function PaiementsAdminView() {
           </button>
         </div>
       )}
+      {confirmDialog}
     </div>
   );
 }

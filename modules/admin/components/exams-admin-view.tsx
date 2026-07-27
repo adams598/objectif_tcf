@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { fetchJson } from "@/lib/api/fetch-json";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   ALL_EXAM_TYPES,
   EXAM_TYPE_LABELS,
@@ -119,6 +120,8 @@ export function ExamsAdminView() {
     onError: () => toast.error("Impossible de supprimer"),
   });
 
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
+
   return (
     <div className="flex flex-col gap-xl">
       <div className="flex flex-col gap-sm md:flex-row md:items-start md:justify-between">
@@ -185,15 +188,16 @@ export function ExamsAdminView() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        "Désactiver cet examen ? Il ne sera plus visible pour les apprenants."
-                      )
-                    ) {
-                      deleteExam.mutate(selected.id);
-                    }
-                  }}
+                  onClick={() =>
+                    confirm({
+                      title: "Désactiver cet examen ?",
+                      description:
+                        "Il ne sera plus visible pour les apprenants. Les séries associées restent en base.",
+                      confirmLabel: "Désactiver",
+                      destructive: true,
+                      onConfirm: () => deleteExam.mutateAsync(selected.id),
+                    })
+                  }
                 >
                   Désactiver
                 </Button>
@@ -326,6 +330,7 @@ export function ExamsAdminView() {
           </div>
         </div>
       )}
+      {confirmDialog}
     </div>
   );
 }

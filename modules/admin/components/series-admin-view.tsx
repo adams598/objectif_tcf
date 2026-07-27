@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { fetchJson } from "@/lib/api/fetch-json";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   BUNDLE_SKILLS,
   SKILL_CARD_LABELS,
@@ -177,6 +178,8 @@ function SkillPanel({
     },
   });
 
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
+
   const closeForm = () => {
     setShowForm(false);
     setEditingQuestionId(null);
@@ -283,11 +286,15 @@ function SkillPanel({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    if (window.confirm("Supprimer cette question ?")) {
-                      deleteQuestion.mutate(q.id);
-                    }
-                  }}
+                  onClick={() =>
+                    confirm({
+                      title: "Supprimer cette question ?",
+                      description: "Cette action est définitive.",
+                      confirmLabel: "Supprimer",
+                      destructive: true,
+                      onConfirm: () => deleteQuestion.mutateAsync(q.id),
+                    })
+                  }
                 >
                   <span className="material-symbols-outlined text-error text-[18px]">
                     delete
@@ -298,6 +305,7 @@ function SkillPanel({
           ))}
         </div>
       )}
+      {confirmDialog}
     </div>
   );
 }
@@ -404,6 +412,8 @@ export function SeriesAdminView() {
       toast.success("Série supprimée");
     },
   });
+
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const handlePublish = () => {
     if (!selectedGroup) return;
@@ -557,16 +567,20 @@ export function SeriesAdminView() {
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => {
-                        if (
-                          window.confirm("Supprimer toute la série (CO, CE, EE, EO) ?")
-                        ) {
-                          deleteBundle.mutate({
-                            examId: selectedGroup.examId,
-                            order: selectedGroup.order,
-                          });
-                        }
-                      }}
+                      onClick={() =>
+                        confirm({
+                          title: "Supprimer toute la série ?",
+                          description:
+                            "CO, CE, EE et EO seront supprimés. Cette action est définitive.",
+                          confirmLabel: "Supprimer",
+                          destructive: true,
+                          onConfirm: () =>
+                            deleteBundle.mutateAsync({
+                              examId: selectedGroup.examId,
+                              order: selectedGroup.order,
+                            }),
+                        })
+                      }
                     >
                       Supprimer
                     </Button>
@@ -724,6 +738,7 @@ export function SeriesAdminView() {
           </div>
         </div>
       )}
+      {confirmDialog}
     </div>
   );
 }

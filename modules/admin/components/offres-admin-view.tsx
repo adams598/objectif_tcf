@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { fetchJson } from "@/lib/api/fetch-json";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { OfferFeature } from "@/lib/pricing/constants";
 import { EXAM_TAB_LABELS, type ExamTab } from "@/lib/pricing/constants";
 
@@ -106,6 +107,8 @@ export function OffresAdminView() {
       toast.success("Offre supprimée.");
     },
   });
+
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const offers = offersQuery.data ?? [];
 
@@ -271,11 +274,15 @@ export function OffresAdminView() {
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => {
-                      if (confirm("Supprimer cette offre ?")) {
-                        deleteOfferMutation.mutate(offer.id);
-                      }
-                    }}
+                    onClick={() =>
+                      confirm({
+                        title: "Supprimer cette offre ?",
+                        description: "Cette action est définitive.",
+                        confirmLabel: "Supprimer",
+                        destructive: true,
+                        onConfirm: () => deleteOfferMutation.mutateAsync(offer.id),
+                      })
+                    }
                   >
                     Supprimer
                   </Button>
@@ -285,6 +292,7 @@ export function OffresAdminView() {
           )
         )}
       </section>
+      {confirmDialog}
     </div>
   );
 }

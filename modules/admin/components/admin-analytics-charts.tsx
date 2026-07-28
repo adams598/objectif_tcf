@@ -60,7 +60,11 @@ export type AdminAnalyticsData = {
   completedAttemptsByMonth: Array<{ month: string; count: number }>;
   paymentsByMethod: Array<{ method: string; count: number }>;
   paymentsByProvider: Array<{ provider: string; count: number }>;
-  revenueTotals: Array<{ currency: string; amount: number }>;
+  revenueTotals: Array<{
+    currency: string;
+    amount: number;
+    amountXaf: number;
+  }>;
 };
 
 const CHART_COLORS = [
@@ -127,6 +131,16 @@ function formatAmount(value: number, currency?: string) {
   return value.toLocaleString("fr-FR");
 }
 
+function formatRevenueLegend(
+  currency: string,
+  nativeAmount: number,
+  amountXaf: number
+): string {
+  const native = formatAmount(nativeAmount, currency);
+  if (currency === "XAF") return native;
+  return `${native} (~${formatAmount(amountXaf, "XAF")})`;
+}
+
 function withLabels<T extends { month: string }>(rows: T[] = []) {
   return rows.map((r) => ({ ...r, label: formatMonthLabel(r.month) }));
 }
@@ -152,7 +166,11 @@ function normalizeAnalyticsData(raw: AdminAnalyticsData): AdminAnalyticsData {
     completedAttemptsByMonth: raw.completedAttemptsByMonth ?? [],
     paymentsByMethod: raw.paymentsByMethod ?? [],
     paymentsByProvider: raw.paymentsByProvider ?? [],
-    revenueTotals: raw.revenueTotals ?? [],
+    revenueTotals: (raw.revenueTotals ?? []).map((r) => ({
+      currency: r.currency,
+      amount: r.amount ?? 0,
+      amountXaf: r.amountXaf ?? r.amount ?? 0,
+    })),
   };
 }
 
@@ -255,17 +273,20 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
     [data.paymentsByProvider]
   );
 
-  const currencyPie = useMemo(
-    () =>
-      toNamedPieData(
-        data.revenueTotals.map((r) => ({
-          name: r.currency,
-          value: r.amount,
-        })),
-        "Aucun revenu"
-      ),
-    [data.revenueTotals]
-  );
+  const currencyPie = useMemo(() => {
+    const items = data.revenueTotals
+      .filter((r) => r.amountXaf > 0)
+      .map((r) => ({
+        name: r.currency,
+        value: r.amountXaf,
+        legendLabel: formatRevenueLegend(r.currency, r.amount, r.amountXaf),
+      }));
+
+    if (items.length === 0) {
+      return [{ name: "Aucun revenu", value: 1, isEmpty: true }];
+    }
+    return items;
+  }, [data.revenueTotals]);
 
   const attemptCompletionPie = useMemo(() => {
     const incomplete = Math.max(
@@ -569,12 +590,16 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
         description="Analyse des flux financiers sur la période"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-lg">
-          <ChartCard title="Par devise" subtitle="Donut — total période">
-            <DonutChart data={currencyPie} height={200} />
-            <PieLegend
+          <ChartCard title="Par devise" subtitle="Donut — base F CFA (équivalents)">
+            <DonutChart
               data={currencyPie}
-              formatValue={(v, name) => formatAmount(v, name)}
+              height={200}
+              tooltipFormatter={(value, name) => [
+                formatAmount(Number(value), "XAF"),
+                `${name} (équiv. F CFA)`,
+              ]}
             />
+            <PieLegend data={currencyPie} showPercent />
           </ChartCard>
 
           <ChartCard title="Par méthode" subtitle="Donut">
@@ -746,16 +771,26 @@ function ChartCard({
   );
 }
 
-type PieDatum = { name: string; value: number; isEmpty?: boolean };
+type PieDatum = {
+  name: string;
+  value: number;
+  isEmpty?: boolean;
+  legendLabel?: string;
+};
 
 function DonutChart({
   data,
   height = 220,
   colors = CHART_COLORS,
+  tooltipFormatter,
 }: {
   data: PieDatum[];
   height?: number;
   colors?: string[];
+  tooltipFormatter?: (
+    value: number,
+    name: string
+  ) => [string, string];
 }) {
   const isEmpty = data.length === 1 && data[0]?.isEmpty;
 
@@ -782,7 +817,15 @@ function DonutChart({
             />
           ))}
         </Pie>
-        <Tooltip contentStyle={TOOLTIP_STYLE} />
+        <Tooltip
+          contentStyle={TOOLTIP_STYLE}
+          formatter={
+            tooltipFormatter
+              ? (value, name) =>
+                  tooltipFormatter(Number(value), String(name ?? ""))
+              : undefined
+          }
+        />
       </PieChart>
     </ResponsiveContainer>
   );
@@ -791,9 +834,11 @@ function DonutChart({
 function PieLegend({
   data,
   formatValue,
+  showPercent = true,
 }: {
   data: PieDatum[];
   formatValue?: (value: number, name: string) => string;
+  showPercent?: boolean;
 }) {
   const isEmpty = data.length === 1 && data[0]?.isEmpty;
   const total = isEmpty ? 0 : data.reduce((s, d) => s + d.value, 0);
@@ -806,9 +851,15 @@ function PieLegend({
         const display =
           isEmpty || item.isEmpty
             ? "—"
-            : formatValue
-              ? formatValue(item.value, item.name)
-              : `${item.value.toLocaleString("fr-FR")} (${pct}%)`;
+            : item.legendLabel
+              ? showPercent
+                ? `${item.legendLabel} (${pct}%)`
+                : item.legendLabel
+              : formatValue
+                ? formatValue(item.value, item.name)
+                : showPercent
+                  ? `${item.value.toLocaleString("fr-FR")} (${pct}%)`
+                  : item.value.toLocaleString("fr-FR");
         return (
           <li
             key={item.name}

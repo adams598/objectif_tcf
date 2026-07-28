@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { getInvoicePayloadForPayment } from "@/lib/invoices/issue-invoice";
-import { generateInvoicePdf } from "@/lib/pdf/generate-documents";
+import { generateInvoicePdfFromData } from "@/lib/pdf/generate-documents";
 import {
   notFoundResponse,
   serverErrorResponse,
@@ -16,6 +16,7 @@ export async function GET(
     const user = await requireAuth();
     const { id } = await params;
     const format = new URL(req.url).searchParams.get("format");
+    const inline = new URL(req.url).searchParams.get("inline") === "1";
 
     const payload = await getInvoicePayloadForPayment(id);
     if (!payload || payload.payment.userId !== user.userId) {
@@ -23,16 +24,7 @@ export async function GET(
     }
 
     if (format === "pdf") {
-      const pdfBytes = await generateInvoicePdf({
-        invoiceNumber: payload.invoice.invoiceNumber,
-        customerName: payload.invoice.customerName,
-        customerEmail: payload.invoice.customerEmail,
-        description: payload.invoice.description,
-        examTypeLabel: payload.invoice.examTypeLabel,
-        amountLabel: payload.invoice.amountFormatted,
-        paidAt: payload.invoice.paidAt,
-        periodEnd: payload.invoice.periodEnd,
-      });
+      const pdfBytes = await generateInvoicePdfFromData(payload.invoice);
 
       return new NextResponse(Buffer.from(pdfBytes), {
         status: 200,
@@ -45,12 +37,13 @@ export async function GET(
     }
 
     const filename = `${payload.invoice.invoiceNumber}.html`;
+    const disposition = inline ? "inline" : "attachment";
 
     return new NextResponse(payload.html, {
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Disposition": `${disposition}; filename="${filename}"`,
         "Cache-Control": "private, no-store",
       },
     });

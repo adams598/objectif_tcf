@@ -514,8 +514,14 @@ export const appExtEn = {
     paymentSuccessTitle: "Payment successful!",
     subscriptionActive: "Your subscription is active. Happy studying!",
     invoiceSent:
-      "Your invoice has been emailed and is available in Settings → My invoices.",
-    viewInvoices: "View my invoices",
+      "Your invoice has been emailed and is available in your Documents area.",
+    viewInvoices: "My documents",
+    viewInvoice: "View invoice",
+    downloadInvoicePdf: "Download PDF",
+    emailInvoice: "Email invoice",
+    invoiceEmailSent: "Invoice sent by email.",
+    invoiceEmailError: "Could not send the invoice.",
+    goToDocuments: "Go to my documents",
     startPreparation: "Start my preparation",
     paymentCancelledDesc:
       "No amount was charged. You can try again anytime.",
@@ -797,6 +803,20 @@ export const appExtEn = {
     countryBc: "British Columbia",
     countryHint:
       "You can change these preferences anytime in your settings.",
+  },
+  documents: {
+    title: "Documents",
+    subtitle:
+      "Find your subscription invoices and payment receipts.",
+    invoicesSectionTitle: "Invoices",
+    invoicesSectionDesc:
+      "Download invoices as PDF or view them online.",
+    viewInvoice: "View",
+    emailInvoice: "Email invoice",
+    invoiceEmailSent: "Invoice sent to your email address.",
+    invoiceEmailError: "Could not send. Please try again later.",
+    downloadError: "Download failed.",
+    settingsHint: "To manage your profile and preferences, go to",
   },
   writingCorrection: {
     title: "Written expression correction",

@@ -21,6 +21,7 @@ export const enCA: CoreMessages = {
     results: "Results",
     community: "Community",
     messaging: "Messages",
+    documents: "Documents",
     settings: "Settings",
     examMode: "Exam Mode",
     help: "Help",
@@ -98,7 +99,7 @@ export const enCA: CoreMessages = {
     deleteAccountDev: "Feature in development",
     invoicesTitle: "My invoices",
     invoicesDesc:
-      "Download your subscription invoices. A copy is also emailed after each payment.",
+      "View and download your invoices in the Documents area.",
     noInvoicesTitle: "No invoices yet",
     noInvoicesDesc:
       "Your invoices will appear here after your first paid subscription.",

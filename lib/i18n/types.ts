@@ -27,6 +27,7 @@ export interface CoreMessages {
     results: string;
     community: string;
     messaging: string;
+    documents: string;
     settings: string;
     examMode: string;
     help: string;

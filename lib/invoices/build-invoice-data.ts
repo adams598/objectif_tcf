@@ -13,7 +13,9 @@ import {
 import { formatPaymentAmount, PAYMENT_METHODS } from "@/lib/payments/methods";
 import { getAppUrl } from "@/lib/email/config";
 import type { InvoiceData, PaymentInvoiceMetadata } from "@/lib/invoices/types";
+import { getInvoiceCompanyConfig, getVatMention } from "@/lib/invoices/company-config";
 import { generateInvoiceNumber } from "@/lib/invoices/invoice-number";
+import { PLAN_LABELS } from "@/lib/admin/analytics";
 
 const PROVIDER_LABELS: Record<PaymentProvider, string> = {
   STRIPE: "Stripe",
@@ -71,6 +73,10 @@ export function buildInvoiceData(input: {
     [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
     user.name;
 
+  const company = getInvoiceCompanyConfig();
+  const vat = getVatMention(currency);
+  const planKey = metadata.subscriptionPlan as keyof typeof PLAN_LABELS | undefined;
+
   return {
     invoiceNumber: generateInvoiceNumber(payment),
     issuedAt: formatDateFr(paidAt),
@@ -94,5 +100,12 @@ export function buildInvoiceData(input: {
       : null,
     statusLabel: "Payée",
     downloadUrl: `${getAppUrl()}/api/paiement/${payment.id}/facture`,
+    pdfDownloadUrl: `${getAppUrl()}/api/paiement/${payment.id}/facture?format=pdf`,
+    companyLegalName: company.legalName,
+    companyAddress: company.addressLines.join("\n"),
+    siret: company.siret,
+    vatNumber: company.vatNumber,
+    vatMention: vat.rateLabel,
+    planLabel: planKey ? PLAN_LABELS[planKey] ?? null : null,
   };
 }

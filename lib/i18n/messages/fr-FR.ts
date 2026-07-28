@@ -21,6 +21,7 @@ export const frFR: CoreMessages = {
     results: "Résultats",
     community: "Communauté",
     messaging: "Messagerie",
+    documents: "Documents",
     settings: "Paramètres",
     examMode: "Mode Examen",
     help: "Aide",
@@ -101,7 +102,7 @@ export const frFR: CoreMessages = {
     deleteAccountDev: "Fonctionnalité en développement",
     invoicesTitle: "Mes factures",
     invoicesDesc:
-      "Téléchargez vos factures d'abonnement. Une copie est aussi envoyée par email après chaque paiement.",
+      "Consultez et téléchargez vos factures dans l'espace Documents.",
     noInvoicesTitle: "Aucune facture pour le moment",
     noInvoicesDesc:
       "Vos factures apparaîtront ici après votre premier abonnement payé.",

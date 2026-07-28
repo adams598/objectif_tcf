@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { fetchJson } from "@/lib/api/fetch-json";
@@ -19,53 +20,80 @@ interface UserInvoice {
   periodEnd: string;
   subscriptionDays: number;
   downloadPath: string;
+  pdfDownloadPath: string;
+  viewPath: string;
 }
 
 interface InvoicesResponse {
   invoices: UserInvoice[];
 }
 
-export function UserInvoicesSection() {
+async function downloadInvoice(invoice: UserInvoice, format: "pdf" | "html") {
+  const path = format === "pdf" ? invoice.pdfDownloadPath : invoice.downloadPath;
+  const response = await fetch(path);
+  if (!response.ok) throw new Error("download_failed");
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `${invoice.invoiceNumber}.${format === "pdf" ? "pdf" : "html"}`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+export function UserInvoicesSection({
+  variant = "settings",
+}: {
+  variant?: "settings" | "documents";
+}) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [sendingId, setSendingId] = useState<string | null>(null);
+
   const { data, isLoading } = useQuery({
     queryKey: ["user-invoices"],
     queryFn: () => fetchJson<InvoicesResponse>("/api/utilisateurs/factures"),
   });
 
+  const sendMutation = useMutation({
+    mutationFn: (paymentId: string) =>
+      fetchJson<{ sent: boolean }>(`/api/paiement/${paymentId}/facture/envoyer`, {
+        method: "POST",
+      }),
+    onSuccess: () => {
+      toast.success(t("documents.invoiceEmailSent"));
+      void queryClient.invalidateQueries({ queryKey: ["user-invoices"] });
+    },
+    onError: () => toast.error(t("documents.invoiceEmailError")),
+    onSettled: () => setSendingId(null),
+  });
+
   const invoices = data?.invoices ?? [];
 
-  const handleDownload = async (invoice: UserInvoice, format: "pdf" | "html" = "pdf") => {
-    const path =
-      format === "pdf"
-        ? `${invoice.downloadPath}?format=pdf`
-        : invoice.downloadPath;
-    const response = await fetch(path);
-    if (!response.ok) return;
-
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${invoice.invoiceNumber}.${format === "pdf" ? "pdf" : "html"}`;
-    anchor.click();
-    URL.revokeObjectURL(url);
-  };
+  const title =
+    variant === "documents"
+      ? t("documents.invoicesSectionTitle")
+      : t("settings.invoicesTitle");
+  const desc =
+    variant === "documents"
+      ? t("documents.invoicesSectionDesc")
+      : t("settings.invoicesDesc");
 
   return (
     <motion.section
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.18 }}
+      transition={{ delay: variant === "documents" ? 0 : 0.18 }}
       className="bg-surface border border-outline-variant rounded-2xl p-lg shadow-violet-sm"
     >
       <div className="flex items-center gap-sm mb-lg">
         <span className="material-symbols-outlined text-primary">receipt_long</span>
         <div>
           <h2 className="font-headline-lg text-[22px] font-semibold text-on-surface">
-            {t("settings.invoicesTitle")}
+            {title}
           </h2>
           <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">
-            {t("settings.invoicesDesc")}
+            {desc}
           </p>
         </div>
       </div>
@@ -75,7 +103,7 @@ export function UserInvoicesSection() {
           {Array.from({ length: 2 }).map((_, index) => (
             <div
               key={index}
-              className="h-24 rounded-xl bg-surface-container animate-pulse"
+              className="h-28 rounded-xl bg-surface-container animate-pulse"
             />
           ))}
         </div>
@@ -110,19 +138,43 @@ export function UserInvoicesSection() {
                     {invoice.amountFormatted}
                   </p>
                 </div>
-                <div className="flex gap-sm">
+                <div className="flex flex-wrap gap-sm">
                   <Button
                     variant="secondary"
-                    onClick={() => void handleDownload(invoice, "pdf")}
+                    onClick={() =>
+                      window.open(`${invoice.viewPath}`, "_blank", "noopener")
+                    }
                   >
-                    <span className="material-symbols-outlined text-[18px]">download</span>
+                    <span className="material-symbols-outlined text-[18px]">
+                      visibility
+                    </span>
+                    {t("documents.viewInvoice")}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      void downloadInvoice(invoice, "pdf").catch(() =>
+                        toast.error(t("documents.downloadError"))
+                      )
+                    }
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      download
+                    </span>
                     PDF
                   </Button>
                   <Button
                     variant="secondary"
-                    onClick={() => void handleDownload(invoice, "html")}
+                    loading={sendingId === invoice.paymentId}
+                    onClick={() => {
+                      setSendingId(invoice.paymentId);
+                      sendMutation.mutate(invoice.paymentId);
+                    }}
                   >
-                    HTML
+                    <span className="material-symbols-outlined text-[18px]">
+                      mail
+                    </span>
+                    {t("documents.emailInvoice")}
                   </Button>
                 </div>
               </div>

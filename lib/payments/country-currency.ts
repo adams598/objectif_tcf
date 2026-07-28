@@ -117,10 +117,13 @@ export function resolvePaymentLocaleFromCountry(
       phonePrefix: "+237",
       preferredMethods: [
         "MOBILE_MONEY_MTN",
+        "MOBILE_MONEY_ORANGE",
         "MOBILE_MONEY",
+        "MOBILE_MONEY_WAVE",
         "CARD",
         "GOOGLE_PAY",
         "PAYPAL",
+        "BANK_TRANSFER",
       ],
     };
   }
@@ -132,10 +135,13 @@ export function resolvePaymentLocaleFromCountry(
       phonePrefix: PHONE_PREFIX[key] ?? "+237",
       preferredMethods: [
         "MOBILE_MONEY_MTN",
+        "MOBILE_MONEY_ORANGE",
         "MOBILE_MONEY",
+        "MOBILE_MONEY_WAVE",
         "CARD",
         "GOOGLE_PAY",
         "PAYPAL",
+        "BANK_TRANSFER",
       ],
     };
   }
@@ -147,10 +153,14 @@ export function resolvePaymentLocaleFromCountry(
       phonePrefix: PHONE_PREFIX[key] ?? "+221",
       preferredMethods: [
         "MOBILE_MONEY",
+        "MOBILE_MONEY_ORANGE",
+        "MOBILE_MONEY_WAVE",
+        "MOBILE_MONEY_MOOV",
         "MOBILE_MONEY_MTN",
         "CARD",
         "GOOGLE_PAY",
         "PAYPAL",
+        "BANK_TRANSFER",
       ],
     };
   }
@@ -172,13 +182,19 @@ export function resolvePaymentLocaleFromCountry(
   };
 }
 
-/** Moyens affichés au checkout (liste simplifiée demandée). */
+/** Moyens affichés au checkout — liste complète filtrée par devise et providers. */
 export const CHECKOUT_METHOD_IDS: PaymentMethod[] = [
   "MOBILE_MONEY_MTN",
+  "MOBILE_MONEY_ORANGE",
   "MOBILE_MONEY",
+  "MOBILE_MONEY_WAVE",
+  "MOBILE_MONEY_MOOV",
+  "MOBILE_MONEY_AIRTEL",
   "CARD",
-  "PAYPAL",
   "GOOGLE_PAY",
+  "PAYPAL",
+  "SEPA",
+  "BANK_TRANSFER",
 ];
 
 export function sortMethodsForLocale(

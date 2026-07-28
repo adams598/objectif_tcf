@@ -32,7 +32,7 @@ import type { UserProfile } from "@/components/providers/user-preferences-provid
 import { useTranslation } from "@/components/providers/locale-provider";
 import type { AppLocale } from "@/lib/i18n/locales";
 import { parseAppLocale, localeToStorage } from "@/lib/i18n/locales";
-import { UserInvoicesSection } from "@/modules/dashboard/components/user-invoices-section";
+import Link from "next/link";
 
 export function ParametresView() {
   const {
@@ -548,7 +548,29 @@ export function ParametresView() {
         </motion.section>
       </div>
 
-      <UserInvoicesSection />
+      <motion.section
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.18 }}
+        className="bg-surface border border-outline-variant rounded-2xl p-lg shadow-violet-sm"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-md">
+          <div className="flex items-center gap-sm">
+            <span className="material-symbols-outlined text-primary">folder_open</span>
+            <div>
+              <h2 className="font-headline-lg text-[22px] font-semibold text-on-surface">
+                {t("settings.invoicesTitle")}
+              </h2>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">
+                {t("settings.invoicesDesc")}
+              </p>
+            </div>
+          </div>
+          <Button asChild variant="secondary">
+            <Link href="/documents">{t("pricing.goToDocuments")}</Link>
+          </Button>
+        </div>
+      </motion.section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
         <motion.section

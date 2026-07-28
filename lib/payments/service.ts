@@ -41,6 +41,8 @@ import {
   isAnyPaymentProviderConfigured,
 } from "./providers/mock";
 import { issueInvoiceForPayment } from "@/lib/invoices/issue-invoice";
+import { inferSubscriptionPlan } from "@/lib/payments/plan-from-offer";
+import type { PaymentInvoiceMetadata } from "@/lib/invoices/types";
 import { refundViaProvider } from "./providers/refund";
 
 export function buildProviderReference(): string {
@@ -95,6 +97,7 @@ export async function resolveCheckoutQuote(input: {
       days: quote.days,
       label: `Abonnement ${input.days} jour${quote.days > 1 ? "s" : ""}`,
       amounts: buildAmounts(quote.priceXaf, quote.priceUsd, quote.priceXof),
+      subscriptionPlan: inferSubscriptionPlan({ subscriptionDays: quote.days }),
     };
   }
 
@@ -107,6 +110,11 @@ export async function resolveCheckoutQuote(input: {
   }
 
   const days = offer.baseDays + offer.bonusDays;
+  const subscriptionPlan = inferSubscriptionPlan({
+    offerName: offer.name,
+    offerSlug: offer.slug,
+    subscriptionDays: days,
+  });
 
   return {
     examType: offer.examType,
@@ -117,6 +125,7 @@ export async function resolveCheckoutQuote(input: {
     amounts: buildAmounts(offer.priceXaf, offer.priceUsd, offer.priceXof),
     offerId: offer.id,
     offerName: offer.name,
+    subscriptionPlan,
   };
 }
 
@@ -153,6 +162,7 @@ export async function createPaymentSession(
         checkoutType: quote.type,
         examTab: quote.examTab,
         offerName: quote.offerName,
+        subscriptionPlan: quote.subscriptionPlan ?? "PRO",
       },
     },
   });
@@ -327,6 +337,16 @@ export async function finalizeSuccessfulPayment(
 
   const now = new Date();
   const days = payment.subscriptionDays ?? 30;
+  const metadata = (payment.metadata ?? {}) as PaymentInvoiceMetadata & {
+    subscriptionPlan?: string;
+  };
+  const subscriptionPlan = inferSubscriptionPlan({
+    offerName: metadata.offerName,
+    subscriptionDays: days,
+  });
+  const plan =
+    (metadata.subscriptionPlan as import("@prisma/client").SubscriptionPlan) ??
+    subscriptionPlan;
 
   const existing = await prisma.subscription.findUnique({
     where: {
@@ -348,7 +368,7 @@ export async function finalizeSuccessfulPayment(
     subscription = await prisma.subscription.update({
       where: { id: existing.id },
       data: {
-        plan: "PRO",
+        plan,
         status: "ACTIVE",
         currentPeriodStart: existing.currentPeriodEnd > now ? existing.currentPeriodStart : now,
         currentPeriodEnd: periodEnd,
@@ -362,7 +382,7 @@ export async function finalizeSuccessfulPayment(
       data: {
         userId: payment.userId,
         examType: payment.examType,
-        plan: "PRO",
+        plan,
         status: "ACTIVE",
         currentPeriodStart: now,
         currentPeriodEnd: periodEnd,

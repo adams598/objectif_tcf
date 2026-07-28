@@ -48,8 +48,9 @@ export async function getInvoicePayloadForPayment(paymentId: string) {
   };
 }
 
-export async function issueInvoiceForPayment(
-  paymentId: string
+export async function sendInvoiceEmailForPayment(
+  paymentId: string,
+  options?: { force?: boolean }
 ): Promise<SendEmailResult> {
   const payload = await getInvoicePayloadForPayment(paymentId);
   if (!payload) {
@@ -60,7 +61,7 @@ export async function issueInvoiceForPayment(
   const metadata = (payment.metadata ?? {}) as PaymentInvoiceMetadata;
   const invoiceNumber = generateInvoiceNumber(payment);
 
-  if (metadata.invoiceSentAt) {
+  if (metadata.invoiceSentAt && !options?.force) {
     return { ok: true };
   }
 
@@ -115,6 +116,12 @@ export async function issueInvoiceForPayment(
   }
 }
 
+export async function issueInvoiceForPayment(
+  paymentId: string
+): Promise<SendEmailResult> {
+  return sendInvoiceEmailForPayment(paymentId);
+}
+
 export async function listUserInvoices(userId: string) {
   const payments = await prisma.payment.findMany({
     where: { userId, status: "SUCCEEDED" },
@@ -159,6 +166,8 @@ export async function listUserInvoices(userId: string) {
       periodEnd: invoice.periodEnd,
       subscriptionDays: invoice.subscriptionDays,
       downloadPath: `/api/paiement/${payment.id}/facture`,
+      pdfDownloadPath: `/api/paiement/${payment.id}/facture?format=pdf`,
+      viewPath: `/api/paiement/${payment.id}/facture?inline=1`,
     };
   });
 }

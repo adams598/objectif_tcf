@@ -4,6 +4,7 @@ import type {
   PaymentMethod,
   PaymentProvider,
   PaymentStatus,
+  SubscriptionPlan,
 } from "@prisma/client";
 
 export interface PaymentAmounts {
@@ -22,6 +23,7 @@ export interface CheckoutQuote {
   amounts: PaymentAmounts;
   offerId?: string;
   offerName?: string;
+  subscriptionPlan?: SubscriptionPlan;
 }
 
 export interface PaymentSessionDetails {

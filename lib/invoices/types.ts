@@ -18,6 +18,13 @@ export interface InvoiceData {
   paymentProvider: string | null;
   statusLabel: string;
   downloadUrl: string;
+  pdfDownloadUrl: string;
+  companyLegalName: string;
+  companyAddress: string;
+  siret: string | null;
+  vatNumber: string | null;
+  vatMention: string;
+  planLabel: string | null;
 }
 
 export interface PaymentInvoiceMetadata {
@@ -26,4 +33,5 @@ export interface PaymentInvoiceMetadata {
   checkoutType?: string;
   examTab?: string;
   offerName?: string;
+  subscriptionPlan?: string;
 }

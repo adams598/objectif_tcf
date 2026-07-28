@@ -12,6 +12,7 @@ import {
   monthKey,
   resolveAnalyticsPeriod,
 } from "@/lib/admin/analytics-period";
+import { sumNativeAndXaf } from "@/lib/admin/payment-currency";
 
 export {
   type AnalyticsFilters,
@@ -262,7 +263,6 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
     paymentsByProvider,
     totalAttempts,
     completedAttempts,
-    revenueTotals,
     exams,
     subStatsMap,
     filterOptions,
@@ -298,7 +298,7 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
     }),
     prisma.payment.findMany({
       where: paymentWhere,
-      select: { paidAt: true, amount: true, currency: true },
+      select: { paidAt: true, amount: true, currency: true, amountXaf: true },
     }),
     prisma.attempt.findMany({
       where: attemptWhere,
@@ -325,11 +325,6 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
     prisma.attempt.count({ where: attemptWhere }),
     prisma.attempt.count({
       where: { ...attemptWhere, status: "COMPLETED" },
-    }),
-    prisma.payment.groupBy({
-      by: ["currency"],
-      where: paymentWhere,
-      _sum: { amount: true },
     }),
     prisma.exam.findMany({
       where: { deletedAt: null },
@@ -391,6 +386,8 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
       (completedAttemptsByMonth.get(key) ?? 0) + 1
     );
   }
+
+  const revenueTotals = sumNativeAndXaf(paymentsInPeriod);
 
   return {
     filters: {
@@ -460,7 +457,8 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
     })),
     revenueTotals: revenueTotals.map((r) => ({
       currency: r.currency,
-      amount: r._sum.amount ?? 0,
+      amount: r.amount,
+      amountXaf: r.amountXaf,
     })),
     exams: exams.map((exam) => {
       const stats = subStatsMap.get(exam.type) ?? emptyExamStats();

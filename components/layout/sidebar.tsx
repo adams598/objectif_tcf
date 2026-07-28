@@ -36,6 +36,7 @@ const studentNavItems: NavItem[] = [
   { href: "/resultats", labelKey: "nav.results", icon: "analytics" },
   { href: "/communaute", labelKey: "nav.community", icon: "forum" },
   { href: "/messagerie", labelKey: "nav.messaging", icon: "chat" },
+  { href: "/documents", labelKey: "nav.documents", icon: "folder_open" },
   { href: "/parametres", labelKey: "nav.settings", icon: "settings" },
 ];
 

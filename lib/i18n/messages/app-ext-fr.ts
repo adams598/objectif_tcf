@@ -523,8 +523,14 @@ export const appExtFr = {
     paymentSuccessTitle: "Paiement réussi !",
     subscriptionActive: "Votre abonnement est actif. Bonne préparation !",
     invoiceSent:
-      "Votre facture a été envoyée par email et est disponible dans Paramètres → Mes factures.",
-    viewInvoices: "Voir mes factures",
+      "Votre facture a été envoyée par email et est disponible dans votre espace Documents.",
+    viewInvoices: "Mes documents",
+    viewInvoice: "Voir la facture",
+    downloadInvoicePdf: "Télécharger le PDF",
+    emailInvoice: "Recevoir par email",
+    invoiceEmailSent: "Facture envoyée par email.",
+    invoiceEmailError: "Impossible d'envoyer la facture.",
+    goToDocuments: "Accéder à mes documents",
     startPreparation: "Commencer ma préparation",
     paymentCancelledDesc:
       "Aucun montant n'a été débité. Vous pouvez réessayer quand vous voulez.",
@@ -805,6 +811,20 @@ export const appExtFr = {
     countryBc: "Colombie-Britannique",
     countryHint:
       "Vous pouvez modifier ces préférences à tout moment dans vos paramètres.",
+  },
+  documents: {
+    title: "Documents",
+    subtitle:
+      "Retrouvez vos factures d'abonnement et vos justificatifs de paiement.",
+    invoicesSectionTitle: "Factures",
+    invoicesSectionDesc:
+      "Téléchargez vos factures au format PDF ou consultez-les en ligne.",
+    viewInvoice: "Voir",
+    emailInvoice: "Envoyer par email",
+    invoiceEmailSent: "Facture envoyée à votre adresse email.",
+    invoiceEmailError: "Envoi impossible. Réessayez plus tard.",
+    downloadError: "Téléchargement impossible.",
+    settingsHint: "Pour gérer votre profil et vos préférences, rendez-vous dans",
   },
   writingCorrection: {
     title: "Correction expression écrite",

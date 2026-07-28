@@ -23,6 +23,12 @@ interface AdminExam {
   description: string | null;
   isActive: boolean;
   _count: { series: number };
+  subscriptionStats: {
+    totalActive: number;
+    free: number;
+    paid: number;
+    byPlan: Array<{ plan: string; label: string; count: number }>;
+  };
 }
 
 const emptyForm = {
@@ -32,6 +38,91 @@ const emptyForm = {
   description: "",
   isActive: true,
 };
+
+function ExamListSection({
+  title,
+  exams,
+  selectedId,
+  onSelect,
+  inactive = false,
+}: {
+  title: string;
+  exams: AdminExam[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  inactive?: boolean;
+}) {
+  return (
+    <div>
+      <p className="font-label-sm text-label-sm text-on-surface-variant mb-xs px-xs">
+        {title} ({exams.length})
+      </p>
+      <div className="flex flex-col gap-xs">
+        {exams.map((exam) => (
+          <button
+            key={exam.id}
+            type="button"
+            onClick={() => onSelect(exam.id)}
+            className={cn(
+              "text-left p-md rounded-xl border transition-all",
+              inactive && "opacity-75",
+              selectedId === exam.id
+                ? "border-primary bg-primary/5"
+                : "border-outline-variant hover:border-primary/30"
+            )}
+          >
+            <div className="flex items-center justify-between gap-sm mb-xs flex-wrap">
+              <Badge variant="outline">{EXAM_TYPE_LABELS[exam.type]}</Badge>
+              {inactive && (
+                <Badge variant="error">Désactivé</Badge>
+              )}
+            </div>
+            <p className="font-label-md font-semibold">{exam.title}</p>
+            <p className="font-label-sm text-on-surface-variant mt-xs">
+              {exam._count.series} séries · {exam.subscriptionStats.free} gratuits ·{" "}
+              {exam.subscriptionStats.paid} payants
+            </p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SubscriptionStatsPanel({ exam }: { exam: AdminExam }) {
+  const stats = exam.subscriptionStats;
+  return (
+    <div className="rounded-xl border border-outline-variant bg-surface-container-low/50 p-md flex flex-col gap-sm">
+      <h3 className="font-label-md font-bold">Inscriptions (type {EXAM_TYPE_LABELS[exam.type]})</h3>
+      <p className="font-label-sm text-on-surface-variant">
+        Les abonnements sont liés au type d&apos;examen ({EXAM_TYPE_LABELS[exam.type]}).
+      </p>
+      <div className="grid grid-cols-3 gap-sm">
+        <StatPill label="Total actifs" value={stats.totalActive} />
+        <StatPill label="Gratuits" value={stats.free} />
+        <StatPill label="Payants" value={stats.paid} />
+      </div>
+      {stats.byPlan.length > 0 && (
+        <div className="flex flex-wrap gap-xs mt-xs">
+          {stats.byPlan.map((p) => (
+            <Badge key={p.plan} variant={p.plan === "FREE" ? "outline" : "primary"}>
+              {p.label} : {p.count}
+            </Badge>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatPill({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg bg-surface p-sm text-center border border-outline-variant/60">
+      <p className="font-display-md text-[20px] font-bold">{value}</p>
+      <p className="font-label-sm text-[10px] text-on-surface-variant">{label}</p>
+    </div>
+  );
+}
 
 export function ExamsAdminView() {
   const queryClient = useQueryClient();
@@ -47,9 +138,11 @@ export function ExamsAdminView() {
 
   const examsQuery = useQuery({
     queryKey: ["admin-exams-all"],
-    queryFn: () =>
-      fetchJson<AdminExam[]>("/api/admin/exams?includeInactive=true"),
+    queryFn: () => fetchJson<AdminExam[]>("/api/admin/exams"),
   });
+
+  const activeExams = examsQuery.data?.filter((e) => e.isActive) ?? [];
+  const inactiveExams = examsQuery.data?.filter((e) => !e.isActive) ?? [];
 
   const selected = examsQuery.data?.find((e) => e.id === selectedId) ?? null;
 
@@ -109,15 +202,14 @@ export function ExamsAdminView() {
     onError: () => toast.error("Erreur mise à jour"),
   });
 
-  const deleteExam = useMutation({
+  const deactivateExam = useMutation({
     mutationFn: (id: string) =>
       fetchJson(`/api/admin/exams/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       invalidate();
-      setSelectedId(null);
       toast.success("Examen désactivé");
     },
-    onError: () => toast.error("Impossible de supprimer"),
+    onError: () => toast.error("Impossible de désactiver"),
   });
 
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
@@ -149,31 +241,24 @@ export function ExamsAdminView() {
           {examsQuery.isLoading ? (
             <p className="text-on-surface-variant animate-pulse">Chargement…</p>
           ) : (
-            <div className="flex flex-col gap-xs">
-              {examsQuery.data?.map((exam) => (
-                <button
-                  key={exam.id}
-                  type="button"
-                  onClick={() => setSelectedId(exam.id)}
-                  className={cn(
-                    "text-left p-md rounded-xl border transition-all",
-                    selectedId === exam.id
-                      ? "border-primary bg-primary/5"
-                      : "border-outline-variant hover:border-primary/30"
-                  )}
-                >
-                  <div className="flex items-center justify-between gap-sm mb-xs">
-                    <Badge variant="outline">{EXAM_TYPE_LABELS[exam.type]}</Badge>
-                    {!exam.isActive && (
-                      <Badge variant="error">Inactif</Badge>
-                    )}
-                  </div>
-                  <p className="font-label-md font-semibold">{exam.title}</p>
-                  <p className="font-label-sm text-on-surface-variant mt-xs">
-                    {exam._count.series} séries · {exam.id}
-                  </p>
-                </button>
-              ))}
+            <div className="flex flex-col gap-md">
+              {activeExams.length > 0 && (
+                <ExamListSection
+                  title="Actifs"
+                  exams={activeExams}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                />
+              )}
+              {inactiveExams.length > 0 && (
+                <ExamListSection
+                  title="Désactivés"
+                  exams={inactiveExams}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                  inactive
+                />
+              )}
             </div>
           )}
         </div>
@@ -181,27 +266,46 @@ export function ExamsAdminView() {
         <div className="lg:col-span-2 bg-surface border border-outline-variant rounded-2xl p-lg">
           {selected ? (
             <div className="flex flex-col gap-md">
-              <div className="flex items-start justify-between gap-md">
+              <div className="flex items-start justify-between gap-md flex-wrap">
                 <h2 className="font-headline-lg text-[18px] font-bold">
-                  Modifier l&apos;examen
+                  {selected.isActive ? "Modifier l'examen" : "Examen désactivé"}
                 </h2>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() =>
-                    confirm({
-                      title: "Désactiver cet examen ?",
-                      description:
-                        "Il ne sera plus visible pour les apprenants. Les séries associées restent en base.",
-                      confirmLabel: "Désactiver",
-                      destructive: true,
-                      onConfirm: () => deleteExam.mutateAsync(selected.id),
-                    })
-                  }
-                >
-                  Désactiver
-                </Button>
+                {selected.isActive ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() =>
+                      confirm({
+                        title: "Désactiver cet examen ?",
+                        description:
+                          "Il ne sera plus visible pour les apprenants. Vous pourrez toujours le gérer ici.",
+                        confirmLabel: "Désactiver",
+                        destructive: true,
+                        onConfirm: () => deactivateExam.mutateAsync(selected.id),
+                      })
+                    }
+                  >
+                    Désactiver
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      updateExam.mutate({ ...editForm, isActive: true })
+                    }
+                  >
+                    Réactiver
+                  </Button>
+                )}
               </div>
+
+              {!selected.isActive && (
+                <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 px-md py-sm font-label-sm text-amber-900 dark:text-amber-100">
+                  Cet examen est désactivé — invisible pour les apprenants, visible pour les admins.
+                </div>
+              )}
+
+              <SubscriptionStatsPanel exam={selected} />
 
               <Input
                 label="Titre"

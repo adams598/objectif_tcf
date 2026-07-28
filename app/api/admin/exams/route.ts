@@ -5,6 +5,12 @@ import { prisma } from "@/lib/db/prisma";
 import { requireRole } from "@/lib/auth/session";
 import { slugifyExamId } from "@/lib/exams/catalog";
 import {
+  fetchActiveSubscriptionStatsByExamType,
+  PLAN_LABELS,
+  type ExamSubscriptionStats,
+  emptyExamStats,
+} from "@/lib/admin/analytics";
+import {
   successResponse,
   createdResponse,
   serverErrorResponse,
@@ -44,18 +50,38 @@ function handleAuthError(error: unknown) {
 export async function GET(req: NextRequest) {
   try {
     await requireRole("ADMIN", "SUPER_ADMIN");
-    const includeInactive =
-      new URL(req.url).searchParams.get("includeInactive") === "true";
 
     const exams = await prisma.exam.findMany({
-      where: includeInactive ? { deletedAt: null } : { deletedAt: null, isActive: true },
-      orderBy: [{ type: "asc" }, { title: "asc" }],
+      where: { deletedAt: null },
+      orderBy: [{ isActive: "desc" }, { type: "asc" }, { title: "asc" }],
       include: {
         _count: { select: { series: true } },
       },
     });
 
-    return successResponse(exams);
+    const subStats = await fetchActiveSubscriptionStatsByExamType();
+
+    const enriched = exams.map((exam) => {
+      const stats: ExamSubscriptionStats =
+        subStats.get(exam.type) ?? emptyExamStats();
+      return {
+        ...exam,
+        subscriptionStats: {
+          totalActive: stats.totalActive,
+          free: stats.free,
+          paid: stats.paid,
+          byPlan: (["FREE", "STARTER", "PRO", "ELITE"] as const)
+            .filter((plan) => stats.byPlan[plan] > 0)
+            .map((plan) => ({
+              plan,
+              label: PLAN_LABELS[plan],
+              count: stats.byPlan[plan],
+            })),
+        },
+      };
+    });
+
+    return successResponse(enriched);
   } catch (error) {
     return handleAuthError(error) ?? serverErrorResponse(error);
   }

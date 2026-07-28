@@ -111,10 +111,10 @@ export async function DELETE(
 
     await prisma.exam.update({
       where: { id },
-      data: { deletedAt: new Date(), isActive: false },
+      data: { isActive: false },
     });
 
-    return successResponse({ deleted: true });
+    return successResponse({ deactivated: true });
   } catch (error) {
     return handleAuthError(error) ?? serverErrorResponse(error);
   }

@@ -1,11 +1,36 @@
-import type { ExamType, SubscriptionPlan } from "@prisma/client";
+import type {
+  ExamType,
+  Gender,
+  Prisma,
+  SubscriptionPlan,
+} from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import {
+  type AnalyticsFilters,
+  buildDateRangeFilter,
+  buildUserDemographicWhere,
+  monthKey,
+  resolveAnalyticsPeriod,
+} from "@/lib/admin/analytics-period";
+
+export {
+  type AnalyticsFilters,
+  type AnalyticsPeriodType,
+} from "@/lib/admin/analytics-period";
+export { periodStart, buildMonthKeys } from "@/lib/admin/analytics-period";
 
 export const PLAN_LABELS: Record<SubscriptionPlan, string> = {
   FREE: "Gratuit",
   STARTER: "Essentiel",
   PRO: "Pro",
   ELITE: "Premium",
+};
+
+export const GENDER_LABELS: Record<Gender, string> = {
+  MALE: "Homme",
+  FEMALE: "Femme",
+  OTHER: "Autre",
+  UNSPECIFIED: "Non renseigné",
 };
 
 export type ExamSubscriptionStats = {
@@ -60,34 +85,6 @@ export async function fetchActiveSubscriptionStatsByExamType(): Promise<
   );
 }
 
-export type AnalyticsFilters = {
-  examType?: ExamType | null;
-  months?: number;
-};
-
-/** Premier jour du mois, il y a (monthCount - 1) mois — aligné sur le filtre « X derniers mois ». */
-export function periodStart(monthCount: number): Date {
-  const now = new Date();
-  const d = new Date(now.getFullYear(), now.getMonth() - (monthCount - 1), 1);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-/** Toutes les clés YYYY-MM de la période (mois courant inclus), ordre chronologique. */
-export function buildMonthKeys(monthCount: number): string[] {
-  const keys: string[] = [];
-  const now = new Date();
-  for (let i = monthCount - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    keys.push(monthKey(d));
-  }
-  return keys;
-}
-
-function monthKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
 function fillCountSeries(
   monthKeys: string[],
   data: Map<string, number>
@@ -108,15 +105,96 @@ function fillRevenueSeries(
   }));
 }
 
-export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
-  const months = filters.months ?? 6;
-  const since = periodStart(months);
-  const monthKeys = buildMonthKeys(months);
+async function fetchFilterOptions() {
   const now = new Date();
-  const examTypeFilter = filters.examType ?? undefined;
+  const [
+    countryRows,
+    methodRows,
+    genderRows,
+    usersWithBirthDate,
+    oldestUser,
+    oldestPayment,
+    oldestAttempt,
+  ] = await Promise.all([
+    prisma.user.findMany({
+      where: { deletedAt: null, country: { not: null } },
+      distinct: ["country"],
+      select: { country: true },
+      orderBy: { country: "asc" },
+    }),
+    prisma.payment.findMany({
+      where: { status: "SUCCEEDED", method: { not: null } },
+      distinct: ["method"],
+      select: { method: true },
+      orderBy: { method: "asc" },
+    }),
+    prisma.user.groupBy({
+      by: ["gender"],
+      where: { deletedAt: null, gender: { not: null } },
+      _count: { _all: true },
+    }),
+    prisma.user.count({
+      where: { deletedAt: null, birthDate: { not: null } },
+    }),
+    prisma.user.findFirst({
+      where: { deletedAt: null },
+      orderBy: { createdAt: "asc" },
+      select: { createdAt: true },
+    }),
+    prisma.payment.findFirst({
+      where: { status: "SUCCEEDED", paidAt: { not: null } },
+      orderBy: { paidAt: "asc" },
+      select: { paidAt: true },
+    }),
+    prisma.attempt.findFirst({
+      orderBy: { startedAt: "asc" },
+      select: { startedAt: true },
+    }),
+  ]);
 
-  const userWhere = {
-    deletedAt: null,
+  const yearsFromData = [
+    oldestUser?.createdAt,
+    oldestPayment?.paidAt,
+    oldestAttempt?.startedAt,
+  ]
+    .filter((d): d is Date => d != null)
+    .map((d) => d.getFullYear());
+
+  const oldestYear =
+    yearsFromData.length > 0
+      ? Math.min(...yearsFromData)
+      : now.getFullYear();
+  const years: number[] = [];
+  for (let y = now.getFullYear(); y >= oldestYear; y--) {
+    years.push(y);
+  }
+
+  const gendersWithData = genderRows.filter(
+    (g) => g.gender && g.gender !== "UNSPECIFIED" && g._count._all > 0
+  );
+
+  return {
+    countries: countryRows.map((c) => c.country!).filter(Boolean),
+    paymentMethods: methodRows.map((m) => m.method!).filter(Boolean),
+    genders: gendersWithData.map((g) => g.gender!),
+    hasGenderData: gendersWithData.length > 0,
+    hasAgeData: usersWithBirthDate > 0,
+    years,
+    oldestYear,
+    currentYear: now.getFullYear(),
+  };
+}
+
+function buildUserWhere(
+  filters: AnalyticsFilters,
+  since: Date,
+  until: Date
+): Prisma.UserWhereInput {
+  const examTypeFilter = filters.examType ?? undefined;
+  const paymentMethod = filters.paymentMethod ?? undefined;
+
+  return {
+    ...buildUserDemographicWhere(filters),
     ...(examTypeFilter
       ? {
           subscriptions: {
@@ -124,22 +202,47 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
           },
         }
       : {}),
+    ...(paymentMethod
+      ? {
+          payments: {
+            some: {
+              status: "SUCCEEDED" as const,
+              method: paymentMethod,
+              paidAt: buildDateRangeFilter(since, until),
+            },
+          },
+        }
+      : {}),
   };
+}
 
-  const subscriptionWhere = {
+export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
+  const period = resolveAnalyticsPeriod(filters);
+  const { since, until, monthKeys } = period;
+  const now = new Date();
+  const examTypeFilter = filters.examType ?? undefined;
+  const paymentMethod = filters.paymentMethod ?? undefined;
+
+  const userWhere = buildUserWhere(filters, since, until);
+
+  const subscriptionWhere: Prisma.SubscriptionWhereInput = {
     status: "ACTIVE" as const,
     currentPeriodEnd: { gt: now },
+    user: userWhere,
     ...(examTypeFilter ? { examType: examTypeFilter } : {}),
   };
 
-  const paymentWhere = {
+  const paymentWhere: Prisma.PaymentWhereInput = {
     status: "SUCCEEDED" as const,
-    paidAt: { gte: since },
+    paidAt: buildDateRangeFilter(since, until),
+    user: userWhere,
     ...(examTypeFilter ? { examType: examTypeFilter } : {}),
+    ...(paymentMethod ? { method: paymentMethod } : {}),
   };
 
-  const attemptWhere = {
-    startedAt: { gte: since },
+  const attemptWhere: Prisma.AttemptWhereInput = {
+    startedAt: buildDateRangeFilter(since, until),
+    user: userWhere,
     ...(examTypeFilter
       ? { series: { exam: { type: examTypeFilter, deletedAt: null } } }
       : {}),
@@ -162,9 +265,12 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
     revenueTotals,
     exams,
     subStatsMap,
+    filterOptions,
   ] = await Promise.all([
     prisma.user.count({ where: userWhere }),
-    prisma.user.count({ where: { ...userWhere, createdAt: { gte: since } } }),
+    prisma.user.count({
+      where: { ...userWhere, createdAt: buildDateRangeFilter(since, until) },
+    }),
     prisma.user.count({
       where: {
         ...userWhere,
@@ -184,7 +290,10 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
       _count: { _all: true },
     }),
     prisma.user.findMany({
-      where: { ...userWhere, createdAt: { gte: since } },
+      where: {
+        ...userWhere,
+        createdAt: buildDateRangeFilter(since, until),
+      },
       select: { createdAt: true },
     }),
     prisma.payment.findMany({
@@ -199,7 +308,7 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
       where: {
         ...attemptWhere,
         status: "COMPLETED",
-        completedAt: { gte: since },
+        completedAt: buildDateRangeFilter(since, until),
       },
       select: { completedAt: true },
     }),
@@ -228,6 +337,7 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
       include: { _count: { select: { series: true } } },
     }),
     fetchActiveSubscriptionStatsByExamType(),
+    fetchFilterOptions(),
   ]);
 
   const freeSubs = subscriptionsByPlan
@@ -285,11 +395,22 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
   return {
     filters: {
       examType: examTypeFilter ?? null,
-      months,
+      periodType: period.periodType,
+      months: filters.months ?? 6,
+      year: filters.year ?? null,
+      month: filters.month ?? null,
+      monthPairStart: filters.monthPairStart ?? null,
+      country: filters.country ?? null,
+      paymentMethod: paymentMethod ?? null,
+      gender: filters.gender ?? null,
+      ageMin: filters.ageMin ?? null,
+      ageMax: filters.ageMax ?? null,
+      ageExact: filters.ageExact ?? null,
       periodStart: since.toISOString(),
-      periodEnd: now.toISOString(),
+      periodEnd: until.toISOString(),
       monthKeys,
     },
+    filterOptions,
     overview: {
       totalUsers,
       newUsersInPeriod,

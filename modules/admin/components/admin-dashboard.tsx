@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { fetchJson } from "@/lib/api/fetch-json";
@@ -9,22 +9,52 @@ import {
   AdminAnalyticsCharts,
   type AdminAnalyticsData,
 } from "@/modules/admin/components/admin-analytics-charts";
-import { ALL_EXAM_TYPES, EXAM_TYPE_LABELS } from "@/lib/exams/catalog";
+import {
+  AdminAnalyticsFilters,
+  buildAnalyticsQueryParams,
+  defaultAnalyticsFilters,
+  type AnalyticsFilterOptions,
+  type AnalyticsFilterState,
+} from "@/modules/admin/components/admin-analytics-filters";
+
+type AnalyticsResponse = AdminAnalyticsData & {
+  filters: Record<string, unknown>;
+  filterOptions: AnalyticsFilterOptions;
+};
+
+const FALLBACK_OPTIONS: AnalyticsFilterOptions = {
+  countries: [],
+  paymentMethods: [],
+  genders: [],
+  hasGenderData: false,
+  hasAgeData: false,
+  years: [new Date().getFullYear()],
+  currentYear: new Date().getFullYear(),
+};
 
 export function AdminDashboard() {
-  const [examType, setExamType] = useState<string>("ALL");
-  const [months, setMonths] = useState(6);
+  const [filters, setFilters] = useState<AnalyticsFilterState>(() =>
+    defaultAnalyticsFilters(new Date().getFullYear())
+  );
+
+  const queryParams = useMemo(
+    () => buildAnalyticsQueryParams(filters),
+    [filters]
+  );
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["admin-analytics", examType, months],
-    queryFn: () => {
-      const params = new URLSearchParams({ months: String(months) });
-      if (examType !== "ALL") params.set("examType", examType);
-      return fetchJson<AdminAnalyticsData & { filters: { examType: string | null; months: number } }>(
-        `/api/admin/analytics?${params}`
-      );
-    },
+    queryKey: ["admin-analytics", queryParams.toString()],
+    queryFn: () =>
+      fetchJson<AnalyticsResponse>(
+        `/api/admin/analytics?${queryParams.toString()}`
+      ),
   });
+
+  const filterOptions = data?.filterOptions ?? FALLBACK_OPTIONS;
+
+  const patchFilters = (patch: Partial<AnalyticsFilterState>) => {
+    setFilters((prev) => ({ ...prev, ...patch }));
+  };
 
   return (
     <div className="flex flex-col gap-xl">
@@ -37,29 +67,11 @@ export function AdminDashboard() {
         </p>
       </motion.div>
 
-      <div className="flex flex-wrap gap-sm">
-        <select
-          className="rounded-xl border border-outline-variant px-md py-sm bg-surface font-label-sm"
-          value={examType}
-          onChange={(e) => setExamType(e.target.value)}
-        >
-          <option value="ALL">Tous les examens</option>
-          {ALL_EXAM_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {EXAM_TYPE_LABELS[type]}
-            </option>
-          ))}
-        </select>
-        <select
-          className="rounded-xl border border-outline-variant px-md py-sm bg-surface font-label-sm"
-          value={months}
-          onChange={(e) => setMonths(parseInt(e.target.value, 10))}
-        >
-          <option value={3}>3 derniers mois</option>
-          <option value={6}>6 derniers mois</option>
-          <option value={12}>12 derniers mois</option>
-        </select>
-      </div>
+      <AdminAnalyticsFilters
+        filters={filters}
+        options={filterOptions}
+        onChange={patchFilters}
+      />
 
       <AdminSystemStatusPanel />
 

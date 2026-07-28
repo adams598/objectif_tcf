@@ -2,6 +2,7 @@ import { PrismaClient, type ExamType, type Prisma } from "@prisma/client";
 import type { OfferFeature } from "../lib/pricing/constants";
 import { seedExamContent } from "./seed-content";
 import { seedAdminUser } from "./seed-admin";
+import { seedAnalyticsDemo } from "./seed-analytics-demo";
 
 const prisma = new PrismaClient();
 
@@ -264,6 +265,14 @@ async function main() {
 
   await seedAdminUser(prisma);
   await seedExamContent(prisma);
+
+  if (process.env.SEED_ANALYTICS_DEMO !== "false") {
+    await seedAnalyticsDemo(prisma);
+  } else {
+    console.log(
+      "ℹ️  Seed analytics démo ignoré (SEED_ANALYTICS_DEMO=false)"
+    );
+  }
 }
 
 main()

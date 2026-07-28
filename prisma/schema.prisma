@@ -172,6 +172,13 @@ enum LanguageLevel {
   C2
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNSPECIFIED
+}
+
 // ===========================
 // USER & AUTH
 // ===========================
@@ -186,6 +193,8 @@ model User {
   avatarUrl         String?
   phone             String?
   country           String?
+  gender            Gender?
+  birthDate         DateTime?
   nativeLanguage    String?
   role              Role      @default(USER)
   isActive          Boolean   @default(true)

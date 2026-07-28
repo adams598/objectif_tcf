@@ -21,6 +21,7 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed-admin": "tsx prisma/seed-admin.ts",
+    "db:seed-analytics": "tsx prisma/run-seed-analytics.ts",
     "vercel:env-pull": "vercel env pull .env.vercel.local",
     "env:check": "tsx scripts/check-env.ts",
     "env:check:prod": "tsx scripts/check-env.ts prod",

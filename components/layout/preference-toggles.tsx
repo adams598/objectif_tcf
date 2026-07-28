@@ -20,11 +20,14 @@ import {
 
 interface PreferenceTogglesProps {
   compact?: boolean;
+  /** Sidebar : icônes discrètes, sans bordure */
+  variant?: "default" | "sidebar";
   className?: string;
 }
 
 export function PreferenceToggles({
   compact = false,
+  variant = "default",
   className,
 }: PreferenceTogglesProps) {
   const { locale, setLocale } = useLocale();
@@ -57,22 +60,55 @@ export function PreferenceToggles({
   };
 
   const localeShort =
-    locale === "en-CA" ? "EN" : locale === "fr-CA" ? "FR-CA" : "FR";
+    locale === "en-CA" ? "EN" : locale === "fr-CA" ? "FR" : "FR";
+
+  const isSidebar = variant === "sidebar";
+  const iconBtnClass = isSidebar
+    ? "inline-flex items-center justify-center rounded-lg p-1.5 text-on-surface-variant/55 hover:text-on-surface-variant hover:bg-surface-container/70 transition-colors"
+    : cn(
+        "inline-flex items-center justify-center rounded-full border border-outline-variant bg-surface p-1.5 text-on-surface-variant hover:text-primary hover:border-primary/40 transition-colors",
+        compact && "p-1.5"
+      );
+  const localeBtnClass = isSidebar
+    ? cn(
+        iconBtnClass,
+        "gap-0.5",
+        compact && "p-1.5"
+      )
+    : cn(
+        "inline-flex items-center gap-1 rounded-full border border-outline-variant bg-surface px-sm py-1.5 font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:border-primary/40 transition-colors",
+        compact && "px-2"
+      );
 
   return (
-    <div className={cn("flex items-center gap-xs", className)}>
+    <div
+      className={cn(
+        "flex items-center",
+        isSidebar ? "gap-0.5" : "gap-xs",
+        className
+      )}
+    >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full border border-outline-variant bg-surface px-sm py-1.5 font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:border-primary/40 transition-colors",
-              compact && "px-2"
-            )}
+            className={localeBtnClass}
             aria-label={t("preferences.changeLanguage")}
           >
-            <span className="material-symbols-outlined text-[16px]">language</span>
-            {!compact ? <span>{localeShort}</span> : null}
+            <span
+              className={cn(
+                "material-symbols-outlined",
+                isSidebar ? "text-[15px] opacity-80" : "text-[16px]"
+              )}
+            >
+              language
+            </span>
+            {!compact && !isSidebar ? <span>{localeShort}</span> : null}
+            {!compact && isSidebar ? (
+              <span className="text-[10px] font-medium uppercase tracking-wide opacity-70">
+                {localeShort}
+              </span>
+            ) : null}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -91,13 +127,15 @@ export function PreferenceToggles({
       <button
         type="button"
         onClick={() => void handleThemeToggle()}
-        className={cn(
-          "inline-flex items-center justify-center rounded-full border border-outline-variant bg-surface p-1.5 text-on-surface-variant hover:text-primary hover:border-primary/40 transition-colors",
-          compact && "p-1.5"
-        )}
+        className={iconBtnClass}
         aria-label={t("preferences.toggleTheme")}
       >
-        <span className="material-symbols-outlined text-[16px]">
+        <span
+          className={cn(
+            "material-symbols-outlined",
+            isSidebar ? "text-[15px] opacity-80" : "text-[16px]"
+          )}
+        >
           {theme === "light" ? "dark_mode" : "light_mode"}
         </span>
       </button>

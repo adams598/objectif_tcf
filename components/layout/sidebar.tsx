@@ -79,16 +79,16 @@ export function Sidebar({ role = "USER" }: SidebarProps) {
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className="hidden md:flex flex-col fixed left-0 top-0 h-full bg-surface border-r border-outline-variant z-40 overflow-hidden"
     >
-      <div className="flex items-center gap-sm px-md h-16 border-b border-outline-variant shrink-0">
+      <div className="flex items-center gap-xs px-sm h-[52px] border-b border-outline-variant/80 shrink-0">
         <BrandLogo
           variant={collapsed ? "icon" : "full"}
+          appearance="sidebar"
           href="/"
-          className="min-w-0 flex-1"
-          imageClassName={collapsed ? undefined : "h-11 max-w-[200px]"}
+          className="min-w-0 flex-1 overflow-hidden"
         />
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto p-1 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors"
+          className="shrink-0 p-1 rounded-lg text-on-surface-variant/60 hover:text-on-surface-variant hover:bg-surface-container/80 transition-colors"
           aria-label={collapsed ? t("nav.expandSidebar") : t("nav.collapseSidebar")}
         >
           <span className="material-symbols-outlined text-[18px]">
@@ -175,14 +175,14 @@ export function Sidebar({ role = "USER" }: SidebarProps) {
         )}
       </nav>
 
-      <div className="border-t border-outline-variant p-sm">
+      <div className="border-t border-outline-variant/80 p-sm">
         {!collapsed ? (
-          <div className="px-md pb-sm">
-            <PreferenceToggles />
+          <div className="px-sm pb-xs pt-xs">
+            <PreferenceToggles variant="sidebar" />
           </div>
         ) : (
-          <div className="flex justify-center pb-sm">
-            <PreferenceToggles compact />
+          <div className="flex justify-center pb-xs pt-xs">
+            <PreferenceToggles variant="sidebar" compact />
           </div>
         )}
         <Link

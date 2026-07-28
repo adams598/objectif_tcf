@@ -13,6 +13,8 @@ const LOGO_FULL_HEIGHT = 150;
 
 interface BrandLogoProps {
   variant?: "full" | "icon";
+  /** Sidebar : compact, sans ombre lourde */
+  appearance?: "default" | "sidebar";
   href?: string | null;
   className?: string;
   imageClassName?: string;
@@ -40,6 +42,7 @@ function LogoFallback({ variant }: { variant: "full" | "icon" }) {
 
 export function BrandLogo({
   variant = "full",
+  appearance = "default",
   href = "/",
   className,
   imageClassName,
@@ -47,6 +50,7 @@ export function BrandLogo({
 }: BrandLogoProps) {
   const [imgError, setImgError] = useState(false);
   const isFull = variant === "full";
+  const isSidebar = appearance === "sidebar";
 
   const content = imgError ? (
     <LogoFallback variant={variant} />
@@ -54,7 +58,10 @@ export function BrandLogo({
     <span
       className={cn(
         "inline-flex items-center",
-        isFull && "rounded-lg bg-white px-2 py-1 shadow-sm"
+        isFull &&
+          (isSidebar
+            ? "rounded-md bg-white/90 px-1 py-0.5 ring-1 ring-outline-variant/25"
+            : "rounded-lg bg-white px-2 py-1 shadow-sm")
       )}
     >
       <Image
@@ -66,10 +73,14 @@ export function BrandLogo({
         unoptimized
         onError={() => setImgError(true)}
         className={cn(
-          "w-auto object-contain",
+          "w-auto object-contain object-left",
           isFull
-            ? "h-12 sm:h-14 md:h-16 w-auto max-w-[min(100%,220px)] sm:max-w-[260px] md:max-w-[280px]"
-            : "h-9 w-9 sm:h-10 sm:w-10",
+            ? isSidebar
+              ? "h-7 max-w-[132px]"
+              : "h-12 sm:h-14 md:h-16 w-auto max-w-[min(100%,220px)] sm:max-w-[260px] md:max-w-[280px]"
+            : isSidebar
+              ? "h-7 w-7"
+              : "h-9 w-9 sm:h-10 sm:w-10",
           imageClassName
         )}
       />

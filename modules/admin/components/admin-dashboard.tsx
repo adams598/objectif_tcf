@@ -15,7 +15,7 @@ export function AdminDashboard() {
   const [examType, setExamType] = useState<string>("ALL");
   const [months, setMonths] = useState(6);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["admin-analytics", examType, months],
     queryFn: () => {
       const params = new URLSearchParams({ months: String(months) });
@@ -66,6 +66,11 @@ export function AdminDashboard() {
       {isLoading ? (
         <div className="p-xl text-center text-on-surface-variant animate-pulse">
           Chargement des statistiques…
+        </div>
+      ) : isError ? (
+        <div className="p-xl text-center text-error rounded-2xl border border-error/30 bg-error/5">
+          Impossible de charger les statistiques
+          {error instanceof Error ? ` : ${error.message}` : ""}
         </div>
       ) : data ? (
         <AdminAnalyticsCharts data={data} />

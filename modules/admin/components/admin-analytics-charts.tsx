@@ -113,18 +113,47 @@ function formatMonthLabel(key: string) {
 }
 
 function formatAmount(value: number, currency?: string) {
-  if (currency) {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 0,
-    }).format(value);
+  if (currency && /^[A-Z]{3}$/i.test(currency)) {
+    try {
+      return new Intl.NumberFormat("fr-FR", {
+        style: "currency",
+        currency: currency.toUpperCase(),
+        maximumFractionDigits: 0,
+      }).format(value);
+    } catch {
+      // Devise non reconnue par Intl — repli numérique
+    }
   }
   return value.toLocaleString("fr-FR");
 }
 
-function withLabels<T extends { month: string }>(rows: T[]) {
+function withLabels<T extends { month: string }>(rows: T[] = []) {
   return rows.map((r) => ({ ...r, label: formatMonthLabel(r.month) }));
+}
+
+function normalizeAnalyticsData(raw: AdminAnalyticsData): AdminAnalyticsData {
+  return {
+    overview: {
+      totalUsers: raw.overview?.totalUsers ?? 0,
+      newUsersInPeriod: raw.overview?.newUsersInPeriod ?? 0,
+      activeUsers: raw.overview?.activeUsers ?? 0,
+      totalSubscriptions: raw.overview?.totalSubscriptions ?? 0,
+      freeSubscriptions: raw.overview?.freeSubscriptions ?? 0,
+      paidSubscriptions: raw.overview?.paidSubscriptions ?? 0,
+      totalAttempts: raw.overview?.totalAttempts ?? 0,
+      completedAttempts: raw.overview?.completedAttempts ?? 0,
+      conversionRate: raw.overview?.conversionRate ?? 0,
+    },
+    subscriptionsByPlan: raw.subscriptionsByPlan ?? [],
+    subscriptionsByExamType: raw.subscriptionsByExamType ?? [],
+    registrationsByMonth: raw.registrationsByMonth ?? [],
+    revenueByMonth: raw.revenueByMonth ?? [],
+    attemptsByMonth: raw.attemptsByMonth ?? [],
+    completedAttemptsByMonth: raw.completedAttemptsByMonth ?? [],
+    paymentsByMethod: raw.paymentsByMethod ?? [],
+    paymentsByProvider: raw.paymentsByProvider ?? [],
+    revenueTotals: raw.revenueTotals ?? [],
+  };
 }
 
 function toNamedPieData(
@@ -138,7 +167,9 @@ function toNamedPieData(
   return filtered;
 }
 
-export function AdminAnalyticsCharts({ data }: { data: AdminAnalyticsData }) {
+export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsData }) {
+  const data = useMemo(() => normalizeAnalyticsData(rawData), [rawData]);
+
   const registrations = useMemo(
     () => withLabels(data.registrationsByMonth),
     [data.registrationsByMonth]
@@ -461,21 +492,25 @@ export function AdminAnalyticsCharts({ data }: { data: AdminAnalyticsData }) {
           </ChartCard>
 
           <ChartCard title="Par type d'examen" subtitle="Radar">
-            <ResponsiveContainer width="100%" height={240}>
-              <RadarChart data={radarExamData} cx="50%" cy="50%" outerRadius="70%">
-                <PolarGrid stroke="#e6e0e9" />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10 }} />
-                <PolarRadiusAxis tick={{ fontSize: 9 }} allowDecimals={false} />
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
-                <Radar
-                  name="Abonnements"
-                  dataKey="abonnements"
-                  stroke={CHART_COLORS[0]}
-                  fill={CHART_COLORS[0]}
-                  fillOpacity={0.25}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
+            {radarExamData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={240}>
+                <RadarChart data={radarExamData} cx="50%" cy="50%" outerRadius="70%">
+                  <PolarGrid stroke="#e6e0e9" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10 }} />
+                  <PolarRadiusAxis tick={{ fontSize: 9 }} allowDecimals={false} />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} />
+                  <Radar
+                    name="Abonnements"
+                    dataKey="abonnements"
+                    stroke={CHART_COLORS[0]}
+                    fill={CHART_COLORS[0]}
+                    fillOpacity={0.25}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyChartMessage />
+            )}
           </ChartCard>
         </div>
 
@@ -677,6 +712,14 @@ function AnalyticsSection({
   );
 }
 
+function EmptyChartMessage() {
+  return (
+    <div className="flex items-center justify-center h-[200px] text-on-surface-variant font-label-sm">
+      Aucune donnée sur cette période
+    </div>
+  );
+}
+
 function ChartCard({
   title,
   subtitle,
@@ -760,9 +803,12 @@ function PieLegend({
       {data.map((item, i) => {
         const pct =
           total > 0 ? Math.round((item.value / total) * 100) : 0;
-        const display = formatValue
-          ? formatValue(item.value, item.name)
-          : item.value.toLocaleString("fr-FR");
+        const display =
+          isEmpty || item.isEmpty
+            ? "—"
+            : formatValue
+              ? formatValue(item.value, item.name)
+              : `${item.value.toLocaleString("fr-FR")} (${pct}%)`;
         return (
           <li
             key={item.name}
@@ -780,7 +826,7 @@ function PieLegend({
               <span className="truncate text-on-surface">{item.name}</span>
             </span>
             <span className="text-on-surface-variant shrink-0 ml-2">
-              {isEmpty ? "—" : `${display}${formatValue ? "" : ` (${pct}%)`}`}
+              {display}
             </span>
           </li>
         );

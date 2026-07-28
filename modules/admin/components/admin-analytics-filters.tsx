@@ -12,15 +12,20 @@ import {
 import { GENDER_LABELS } from "@/lib/admin/analytics";
 import type { AnalyticsPeriodType } from "@/lib/admin/analytics-period";
 import { ALL_EXAM_TYPES, EXAM_TYPE_LABELS } from "@/lib/exams/catalog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { normalizeSelectedMonths } from "@/lib/admin/analytics-period";
 
 export type AnalyticsFilterState = {
   examType: string;
   periodType: AnalyticsPeriodType;
   months: number;
   year: number;
-  month: number;
-  monthPairStart: number;
+  selectedMonths: number[];
   country: string;
   paymentMethod: string;
   gender: string;
@@ -38,21 +43,6 @@ export type AnalyticsFilterOptions = {
   years: number[];
   currentYear: number;
 };
-
-const MONTHS_FR = [
-  "Janvier",
-  "Février",
-  "Mars",
-  "Avril",
-  "Mai",
-  "Juin",
-  "Juillet",
-  "Août",
-  "Septembre",
-  "Octobre",
-  "Novembre",
-  "Décembre",
-];
 
 const MONTHS_SHORT = [
   "Jan",
@@ -93,13 +83,13 @@ const AGE_RANGES = [
 ];
 
 export function defaultAnalyticsFilters(currentYear: number): AnalyticsFilterState {
+  const currentMonth = new Date().getMonth() + 1;
   return {
     examType: "ALL",
     periodType: "rolling",
     months: 6,
     year: currentYear,
-    month: 1,
-    monthPairStart: 1,
+    selectedMonths: [currentMonth],
     country: "ALL",
     paymentMethod: "ALL",
     gender: "ALL",
@@ -107,6 +97,31 @@ export function defaultAnalyticsFilters(currentYear: number): AnalyticsFilterSta
     ageMax: "",
     ageExact: "",
   };
+}
+
+function formatSelectedMonthsLabel(year: number, months: number[]): string {
+  const sorted = normalizeSelectedMonths(months);
+  if (sorted.length === 0) return "Choisir les mois";
+  if (sorted.length === 1) {
+    return `${MONTHS_SHORT[sorted[0] - 1]} ${year}`;
+  }
+  const consecutive = sorted.every(
+    (m, i) => i === 0 || m === sorted[i - 1] + 1
+  );
+  if (consecutive) {
+    return `${MONTHS_SHORT[sorted[0] - 1]}–${MONTHS_SHORT[sorted[sorted.length - 1] - 1]} ${year}`;
+  }
+  return `${sorted.length} mois · ${year}`;
+}
+
+function toggleMonth(months: number[], month: number): number[] {
+  const set = new Set(months);
+  if (set.has(month)) {
+    set.delete(month);
+  } else {
+    set.add(month);
+  }
+  return normalizeSelectedMonths(Array.from(set));
 }
 
 export function buildAnalyticsQueryParams(
@@ -119,11 +134,8 @@ export function buildAnalyticsQueryParams(
   });
 
   if (filters.examType !== "ALL") params.set("examType", filters.examType);
-  if (filters.periodType === "month") {
-    params.set("month", String(filters.month));
-  }
-  if (filters.periodType === "monthPair") {
-    params.set("monthPairStart", String(filters.monthPairStart));
+  if (filters.periodType === "custom" && filters.selectedMonths.length > 0) {
+    params.set("selectedMonths", filters.selectedMonths.join(","));
   }
   if (filters.country !== "ALL") params.set("country", filters.country);
   if (filters.paymentMethod !== "ALL") {
@@ -140,7 +152,8 @@ export function buildAnalyticsQueryParams(
 function countActiveFilters(filters: AnalyticsFilterState): number {
   let n = 0;
   if (filters.examType !== "ALL") n++;
-  if (filters.periodType !== "rolling" || filters.months !== 6) n++;
+  if (filters.periodType === "custom") n++;
+  else if (filters.periodType !== "rolling" || filters.months !== 6) n++;
   if (filters.country !== "ALL") n++;
   if (filters.paymentMethod !== "ALL") n++;
   if (filters.gender !== "ALL") n++;
@@ -201,6 +214,119 @@ function FilterField({
   );
 }
 
+type MonthSelectorProps = {
+  year: number;
+  selectedMonths: number[];
+  onChange: (months: number[]) => void;
+  layout: "inline" | "dialog";
+  disabled?: boolean;
+};
+
+function MonthSelector({
+  year,
+  selectedMonths,
+  onChange,
+  layout,
+  disabled,
+}: MonthSelectorProps) {
+  const sorted = normalizeSelectedMonths(selectedMonths);
+
+  const grid = (
+    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+      {MONTHS_SHORT.map((name, index) => {
+        const month = index + 1;
+        const active = sorted.includes(month);
+        return (
+          <button
+            key={name}
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(toggleMonth(sorted, month))}
+            className={cn(
+              "h-8 rounded-lg border text-[11px] font-label-sm transition-colors",
+              active
+                ? "border-primary bg-primary/15 text-primary"
+                : "border-outline-variant/70 bg-surface hover:bg-surface-container-low text-on-surface-variant"
+            )}
+          >
+            {name}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const actions = (
+    <div className="flex flex-wrap gap-1.5 pt-2 border-t border-outline-variant/40 mt-2">
+      <button
+        type="button"
+        disabled={disabled}
+        className="h-7 px-2 rounded-md text-[10px] text-on-surface-variant hover:bg-surface-container-low"
+        onClick={() => onChange(Array.from({ length: 12 }, (_, i) => i + 1))}
+      >
+        Toute l&apos;année
+      </button>
+      <button
+        type="button"
+        disabled={disabled}
+        className="h-7 px-2 rounded-md text-[10px] text-on-surface-variant hover:bg-surface-container-low"
+        onClick={() => onChange([])}
+      >
+        Effacer
+      </button>
+    </div>
+  );
+
+  if (layout === "dialog") {
+    return (
+      <div className="sm:col-span-2 space-y-2">
+        <p className="text-[11px] font-label-sm text-on-surface-variant">
+          Mois à inclure ({formatSelectedMonthsLabel(year, sorted)})
+        </p>
+        {grid}
+        {actions}
+        {sorted.length === 0 && (
+          <p className="text-[10px] text-error">
+            Sélectionnez au moins un mois pour la plage personnalisée.
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "inline-flex items-center gap-1 shrink-0",
+        disabled && "opacity-45 pointer-events-none"
+      )}
+      data-filter-item
+    >
+      <span className="text-[10px] text-on-surface-variant/80 whitespace-nowrap hidden xl:inline">
+        Mois
+      </span>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            disabled={disabled}
+            className={cn(selectClass, "pr-2 min-w-[7.5rem] text-left")}
+          >
+            {formatSelectedMonthsLabel(year, sorted)}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64 p-3">
+          <p className="text-[11px] font-label-sm text-on-surface-variant mb-2">
+            Plage · {year}
+          </p>
+          {grid}
+          {actions}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
 type FilterControlsProps = {
   filters: AnalyticsFilterState;
   options: AnalyticsFilterOptions;
@@ -217,7 +343,7 @@ function FilterControls({
   limit,
 }: FilterControlsProps) {
   const yearDisabled = filters.periodType === "rolling";
-  const pairDisabled = filters.periodType !== "monthPair";
+  const customDisabled = filters.periodType !== "custom";
 
   let fieldIndex = 0;
   const show = (node: React.ReactNode) => {
@@ -262,6 +388,14 @@ function FilterControls({
               periodType: "rolling",
               months: parseInt(v.split(":")[1] ?? "6", 10),
             });
+          } else if (v === "custom") {
+            onChange({
+              periodType: "custom",
+              selectedMonths:
+                filters.selectedMonths.length > 0
+                  ? filters.selectedMonths
+                  : [new Date().getMonth() + 1],
+            });
           } else {
             onChange({ periodType: v as AnalyticsPeriodType });
           }
@@ -271,8 +405,7 @@ function FilterControls({
         <option value="rolling:6">6 derniers mois</option>
         <option value="rolling:12">12 derniers mois</option>
         <option value="year">Année entière</option>
-        <option value="month">Mois précis</option>
-        <option value="monthPair">2 mois consécutifs</option>
+        <option value="custom">Plage de mois</option>
       </FilterField>
       )}
 
@@ -292,33 +425,13 @@ function FilterControls({
       )}
 
       {show(
-      <FilterField
-        label="Mois"
-        value={filters.month}
-        onChange={(v) => onChange({ month: parseInt(v, 10) })}
-        disabled={filters.periodType !== "month"}
-      >
-        {MONTHS_FR.map((name, i) => (
-          <option key={name} value={i + 1}>
-            {name}
-          </option>
-        ))}
-      </FilterField>
-      )}
-
-      {show(
-      <FilterField
-        label="2 mois"
-        value={filters.monthPairStart}
-        onChange={(v) => onChange({ monthPairStart: parseInt(v, 10) })}
-        disabled={pairDisabled}
-      >
-        {MONTHS_SHORT.slice(0, 11).map((name, i) => (
-          <option key={name} value={i + 1}>
-            {name}–{MONTHS_SHORT[i + 1]}
-          </option>
-        ))}
-      </FilterField>
+      <MonthSelector
+        year={filters.year}
+        selectedMonths={filters.selectedMonths}
+        onChange={(selectedMonths) => onChange({ selectedMonths })}
+        layout={layout}
+        disabled={customDisabled}
+      />
       )}
 
       {show(

@@ -3,6 +3,7 @@ import type { ExamType, Gender, PaymentMethod } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { fetchAdminAnalytics } from "@/lib/admin/analytics";
 import type { AnalyticsPeriodType } from "@/lib/admin/analytics-period";
+import { parseSelectedMonthsParam } from "@/lib/admin/analytics-period";
 import {
   successResponse,
   serverErrorResponse,
@@ -20,7 +21,7 @@ const EXAM_TYPES = [
   "AUTRE",
 ] as const;
 
-const PERIOD_TYPES = ["rolling", "year", "month", "monthPair"] as const;
+const PERIOD_TYPES = ["rolling", "year", "custom"] as const;
 
 const GENDERS = ["MALE", "FEMALE", "OTHER", "UNSPECIFIED"] as const;
 
@@ -77,11 +78,8 @@ export async function GET(req: NextRequest) {
 
     const months = parseOptionalInt(searchParams.get("months"), 1, 24) ?? 6;
     const year = parseOptionalInt(searchParams.get("year"), 2000, 2100);
-    const month = parseOptionalInt(searchParams.get("month"), 1, 12);
-    const monthPairStart = parseOptionalInt(
-      searchParams.get("monthPairStart"),
-      1,
-      11
+    const selectedMonths = parseSelectedMonthsParam(
+      searchParams.get("selectedMonths")
     );
 
     const countryRaw = searchParams.get("country");
@@ -113,8 +111,7 @@ export async function GET(req: NextRequest) {
       periodType,
       months,
       year,
-      month,
-      monthPairStart,
+      selectedMonths: selectedMonths.length > 0 ? selectedMonths : undefined,
       country,
       paymentMethod,
       gender,

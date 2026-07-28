@@ -1,14 +1,14 @@
 import type { Prisma } from "@prisma/client";
 
-export type AnalyticsPeriodType = "rolling" | "year" | "month" | "monthPair";
+export type AnalyticsPeriodType = "rolling" | "year" | "custom";
 
 export type AnalyticsFilters = {
   examType?: import("@prisma/client").ExamType | null;
   periodType?: AnalyticsPeriodType;
   months?: number;
   year?: number | null;
-  month?: number | null;
-  monthPairStart?: number | null;
+  /** Mois calendaires 1–12, triés, uniques */
+  selectedMonths?: number[];
   country?: string | null;
   paymentMethod?: import("@prisma/client").PaymentMethod | null;
   gender?: import("@prisma/client").Gender | null;
@@ -51,6 +51,32 @@ export function buildMonthKeysForYear(year: number): string[] {
   );
 }
 
+export function normalizeSelectedMonths(months: number[]): number[] {
+  const unique = new Set<number>();
+  for (const m of months) {
+    if (m >= 1 && m <= 12) unique.add(m);
+  }
+  return Array.from(unique).sort((a, b) => a - b);
+}
+
+export function parseSelectedMonthsParam(raw: string | null): number[] {
+  if (!raw?.trim()) return [];
+  const parsed = raw
+    .split(",")
+    .map((part) => parseInt(part.trim(), 10))
+    .filter((n) => !Number.isNaN(n));
+  return normalizeSelectedMonths(parsed);
+}
+
+export function buildMonthKeysForSelection(
+  year: number,
+  months: number[]
+): string[] {
+  return normalizeSelectedMonths(months).map((m) =>
+    monthKey(new Date(year, m - 1, 1))
+  );
+}
+
 export function resolveAnalyticsPeriod(
   filters: AnalyticsFilters
 ): ResolvedPeriod {
@@ -68,34 +94,21 @@ export function resolveAnalyticsPeriod(
     };
   }
 
-  if (periodType === "month" && filters.year && filters.month) {
-    const since = new Date(filters.year, filters.month - 1, 1, 0, 0, 0, 0);
-    const until = new Date(filters.year, filters.month, 0, 23, 59, 59, 999);
-    return {
-      since,
-      until,
-      monthKeys: [monthKey(since)],
-      periodType,
-    };
-  }
+  if (periodType === "custom" && filters.year) {
+    const selected =
+      filters.selectedMonths && filters.selectedMonths.length > 0
+        ? normalizeSelectedMonths(filters.selectedMonths)
+        : [now.getMonth() + 1];
 
-  if (
-    periodType === "monthPair" &&
-    filters.year &&
-    filters.monthPairStart &&
-    filters.monthPairStart >= 1 &&
-    filters.monthPairStart <= 11
-  ) {
-    const startMonth = filters.monthPairStart;
-    const since = new Date(filters.year, startMonth - 1, 1, 0, 0, 0, 0);
-    const until = new Date(filters.year, startMonth + 1, 0, 23, 59, 59, 999);
+    const first = selected[0];
+    const last = selected[selected.length - 1];
+    const since = new Date(filters.year, first - 1, 1, 0, 0, 0, 0);
+    const until = new Date(filters.year, last, 0, 23, 59, 59, 999);
+
     return {
       since,
       until,
-      monthKeys: [
-        monthKey(new Date(filters.year, startMonth - 1, 1)),
-        monthKey(new Date(filters.year, startMonth, 1)),
-      ],
+      monthKeys: buildMonthKeysForSelection(filters.year, selected),
       periodType,
     };
   }

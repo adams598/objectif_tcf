@@ -65,21 +65,53 @@ export type AnalyticsFilters = {
   months?: number;
 };
 
-function monthsAgo(months: number): Date {
-  const d = new Date();
-  d.setMonth(d.getMonth() - months);
-  d.setDate(1);
+/** Premier jour du mois, il y a (monthCount - 1) mois — aligné sur le filtre « X derniers mois ». */
+export function periodStart(monthCount: number): Date {
+  const now = new Date();
+  const d = new Date(now.getFullYear(), now.getMonth() - (monthCount - 1), 1);
   d.setHours(0, 0, 0, 0);
   return d;
+}
+
+/** Toutes les clés YYYY-MM de la période (mois courant inclus), ordre chronologique. */
+export function buildMonthKeys(monthCount: number): string[] {
+  const keys: string[] = [];
+  const now = new Date();
+  for (let i = monthCount - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    keys.push(monthKey(d));
+  }
+  return keys;
 }
 
 function monthKey(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function fillCountSeries(
+  monthKeys: string[],
+  data: Map<string, number>
+): Array<{ month: string; count: number }> {
+  return monthKeys.map((month) => ({
+    month,
+    count: data.get(month) ?? 0,
+  }));
+}
+
+function fillRevenueSeries(
+  monthKeys: string[],
+  data: Map<string, { xaf: number; usd: number; eur: number; xof: number }>
+): Array<{ month: string; xaf: number; usd: number; eur: number; xof: number }> {
+  return monthKeys.map((month) => ({
+    month,
+    ...(data.get(month) ?? { xaf: 0, usd: 0, eur: 0, xof: 0 }),
+  }));
+}
+
 export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
   const months = filters.months ?? 6;
-  const since = monthsAgo(months);
+  const since = periodStart(months);
+  const monthKeys = buildMonthKeys(months);
   const now = new Date();
   const examTypeFilter = filters.examType ?? undefined;
 
@@ -116,12 +148,13 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
   const [
     totalUsers,
     newUsersInPeriod,
-    activeSessions,
+    activeUsersWithSession,
     subscriptionsByPlan,
     subscriptionsByExamType,
     registrationsRaw,
     paymentsInPeriod,
     attemptsRaw,
+    completedAttemptsRaw,
     paymentsByMethod,
     paymentsByProvider,
     totalAttempts,
@@ -132,11 +165,12 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
   ] = await Promise.all([
     prisma.user.count({ where: userWhere }),
     prisma.user.count({ where: { ...userWhere, createdAt: { gte: since } } }),
-    prisma.session.count({
+    prisma.user.count({
       where: {
-        expiresAt: { gt: now },
-        isRevoked: false,
-        user: userWhere,
+        ...userWhere,
+        sessions: {
+          some: { expiresAt: { gt: now }, isRevoked: false },
+        },
       },
     }),
     prisma.subscription.groupBy({
@@ -150,7 +184,7 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
       _count: { _all: true },
     }),
     prisma.user.findMany({
-      where: { deletedAt: null, createdAt: { gte: since } },
+      where: { ...userWhere, createdAt: { gte: since } },
       select: { createdAt: true },
     }),
     prisma.payment.findMany({
@@ -160,6 +194,14 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
     prisma.attempt.findMany({
       where: attemptWhere,
       select: { startedAt: true },
+    }),
+    prisma.attempt.findMany({
+      where: {
+        ...attemptWhere,
+        status: "COMPLETED",
+        completedAt: { gte: since },
+      },
+      select: { completedAt: true },
     }),
     prisma.payment.groupBy({
       by: ["method"],
@@ -230,15 +272,28 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
     attemptsByMonth.set(key, (attemptsByMonth.get(key) ?? 0) + 1);
   }
 
-  const sortMonths = (entries: [string, unknown][]) =>
-    entries.sort(([a], [b]) => a.localeCompare(b));
+  const completedAttemptsByMonth = new Map<string, number>();
+  for (const a of completedAttemptsRaw) {
+    if (!a.completedAt) continue;
+    const key = monthKey(a.completedAt);
+    completedAttemptsByMonth.set(
+      key,
+      (completedAttemptsByMonth.get(key) ?? 0) + 1
+    );
+  }
 
   return {
-    filters: { examType: examTypeFilter ?? null, months },
+    filters: {
+      examType: examTypeFilter ?? null,
+      months,
+      periodStart: since.toISOString(),
+      periodEnd: now.toISOString(),
+      monthKeys,
+    },
     overview: {
       totalUsers,
       newUsersInPeriod,
-      activeUsers: activeSessions,
+      activeUsers: activeUsersWithSession,
       totalSubscriptions: freeSubs + paidSubs,
       freeSubscriptions: freeSubs,
       paidSubscriptions: paidSubs,
@@ -267,17 +322,12 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
           })),
       })
     ),
-    registrationsByMonth: sortMonths(
-      Array.from(registrationsByMonth.entries())
-    ).map(([month, count]) => ({ month, count: count as number })),
-    revenueByMonth: sortMonths(Array.from(revenueByMonth.entries())).map(
-      ([month, amounts]) => ({
-        month,
-        ...(amounts as { xaf: number; usd: number; eur: number; xof: number }),
-      })
-    ),
-    attemptsByMonth: sortMonths(Array.from(attemptsByMonth.entries())).map(
-      ([month, count]) => ({ month, count: count as number })
+    registrationsByMonth: fillCountSeries(monthKeys, registrationsByMonth),
+    revenueByMonth: fillRevenueSeries(monthKeys, revenueByMonth),
+    attemptsByMonth: fillCountSeries(monthKeys, attemptsByMonth),
+    completedAttemptsByMonth: fillCountSeries(
+      monthKeys,
+      completedAttemptsByMonth
     ),
     paymentsByMethod: paymentsByMethod.map((p) => ({
       method: p.method ?? "UNKNOWN",

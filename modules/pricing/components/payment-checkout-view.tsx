@@ -198,6 +198,9 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
         <p className="font-display-md text-[28px] font-bold text-primary">
           {formatPaymentAmount(amount, currency)}
         </p>
+        <p className="font-label-sm text-label-sm text-on-surface-variant mt-md">
+          {t("pricing.autoRenewNotice")}
+        </p>
       </div>
 
       <div className="bg-surface border border-outline-variant rounded-2xl p-lg shadow-violet-sm">

@@ -71,6 +71,17 @@ export const enCA: CoreMessages = {
     noStreak: "None",
     activeSubscriptions: "Active subscriptions",
     subscriptionUntil: "until",
+    cancelSubscription: "Cancel subscription",
+    cancelSubscriptionConfirm:
+      "Stop auto-renewal? No refunds. You keep access until {{date}}, then the subscription will not renew.",
+    cancelSubscriptionSuccess:
+      "Auto-renewal stopped. Access kept until {{date}}. No refund.",
+    cancelSubscriptionError: "Could not cancel the subscription. Please try again.",
+    subscriptionCancelledNotice: "Cancelled — access until {{date}}",
+    autoRenewOn: "Auto-renewal enabled",
+    autoRenewOff: "Auto-renewal disabled",
+    noRefundNotice:
+      "Cancellation takes effect at the end of the current period. No refunds.",
     saveProfile: "Save changes",
     preferences: "Preferences",
     interfaceLanguage: "Interface language",
@@ -140,7 +151,7 @@ export const enCA: CoreMessages = {
     freeSection: "Free series",
     premiumSection: "Premium series",
     premiumHint:
-      "Click a series to view subscription offers and unlock access.",
+      "Premium series require an active paid subscription. Click to view offers or open a series if you are already subscribed.",
     noResults: "No results",
     noResultsDesc: "No series match your search or filter.",
     subscribeToAccess: "Subscribe to access",
@@ -148,6 +159,7 @@ export const enCA: CoreMessages = {
     disciplines: "4 disciplines",
     subscriptionRequired: "Subscription required",
     freeAccess: "Free access",
+    premiumAccess: "Premium access",
     disciplinesProgress: "{{done}} / {{total}} disciplines completed",
     skillCo: "Listening comprehension",
     skillCe: "Reading comprehension",

@@ -36,6 +36,7 @@ const updateSchema = z.object({
   order: z.number().int().min(1).optional(),
   points: z.number().int().min(1).optional(),
   audioUrl: z.string().optional().nullable(),
+  videoUrl: z.string().optional().nullable(),
   imageUrl: z.string().optional().nullable(),
   choices: z.array(choiceSchema).optional(),
 });

@@ -251,6 +251,18 @@ export async function initiatePayment(
     select: { country: true },
   });
 
+  const existingSub = payment.examType
+    ? await prisma.subscription.findUnique({
+        where: {
+          userId_examType: {
+            userId: user.userId,
+            examType: payment.examType,
+          },
+        },
+        select: { stripeCustomerId: true },
+      })
+    : null;
+
   const chargeParams = {
     paymentId: payment.id,
     providerReference,
@@ -262,10 +274,13 @@ export async function initiatePayment(
     description: payment.description ?? "Abonnement Objectif TCF",
     phoneNumber: input.phoneNumber,
     redirectUrl,
+    subscriptionDays: payment.subscriptionDays ?? undefined,
+    stripeCustomerId: existingSub?.stripeCustomerId,
   };
 
   let checkoutUrl: string;
   let externalId: string | undefined;
+  let stripeCustomerId: string | undefined;
 
   if (provider === "MOCK") {
     const mock = createMockCheckout(chargeParams);
@@ -275,6 +290,7 @@ export async function initiatePayment(
     const stripe = await createStripeCheckout(chargeParams);
     checkoutUrl = stripe.checkoutUrl;
     externalId = stripe.externalId;
+    stripeCustomerId = stripe.stripeCustomerId;
   } else if (provider === "PAWAPAY") {
     const pp = await createPawaPayCheckout({
       ...chargeParams,
@@ -286,6 +302,11 @@ export async function initiatePayment(
   } else {
     throw new Error("NO_PAYMENT_PROVIDER_CONFIGURED");
   }
+
+  const existingMeta =
+    typeof payment.metadata === "object" && payment.metadata
+      ? (payment.metadata as Record<string, unknown>)
+      : {};
 
   await prisma.payment.update({
     where: { id: payment.id },
@@ -299,6 +320,10 @@ export async function initiatePayment(
       externalId,
       checkoutUrl,
       failureReason: null,
+      metadata: {
+        ...existingMeta,
+        ...(stripeCustomerId ? { stripeCustomerId } : {}),
+      },
     },
   });
 
@@ -308,7 +333,11 @@ export async function initiatePayment(
 export async function finalizeSuccessfulPayment(
   providerReference: string,
   externalId?: string,
-  stripePaymentIntentId?: string
+  stripePaymentIntentId?: string,
+  stripeIds?: {
+    subscriptionId?: string | null;
+    customerId?: string | null;
+  }
 ): Promise<Payment | null> {
   const payment = await prisma.payment.findUnique({
     where: { providerReference },
@@ -319,12 +348,25 @@ export async function finalizeSuccessfulPayment(
   }
 
   if (payment.status === "SUCCEEDED") {
-    if (externalId || stripePaymentIntentId) {
+    if (externalId || stripePaymentIntentId || stripeIds?.subscriptionId) {
+      const meta =
+        typeof payment.metadata === "object" && payment.metadata
+          ? (payment.metadata as Record<string, unknown>)
+          : {};
       return prisma.payment.update({
         where: { id: payment.id },
         data: {
           externalId: externalId ?? payment.externalId,
           stripePaymentId: stripePaymentIntentId ?? payment.stripePaymentId,
+          metadata: {
+            ...meta,
+            ...(stripeIds?.subscriptionId
+              ? { stripeSubscriptionId: stripeIds.subscriptionId }
+              : {}),
+            ...(stripeIds?.customerId
+              ? { stripeCustomerId: stripeIds.customerId }
+              : {}),
+          },
         },
       });
     }
@@ -339,6 +381,7 @@ export async function finalizeSuccessfulPayment(
   const days = payment.subscriptionDays ?? 30;
   const metadata = (payment.metadata ?? {}) as PaymentInvoiceMetadata & {
     subscriptionPlan?: string;
+    stripeCustomerId?: string;
   };
   const subscriptionPlan = inferSubscriptionPlan({
     offerName: metadata.offerName,
@@ -347,6 +390,15 @@ export async function finalizeSuccessfulPayment(
   const plan =
     (metadata.subscriptionPlan as import("@prisma/client").SubscriptionPlan) ??
     subscriptionPlan;
+  // Un paiement réussi ne doit jamais créer un plan FREE (pas d'accès premium).
+  const resolvedPlan = plan === "FREE" ? subscriptionPlan : plan;
+  const paidPlan = resolvedPlan === "FREE" ? "STARTER" : resolvedPlan;
+  const stripeCustomerId =
+    stripeIds?.customerId ??
+    (typeof metadata.stripeCustomerId === "string"
+      ? metadata.stripeCustomerId
+      : null);
+  const stripeSubscriptionId = stripeIds?.subscriptionId ?? null;
 
   const existing = await prisma.subscription.findUnique({
     where: {
@@ -368,11 +420,17 @@ export async function finalizeSuccessfulPayment(
     subscription = await prisma.subscription.update({
       where: { id: existing.id },
       data: {
-        plan,
+        plan: paidPlan,
         status: "ACTIVE",
-        currentPeriodStart: existing.currentPeriodEnd > now ? existing.currentPeriodStart : now,
+        currentPeriodStart:
+          existing.currentPeriodEnd > now ? existing.currentPeriodStart : now,
         currentPeriodEnd: periodEnd,
+        autoRenew: true,
         cancelAtPeriodEnd: false,
+        renewalDays: days,
+        offerId: payment.offerId,
+        ...(stripeCustomerId ? { stripeCustomerId } : {}),
+        ...(stripeSubscriptionId ? { stripeSubscriptionId } : {}),
       },
     });
   } else {
@@ -382,10 +440,16 @@ export async function finalizeSuccessfulPayment(
       data: {
         userId: payment.userId,
         examType: payment.examType,
-        plan,
+        plan: paidPlan,
         status: "ACTIVE",
         currentPeriodStart: now,
         currentPeriodEnd: periodEnd,
+        autoRenew: true,
+        cancelAtPeriodEnd: false,
+        renewalDays: days,
+        offerId: payment.offerId,
+        stripeCustomerId,
+        stripeSubscriptionId,
       },
     });
   }
@@ -403,6 +467,15 @@ export async function finalizeSuccessfulPayment(
       externalId: externalId ?? payment.externalId,
       stripePaymentId: stripePaymentIntentId ?? payment.stripePaymentId,
       paidAt: now,
+      metadata: {
+        ...metadata,
+        subscriptionPlan: paidPlan,
+        autoRenew: true,
+        ...(stripeCustomerId ? { stripeCustomerId } : {}),
+        ...(stripeSubscriptionId
+          ? { stripeSubscriptionId }
+          : {}),
+      },
     },
   });
 
@@ -411,6 +484,117 @@ export async function finalizeSuccessfulPayment(
   });
 
   return updatedPayment;
+}
+
+/** Prolonge un abonnement Stripe après un renouvellement (invoice.paid). */
+export async function applyStripeSubscriptionRenewal(input: {
+  stripeSubscriptionId: string;
+  stripeCustomerId?: string | null;
+  stripeInvoiceId?: string | null;
+  amountPaid?: number | null;
+  currency?: string | null;
+}): Promise<void> {
+  const subscription = await prisma.subscription.findFirst({
+    where: { stripeSubscriptionId: input.stripeSubscriptionId },
+  });
+  if (!subscription) return;
+
+  const days = subscription.renewalDays ?? 30;
+  const now = new Date();
+  const extendFrom =
+    subscription.currentPeriodEnd > now ? subscription.currentPeriodEnd : now;
+  const periodEnd = new Date(extendFrom);
+  periodEnd.setDate(periodEnd.getDate() + days);
+
+  await prisma.subscription.update({
+    where: { id: subscription.id },
+    data: {
+      status: "ACTIVE",
+      currentPeriodEnd: periodEnd,
+      autoRenew: !subscription.cancelAtPeriodEnd,
+      ...(input.stripeCustomerId
+        ? { stripeCustomerId: input.stripeCustomerId }
+        : {}),
+    },
+  });
+
+  if (subscription.cancelAtPeriodEnd) {
+    return;
+  }
+
+  const currency = (input.currency ?? "xaf").toUpperCase();
+  const amount = Math.round(input.amountPaid ?? 0);
+  // Stripe EUR/USD en centimes
+  const normalizedAmount =
+    currency === "EUR" || currency === "USD"
+      ? Math.round(amount / 100)
+      : amount;
+
+  if (normalizedAmount <= 0) return;
+
+  const providerReference = buildProviderReference();
+  await prisma.payment.create({
+    data: {
+      userId: subscription.userId,
+      subscriptionId: subscription.id,
+      providerReference,
+      status: "SUCCEEDED",
+      provider: "STRIPE",
+      currency: (["XAF", "XOF", "USD", "EUR"].includes(currency)
+        ? currency
+        : "XAF") as import("@prisma/client").PaymentCurrency,
+      amount: normalizedAmount,
+      examType: subscription.examType,
+      offerId: subscription.offerId,
+      subscriptionDays: days,
+      description: `Renouvellement automatique — ${days} jours`,
+      paidAt: now,
+      externalId: input.stripeInvoiceId,
+      metadata: {
+        renewal: true,
+        stripeSubscriptionId: input.stripeSubscriptionId,
+        autoRenew: true,
+      },
+    },
+  });
+}
+
+export async function markStripeSubscriptionCancelled(
+  stripeSubscriptionId: string,
+  options?: { ended?: boolean }
+): Promise<void> {
+  const subscription = await prisma.subscription.findFirst({
+    where: { stripeSubscriptionId },
+  });
+  if (!subscription) return;
+
+  const now = new Date();
+
+  if (options?.ended) {
+    await prisma.subscription.update({
+      where: { id: subscription.id },
+      data: {
+        autoRenew: false,
+        cancelAtPeriodEnd: false,
+        status: "CANCELLED",
+        currentPeriodEnd:
+          subscription.currentPeriodEnd > now
+            ? now
+            : subscription.currentPeriodEnd,
+      },
+    });
+    return;
+  }
+
+  const stillActive = subscription.currentPeriodEnd > now;
+  await prisma.subscription.update({
+    where: { id: subscription.id },
+    data: {
+      autoRenew: false,
+      cancelAtPeriodEnd: stillActive,
+      status: stillActive ? "ACTIVE" : "CANCELLED",
+    },
+  });
 }
 
 export async function markPaymentFailed(
@@ -571,6 +755,7 @@ export async function refundPaymentForAdmin(
       where: { id: payment.subscriptionId },
       data: {
         status: "CANCELLED",
+        autoRenew: false,
         cancelAtPeriodEnd: false,
         currentPeriodEnd: new Date(),
       },
@@ -646,6 +831,7 @@ export async function markPaymentRefundedByProvider(
       where: { id: payment.subscriptionId },
       data: {
         status: "CANCELLED",
+        autoRenew: false,
         cancelAtPeriodEnd: false,
         currentPeriodEnd: new Date(),
       },

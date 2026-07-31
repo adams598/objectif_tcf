@@ -161,6 +161,7 @@ export const appExtFr = {
     end: "Fin",
     questions: "Questions",
     audioDocument: "Document audio",
+    videoDocument: "Document vidéo",
     listen: "Écouter",
     visualDocument: "Document visuel",
     correctionMode: "Mode de correction",
@@ -200,6 +201,7 @@ export const appExtFr = {
     seriesN: "Série {{n}}",
     previousTask: "Tâche précédente",
     listenDocumentType: "Écouter — {{type}}",
+    watchDocumentType: "Regarder — {{type}}",
     audioDocumentQuestion: "Document audio — Question {{n}}",
     minMaxWords: "{{min}} mots minimum · {{max}} mots maximum",
     modeInstant: "Instantanée",
@@ -441,7 +443,7 @@ export const appExtFr = {
     questionsCount: "{{n}} questions",
     disciplinesCount: "{{n}} disciplines",
     premiumDescSignup:
-      "Débloquez l'intégralité des séries avec un abonnement ou un compte gratuit.",
+      "Débloquez l'intégralité des séries premium avec un abonnement payant.",
     signupLink: "Inscrivez-vous",
     signupSaveSuffix: "pour sauvegarder vos résultats.",
   },
@@ -450,6 +452,8 @@ export const appExtFr = {
     subtitle: "Choisissez l'offre adaptée à votre examen et votre calendrier.",
     createSubscription: "Créer mon abonnement",
     payNow: "Payez maintenant",
+    autoRenewNotice:
+      "Le renouvellement automatique est activé à la souscription. Vous pouvez l'arrêter quand vous le souhaitez depuis Paramètres — aucun remboursement, l'accès reste valide jusqu'à la fin de la période payée.",
     validity: "Validité : {{days}} jours",
     bonusDays: "+ {{days}} jours offerts",
     from: "dès",
@@ -521,7 +525,9 @@ export const appExtFr = {
     paymentNotConfirmed: "Paiement non confirmé",
     retry: "Réessayer",
     paymentSuccessTitle: "Paiement réussi !",
-    subscriptionActive: "Votre abonnement est actif. Bonne préparation !",
+    subscriptionActive:
+      "Votre abonnement est actif avec renouvellement automatique. Vous pouvez l'arrêter à tout moment dans Paramètres.",
+    subscriptionActiveShort: "Votre abonnement est actif. Bonne préparation !",
     invoiceSent:
       "Votre facture a été envoyée par email et est disponible dans votre espace Documents.",
     viewInvoices: "Mes documents",

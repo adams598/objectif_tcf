@@ -1,10 +1,15 @@
 "use client";
 
 import React, { useRef, useState } from "react";
+import { upload } from "@vercel/blob/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import {
+  validateVideoFile,
+  videoBlobPathname,
+} from "@/lib/media/video-upload";
 
 interface AdminMediaUploadProps {
   kind: "image" | "audio" | "video";
@@ -29,7 +34,8 @@ export function AdminMediaUpload({
   const [externalUrl, setExternalUrl] = useState("");
   const [showLinkOption, setShowLinkOption] = useState(kind === "video");
 
-  const supportsFileUpload = kind === "image" || kind === "audio";
+  const supportsFileUpload =
+    kind === "image" || kind === "audio" || kind === "video";
   const showLink =
     allowExternalLink ?? (kind === "video" || supportsFileUpload);
 
@@ -38,38 +44,64 @@ export function AdminMediaUpload({
       ? "audio/mpeg,audio/mp3,audio/wav,audio/webm,audio/ogg"
       : kind === "image"
         ? "image/jpeg,image/png,image/webp,image/gif"
-        : undefined;
+        : kind === "video"
+          ? "video/mp4,video/webm,video/quicktime"
+          : undefined;
+
+  const uploadVideoClient = async (file: File) => {
+    const validationError = validateVideoFile(file);
+    if (validationError) throw new Error(validationError);
+
+    const pathname = videoBlobPathname(file);
+    const blob = await upload(pathname, file, {
+      access: "public",
+      handleUploadUrl: "/api/admin/upload/video",
+      contentType: file.type,
+    });
+    return blob.url;
+  };
+
+  const uploadMediaServer = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("kind", kind);
+
+    const response = await fetch("/api/admin/upload/media", {
+      method: "POST",
+      body: formData,
+    });
+
+    const payload = (await response.json()) as {
+      success?: boolean;
+      data?: { url: string };
+      error?: string;
+    };
+
+    if (!response.ok || !payload.success || !payload.data?.url) {
+      throw new Error(payload.error ?? "Échec de l'envoi du fichier");
+    }
+
+    return payload.data.url;
+  };
 
   const handleFile = async (file: File | null) => {
     if (!file) return;
 
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("kind", kind);
+      const url =
+        kind === "video"
+          ? await uploadVideoClient(file)
+          : await uploadMediaServer(file);
 
-      const response = await fetch("/api/admin/upload/media", {
-        method: "POST",
-        body: formData,
-      });
-
-      const payload = (await response.json()) as {
-        success?: boolean;
-        data?: { url: string };
-        error?: string;
-      };
-
-      if (!response.ok || !payload.success || !payload.data?.url) {
-        throw new Error(payload.error ?? "Échec de l'envoi du fichier");
-      }
-
-      onChange(payload.data.url);
+      onChange(url);
       setExternalUrl("");
       toast.success(
         kind === "audio"
           ? "Audio enregistré sur le cloud"
-          : "Image enregistrée sur le cloud"
+          : kind === "video"
+            ? "Vidéo enregistrée sur Vercel Blob"
+            : "Image enregistrée sur le cloud"
       );
     } catch (error) {
       toast.error(
@@ -97,7 +129,9 @@ export function AdminMediaUpload({
       ? "Choisir un fichier audio"
       : kind === "image"
         ? "Choisir une image"
-        : null;
+        : kind === "video"
+          ? "Choisir une vidéo"
+          : null;
 
   return (
     <div className={cn("flex flex-col gap-sm", className)}>
@@ -123,7 +157,11 @@ export function AdminMediaUpload({
               onClick={() => inputRef.current?.click()}
             >
               <span className="material-symbols-outlined text-[18px]">
-                {kind === "audio" ? "upload_file" : "add_photo_alternate"}
+                {kind === "audio"
+                  ? "upload_file"
+                  : kind === "video"
+                    ? "movie"
+                    : "add_photo_alternate"}
               </span>
               {uploading ? "Envoi en cours…" : uploadLabel}
             </Button>
@@ -143,8 +181,9 @@ export function AdminMediaUpload({
           </div>
           {!value && (
             <p className="font-label-sm text-[11px] text-on-surface-variant">
-              Depuis votre ordinateur ou téléphone — enregistrement automatique sur
-              le cloud. Aucun lien à copier.
+              {kind === "video"
+                ? "MP4, WebM ou MOV — envoi direct vers Vercel Blob (jusqu'à 150 Mo)."
+                : "Depuis votre ordinateur ou téléphone — enregistrement automatique sur le cloud."}
             </p>
           )}
         </div>
@@ -161,11 +200,13 @@ export function AdminMediaUpload({
         <audio controls src={value} className="w-full max-w-md" />
       )}
       {value && kind === "video" && (
-        <p className="font-label-sm text-label-sm text-success flex items-center gap-xs">
-          <span className="material-symbols-outlined text-[16px]">link</span>
-          Lien vidéo enregistré
-        </p>
+        <video
+          controls
+          src={value}
+          className="w-full max-w-md rounded-lg border border-outline-variant bg-black/5"
+        />
       )}
+
       {value && supportsFileUpload && (
         <p className="font-label-sm text-[11px] text-success flex items-center gap-xs">
           <span className="material-symbols-outlined text-[14px]">cloud_done</span>

@@ -8,6 +8,7 @@ import { ExamShell, useExamTimer } from "./shared/exam-shell";
 import { QuestionMap } from "./shared/question-map";
 import { QcmOptions } from "./shared/qcm-options";
 import { ExamAudioPlayer } from "./shared/exam-audio-player";
+import { ExamVideoPlayer } from "./shared/exam-video-player";
 import { ExamMediaPanel } from "./shared/exam-media-panel";
 import { generateCoQuestions } from "@/lib/examen/mock/qcm-generator";
 import { getCoMedia } from "@/lib/examen/media/assets";
@@ -40,6 +41,7 @@ const FALLBACK_QUESTIONS: PlayQuestion[] = generateCoQuestions(39).map((q) => {
     audioScript: media.audioScript,
     documentType: media.documentType,
     audioUrl: null,
+    videoUrl: null,
     imageUrl: media.imageUrl,
     choices: q.choices.map((c, i) => ({ ...c, order: i })),
   };
@@ -213,16 +215,32 @@ export function ExamView({ seriesId, guestMode, examTab }: ExamViewProps) {
                 {question.order}
               </div>
               <div className="flex-1 p-sm md:p-md">
-                <ExamAudioPlayer
-                  audioUrl={question.audioUrl}
-                  audioScript={question.audioScript}
-                  label={
-                    question.documentType
-                      ? t("exam.listenDocumentType", { type: question.documentType })
-                      : t("exam.audioDocument")
-                  }
-                  className="mb-md"
-                />
+                {question.videoUrl ? (
+                  <ExamVideoPlayer
+                    videoUrl={question.videoUrl}
+                    label={
+                      question.documentType
+                        ? t("exam.watchDocumentType", {
+                            type: question.documentType,
+                          })
+                        : t("exam.videoDocument")
+                    }
+                    className="mb-md"
+                  />
+                ) : (
+                  <ExamAudioPlayer
+                    audioUrl={question.audioUrl}
+                    audioScript={question.audioScript}
+                    label={
+                      question.documentType
+                        ? t("exam.listenDocumentType", {
+                            type: question.documentType,
+                          })
+                        : t("exam.audioDocument")
+                    }
+                    className="mb-md"
+                  />
+                )}
 
                 <p className="font-body-md text-body-md text-on-surface mb-md">
                   {question.content}

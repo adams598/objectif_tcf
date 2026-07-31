@@ -97,6 +97,7 @@ export async function GET(
         audioScript: getAudioScriptFromInstruction(q.instruction),
         documentType: getDocumentTypeFromInstruction(q.instruction),
         audioUrl: q.audioUrl,
+        videoUrl: q.videoUrl,
         imageUrl: q.imageUrl,
         choices: q.choices,
       })),

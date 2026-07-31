@@ -161,7 +161,11 @@ function SeriesGroupCard({
       </h3>
       <p className="font-label-sm text-label-sm text-on-surface-variant">
         {t("preparation.disciplinesCount", { n: group.disciplines.length })} ·{" "}
-        {locked ? t("preparation.subscriptionRequired") : t("preparation.freeAccess")}
+        {locked
+          ? t("preparation.subscriptionRequired")
+          : group.isFree
+            ? t("preparation.freeAccess")
+            : t("preparation.subscriptionRequired")}
       </p>
       {!locked && (
         <div className="mt-md flex items-center gap-xs text-primary font-label-sm text-label-sm">

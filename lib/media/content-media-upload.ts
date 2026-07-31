@@ -18,7 +18,9 @@ const AUDIO_MIME = new Set([
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_AUDIO_BYTES = 15 * 1024 * 1024;
 
-export type ContentMediaKind = "image" | "audio";
+export { MAX_VIDEO_BYTES, VIDEO_MIME, validateVideoFile } from "@/lib/media/video-upload";
+
+export type ContentMediaKind = "image" | "audio" | "video";
 
 function extensionForFile(kind: ContentMediaKind, mime: string): string {
   if (kind === "audio") {

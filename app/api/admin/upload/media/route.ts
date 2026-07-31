@@ -34,9 +34,23 @@ export async function POST(req: NextRequest) {
       return errorResponse("Fichier requis", 400);
     }
 
-    const kind = kindRaw === "audio" ? "audio" : kindRaw === "image" ? "image" : null;
+    const kind =
+      kindRaw === "audio"
+        ? "audio"
+        : kindRaw === "image"
+          ? "image"
+          : kindRaw === "video"
+            ? "video"
+            : null;
     if (!kind) {
-      return errorResponse("Type média invalide (image ou audio)", 400);
+      return errorResponse("Type média invalide (image, audio ou video)", 400);
+    }
+
+    if (kind === "video") {
+      return errorResponse(
+        "Utilisez l'upload client pour les vidéos (/api/admin/upload/video)",
+        400
+      );
     }
 
     const url = await uploadContentMedia(file, kind as ContentMediaKind);

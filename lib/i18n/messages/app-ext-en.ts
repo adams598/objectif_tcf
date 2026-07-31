@@ -157,6 +157,7 @@ export const appExtEn = {
     end: "End",
     questions: "Questions",
     audioDocument: "Audio document",
+    videoDocument: "Video document",
     listen: "Listen",
     visualDocument: "Visual document",
     correctionMode: "Correction mode",
@@ -196,6 +197,7 @@ export const appExtEn = {
     seriesN: "Series {{n}}",
     previousTask: "Previous task",
     listenDocumentType: "Listen — {{type}}",
+    watchDocumentType: "Watch — {{type}}",
     audioDocumentQuestion: "Audio document — Question {{n}}",
     minMaxWords: "{{min}} words minimum · {{max}} words maximum",
     modeInstant: "Instant",
@@ -433,7 +435,7 @@ export const appExtEn = {
     questionsCount: "{{n}} questions",
     disciplinesCount: "{{n}} disciplines",
     premiumDescSignup:
-      "Unlock all series with a subscription or a free account.",
+      "Unlock all premium series with a paid subscription.",
     signupLink: "Sign up",
     signupSaveSuffix: "to save your results.",
   },
@@ -442,6 +444,8 @@ export const appExtEn = {
     subtitle: "Choose the offer that fits your exam and timeline.",
     createSubscription: "Create my subscription",
     payNow: "Pay now",
+    autoRenewNotice:
+      "Auto-renewal is enabled when you subscribe. You can cancel anytime in Settings — no refund; access remains until the end of the paid period.",
     validity: "Validity: {{days}} days",
     bonusDays: "+ {{days}} bonus days",
     from: "from",
@@ -512,7 +516,9 @@ export const appExtEn = {
     paymentNotConfirmed: "Payment not confirmed",
     retry: "Try again",
     paymentSuccessTitle: "Payment successful!",
-    subscriptionActive: "Your subscription is active. Happy studying!",
+    subscriptionActive:
+      "Your subscription is active with auto-renewal. You can cancel anytime in Settings.",
+    subscriptionActiveShort: "Your subscription is active. Happy studying!",
     invoiceSent:
       "Your invoice has been emailed and is available in your Documents area.",
     viewInvoices: "My documents",

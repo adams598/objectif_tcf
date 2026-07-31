@@ -49,6 +49,7 @@ interface AdminQuestion {
   instruction: string | null;
   order: number;
   audioUrl?: string | null;
+  videoUrl?: string | null;
   imageUrl?: string | null;
   choices: Array<{
     id: string;
@@ -87,6 +88,7 @@ function questionToQcmForm(q: AdminQuestion, skill: AdminSkill): QcmFormState {
     choiceD: choices[3]?.content ?? "",
     correctIndex: Math.max(0, choices.findIndex((c) => c.isCorrect)),
     audioUrl: q.audioUrl ?? "",
+    videoUrl: q.videoUrl ?? "",
     imageUrl: q.imageUrl ?? "",
     documentTag: parsed.documentTag,
   };
@@ -100,6 +102,7 @@ function questionToTaskForm(q: AdminQuestion): TaskFormState {
     explanation: "",
     order: q.order,
     audioUrl: q.audioUrl ?? "",
+    videoUrl: q.videoUrl ?? "",
     imageUrl: q.imageUrl ?? "",
     minWords: parsed.minWords,
     maxWords: parsed.maxWords,

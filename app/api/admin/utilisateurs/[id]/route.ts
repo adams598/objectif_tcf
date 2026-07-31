@@ -205,6 +205,9 @@ export async function POST(
     const end = new Date(now);
     end.setDate(end.getDate() + parsed.data.days);
 
+    const plan = parsed.data.plan as SubscriptionPlan;
+    const isPaidPlan = plan !== "FREE";
+
     const subscription = await prisma.subscription.upsert({
       where: {
         userId_examType: {
@@ -215,18 +218,22 @@ export async function POST(
       create: {
         userId: id,
         examType: parsed.data.examType as ExamType,
-        plan: parsed.data.plan as SubscriptionPlan,
+        plan,
         status: "ACTIVE",
         currentPeriodStart: now,
         currentPeriodEnd: end,
+        autoRenew: false,
         cancelAtPeriodEnd: false,
+        renewalDays: isPaidPlan ? parsed.data.days : null,
       },
       update: {
-        plan: parsed.data.plan as SubscriptionPlan,
+        plan,
         status: "ACTIVE",
         currentPeriodStart: now,
         currentPeriodEnd: end,
+        autoRenew: false,
         cancelAtPeriodEnd: false,
+        renewalDays: isPaidPlan ? parsed.data.days : null,
       },
     });
 

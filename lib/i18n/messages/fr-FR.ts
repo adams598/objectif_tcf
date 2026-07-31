@@ -72,6 +72,17 @@ export const frFR: CoreMessages = {
     noStreak: "Aucune",
     activeSubscriptions: "Abonnements actifs",
     subscriptionUntil: "jusqu'au",
+    cancelSubscription: "Arrêter l'abonnement",
+    cancelSubscriptionConfirm:
+      "Confirmer l'arrêt du renouvellement ? Aucun remboursement n'est possible. Vous gardez l'accès jusqu'au {{date}}, puis l'abonnement ne sera pas renouvelé.",
+    cancelSubscriptionSuccess:
+      "Renouvellement arrêté. Accès conservé jusqu'au {{date}}. Aucun remboursement.",
+    cancelSubscriptionError: "Impossible d'annuler l'abonnement. Réessayez.",
+    subscriptionCancelledNotice: "Résilié — accès jusqu'au {{date}}",
+    autoRenewOn: "Renouvellement automatique activé",
+    autoRenewOff: "Renouvellement désactivé",
+    noRefundNotice:
+      "L'annulation prend effet à la fin de la période en cours. Aucun remboursement.",
     saveProfile: "Enregistrer les modifications",
     preferences: "Préférences",
     interfaceLanguage: "Langue de l'interface",
@@ -144,7 +155,7 @@ export const frFR: CoreMessages = {
     freeSection: "Séries gratuites",
     premiumSection: "Séries premium",
     premiumHint:
-      "Cliquez sur une série pour voir les offres d'abonnement et débloquer l'accès.",
+      "Les séries premium nécessitent un abonnement payant actif. Cliquez pour voir les offres ou accéder si vous êtes déjà abonné.",
     noResults: "Aucun résultat",
     noResultsDesc: "Aucune série ne correspond à votre recherche ou filtre.",
     subscribeToAccess: "S'abonner pour accéder",
@@ -152,6 +163,7 @@ export const frFR: CoreMessages = {
     disciplines: "4 disciplines",
     subscriptionRequired: "Abonnement requis",
     freeAccess: "Accès gratuit",
+    premiumAccess: "Accès premium",
     disciplinesProgress: "{{done}} / {{total}} disciplines complétées",
     skillCo: "Compréhension Orale",
     skillCe: "Compréhension Écrite",

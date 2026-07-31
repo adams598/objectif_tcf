@@ -34,6 +34,7 @@ const questionSchema = z.object({
   order: z.number().int().min(1),
   points: z.number().int().min(1).default(1),
   audioUrl: z.string().optional().nullable(),
+  videoUrl: z.string().optional().nullable(),
   imageUrl: z.string().optional().nullable(),
   choices: z.array(choiceSchema).optional(),
 });

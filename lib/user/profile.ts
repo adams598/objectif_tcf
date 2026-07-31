@@ -12,6 +12,8 @@ export interface ProfileSubscription {
   status: SubscriptionStatus;
   examType: ExamType;
   currentPeriodEnd: string;
+  autoRenew: boolean;
+  cancelAtPeriodEnd: boolean;
 }
 
 export interface UserProfileResponse {
@@ -80,6 +82,8 @@ export function normalizeUserProfile(user: {
     status: SubscriptionStatus;
     examType: ExamType;
     currentPeriodEnd: Date;
+    autoRenew?: boolean;
+    cancelAtPeriodEnd?: boolean;
   }>;
   settings?: Record<string, unknown> | null;
 }): UserProfileResponse {
@@ -113,6 +117,8 @@ export function normalizeUserProfile(user: {
       status: sub.status,
       examType: sub.examType,
       currentPeriodEnd: sub.currentPeriodEnd.toISOString(),
+      autoRenew: sub.autoRenew ?? true,
+      cancelAtPeriodEnd: sub.cancelAtPeriodEnd ?? false,
     })),
     settings: user.settings ?? null,
   };

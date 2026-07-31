@@ -97,7 +97,11 @@ export function SeriesGroupCard({
           </h3>
           <p className="font-label-sm text-label-sm text-on-surface-variant mb-md">
             {t("series.disciplines")} ·{" "}
-            {locked ? t("series.subscriptionRequired") : t("series.freeAccess")}
+            {locked
+              ? t("series.subscriptionRequired")
+              : group.isFree
+                ? t("series.freeAccess")
+                : t("series.premiumAccess")}
           </p>
 
           <div className="grid grid-cols-2 gap-xs mb-md">

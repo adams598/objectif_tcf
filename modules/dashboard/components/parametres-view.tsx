@@ -420,40 +420,80 @@ export function ParametresView() {
               />
             </dl>
             {profile.subscriptions.length > 0 && (
-              <div className="mt-md">
-                <p className="font-label-sm text-label-sm text-on-surface-variant mb-sm">
+              <div className="mt-md space-y-sm">
+                <p className="font-label-sm text-label-sm text-on-surface-variant">
                   {t("settings.activeSubscriptions")}
                 </p>
-                <div className="flex flex-wrap gap-sm">
-                  {profile.subscriptions.map((sub) => (
-                    <span
-                      key={`${sub.examType}-${sub.currentPeriodEnd}`}
-                      className="inline-flex items-center gap-xs px-sm py-xs rounded-full bg-primary/10 text-primary font-label-sm text-label-sm"
-                    >
-                      {EXAM_TAB_LABELS[EXAM_TYPE_TO_TAB[sub.examType] ?? "tcf"]} — {t("settings.subscriptionUntil")}{" "}
-                      {formatExamDateDisplay(sub.currentPeriodEnd)}
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            await fetch("/api/utilisateurs/abonnements", {
-                              method: "PATCH",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ examType: sub.examType }),
-                            });
-                            toast.success("Abonnement annulé à la fin de la période");
-                            invalidateUserData(queryClient);
-                          } catch {
-                            toast.error("Erreur lors de l'annulation");
-                          }
-                        }}
-                        className="ml-xs text-on-surface-variant hover:text-error underline"
-                        title="Annuler le renouvellement"
+                <p className="font-label-sm text-label-sm text-on-surface-variant">
+                  {t("settings.noRefundNotice")}
+                </p>
+                <div className="flex flex-col gap-sm">
+                  {profile.subscriptions.map((sub) => {
+                    const endLabel = formatExamDateDisplay(sub.currentPeriodEnd);
+                    const examLabel =
+                      EXAM_TAB_LABELS[EXAM_TYPE_TO_TAB[sub.examType] ?? "tcf"];
+                    const cancelled = sub.cancelAtPeriodEnd || !sub.autoRenew;
+
+                    return (
+                      <div
+                        key={`${sub.examType}-${sub.currentPeriodEnd}`}
+                        className="rounded-xl border border-outline-variant bg-surface-container-low px-md py-sm flex flex-col sm:flex-row sm:items-center justify-between gap-sm"
                       >
-                        ✕
-                      </button>
-                    </span>
-                  ))}
+                        <div>
+                          <p className="font-label-md text-label-md text-on-surface font-semibold">
+                            {examLabel} — {sub.plan}
+                          </p>
+                          <p className="font-label-sm text-label-sm text-on-surface-variant">
+                            {cancelled
+                              ? t("settings.subscriptionCancelledNotice", {
+                                  date: endLabel,
+                                })
+                              : `${t("settings.subscriptionUntil")} ${endLabel} · ${t("settings.autoRenewOn")}`}
+                          </p>
+                        </div>
+                        {!cancelled && (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={async () => {
+                              const ok = window.confirm(
+                                t("settings.cancelSubscriptionConfirm", {
+                                  date: endLabel,
+                                })
+                              );
+                              if (!ok) return;
+                              try {
+                                const res = await fetch(
+                                  "/api/utilisateurs/abonnements",
+                                  {
+                                    method: "PATCH",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                      examType: sub.examType,
+                                    }),
+                                  }
+                                );
+                                if (!res.ok) throw new Error("cancel failed");
+                                toast.success(
+                                  t("settings.cancelSubscriptionSuccess", {
+                                    date: endLabel,
+                                  })
+                                );
+                                invalidateUserData(queryClient);
+                              } catch {
+                                toast.error(t("settings.cancelSubscriptionError"));
+                              }
+                            }}
+                          >
+                            {t("settings.cancelSubscription")}
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

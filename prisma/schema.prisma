@@ -323,7 +323,12 @@ model Subscription {
   status          SubscriptionStatus @default(ACTIVE)
   currentPeriodStart DateTime
   currentPeriodEnd   DateTime
+  /** Renouvellement automatique activé à la souscription ; coupé à l'annulation. */
+  autoRenew          Boolean         @default(true)
   cancelAtPeriodEnd  Boolean         @default(false)
+  /** Durée de chaque période (jours de l'offre choisie), utilisée pour le renouvellement. */
+  renewalDays        Int?
+  offerId            String?
   stripeSubscriptionId String?       @unique
   stripeCustomerId     String?
 
@@ -338,6 +343,7 @@ model Subscription {
   @@index([status])
   @@index([userId, examType, status])
   @@index([stripeCustomerId])
+  @@index([autoRenew, cancelAtPeriodEnd, currentPeriodEnd])
 }
 
 model Payment {
@@ -413,6 +419,7 @@ model ExamSeries {
   isFree       Boolean         @default(false)
   isCustomContent Boolean      @default(false)
   audioUrl     String?
+  videoUrl     String?
   imageUrl     String?
   deletedAt    DateTime?
 
@@ -436,6 +443,7 @@ model Question {
   content      String
   instruction  String?
   audioUrl     String?
+  videoUrl     String?
   imageUrl     String?
   order        Int          @default(0)
   points       Int          @default(1)

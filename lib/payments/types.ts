@@ -64,6 +64,9 @@ export interface ProviderChargeParams {
   description: string;
   phoneNumber?: string;
   redirectUrl: string;
+  /** Jours de période — active le mode abonnement Stripe (renouvellement auto). */
+  subscriptionDays?: number;
+  stripeCustomerId?: string | null;
 }
 
 export interface WebhookResult {

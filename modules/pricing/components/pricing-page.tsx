@@ -204,6 +204,9 @@ export function PricingPage() {
             secure: t("pricing.secure"),
           })}
         </p>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-md max-w-2xl mx-auto">
+          {t("pricing.autoRenewNotice")}
+        </p>
       </motion.div>
 
       <div className="flex justify-center gap-sm flex-wrap">

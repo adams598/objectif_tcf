@@ -52,6 +52,8 @@ export async function fetchUserProfile(userId: string) {
     status: "ACTIVE" | "CANCELLED" | "EXPIRED" | "TRIALING" | "PAST_DUE";
     examType: ExamType;
     currentPeriodEnd: Date;
+    autoRenew: boolean;
+    cancelAtPeriodEnd: boolean;
   }> = [];
 
   try {
@@ -60,12 +62,15 @@ export async function fetchUserProfile(userId: string) {
         userId,
         status: "ACTIVE",
         currentPeriodEnd: { gt: new Date() },
+        plan: { in: ["STARTER", "PRO", "ELITE"] },
       },
       select: {
         plan: true,
         status: true,
         examType: true,
         currentPeriodEnd: true,
+        autoRenew: true,
+        cancelAtPeriodEnd: true,
       },
       orderBy: { currentPeriodEnd: "desc" },
     });

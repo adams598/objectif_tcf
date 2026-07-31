@@ -33,6 +33,7 @@ const FALLBACK_CE: PlayQuestion[] = generateCeQuestions(39).map((q) => ({
   audioScript: null,
   documentType: q.passageTag,
   audioUrl: null,
+  videoUrl: null,
   imageUrl: null,
   choices: q.choices.map((c, i) => ({ ...c, order: i })),
 }));

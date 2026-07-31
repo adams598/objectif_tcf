@@ -77,6 +77,14 @@ export interface CoreMessages {
     noStreak: string;
     activeSubscriptions: string;
     subscriptionUntil: string;
+    cancelSubscription: string;
+    cancelSubscriptionConfirm: string;
+    cancelSubscriptionSuccess: string;
+    cancelSubscriptionError: string;
+    subscriptionCancelledNotice: string;
+    autoRenewOn: string;
+    autoRenewOff: string;
+    noRefundNotice: string;
     saveProfile: string;
     preferences: string;
     interfaceLanguage: string;
@@ -148,6 +156,7 @@ export interface CoreMessages {
     disciplines: string;
     subscriptionRequired: string;
     freeAccess: string;
+    premiumAccess: string;
     disciplinesProgress: string;
     skillCo: string;
     skillCe: string;

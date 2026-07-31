@@ -22,6 +22,7 @@ export type QcmFormState = {
   choiceD: string;
   correctIndex: number;
   audioUrl: string;
+  videoUrl: string;
   imageUrl: string;
   documentTag: string;
 };
@@ -32,6 +33,7 @@ export type TaskFormState = {
   explanation: string;
   order: number;
   audioUrl: string;
+  videoUrl: string;
   imageUrl: string;
   minWords: number;
   maxWords: number;
@@ -50,6 +52,7 @@ export const emptyQcmForm = (order = 1): QcmFormState => ({
   choiceD: "",
   correctIndex: 0,
   audioUrl: "",
+  videoUrl: "",
   imageUrl: "",
   documentTag: "",
 });
@@ -60,6 +63,7 @@ export const emptyTaskForm = (order = 1): TaskFormState => ({
   explanation: "",
   order,
   audioUrl: "",
+  videoUrl: "",
   imageUrl: "",
   minWords: 60,
   maxWords: 120,
@@ -80,6 +84,7 @@ export function buildQcmPayload(skill: AdminSkill, form: QcmFormState) {
     explanation: form.explanation || null,
     order: form.order,
     audioUrl: form.audioUrl || null,
+    videoUrl: form.videoUrl || null,
     imageUrl: form.imageUrl || null,
     choices: [form.choiceA, form.choiceB, form.choiceC, form.choiceD].map(
       (content, order) => ({
@@ -102,6 +107,7 @@ export function buildTaskPayload(skill: BundleSkill, form: TaskFormState) {
     explanation: form.explanation || null,
     order: form.order,
     audioUrl: form.audioUrl || null,
+    videoUrl: form.videoUrl || null,
     imageUrl: form.imageUrl || null,
   };
 }
@@ -140,12 +146,24 @@ export function SeriesQuestionForm({
       {isQcm ? (
         <>
           {skill === "COMPREHENSION_ORALE" && (
-            <AdminMediaUpload
-              kind="audio"
-              label="Audio de la question"
-              value={qcmForm.audioUrl}
-              onChange={(url) => onQcmChange((f) => ({ ...f, audioUrl: url }))}
-            />
+            <>
+              <AdminMediaUpload
+                kind="audio"
+                label="Audio de la question"
+                value={qcmForm.audioUrl}
+                onChange={(url) =>
+                  onQcmChange((f) => ({ ...f, audioUrl: url }))
+                }
+              />
+              <AdminMediaUpload
+                kind="video"
+                label="Vidéo de la question (optionnel)"
+                value={qcmForm.videoUrl}
+                onChange={(url) =>
+                  onQcmChange((f) => ({ ...f, videoUrl: url }))
+                }
+              />
+            </>
           )}
           {skill === "COMPREHENSION_ECRITE" && (
             <AdminMediaUpload

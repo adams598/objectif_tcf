@@ -21,11 +21,11 @@ export default function AidePage() {
           {[
             {
               q: "Comment accéder aux séries payantes ?",
-              a: "Souscrivez à un abonnement TCF, TEF ou IELTS depuis la page Tarifs. Une série gratuite est disponible pour chaque examen.",
+              a: "Souscrivez à un abonnement TCF, TEF ou IELTS depuis la page Offres. Seul un abonnement payant actif donne accès aux séries premium, pour la durée de l'offre choisie. Une série gratuite reste disponible pour chaque examen.",
             },
             {
               q: "Puis-je annuler mon abonnement ?",
-              a: "Oui, depuis Paramètres > Profil. L'accès reste actif jusqu'à la fin de la période payée.",
+              a: "Oui, depuis Paramètres > Profil. Le renouvellement automatique s'arrête et l'accès reste actif jusqu'à la fin de la période déjà payée. Aucun remboursement n'est possible après paiement.",
             },
             {
               q: "Où télécharger mes factures ?",

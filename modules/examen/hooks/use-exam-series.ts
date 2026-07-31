@@ -12,6 +12,7 @@ export interface PlayQuestion {
   audioScript: string | null;
   documentType: string | null;
   audioUrl: string | null;
+  videoUrl: string | null;
   imageUrl: string | null;
   choices: Array<{ id: string; content: string; order: number }>;
 }

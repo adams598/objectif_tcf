@@ -7,18 +7,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
-  validateVideoFile,
-  videoBlobPathname,
-} from "@/lib/media/video-upload";
+  contentMediaBlobPathname,
+  maxBytesLabel,
+  validateContentMediaFile,
+  type ContentMediaKind,
+} from "@/lib/media/content-media-types";
 
 interface AdminMediaUploadProps {
-  kind: "image" | "audio" | "video";
+  kind: ContentMediaKind;
   label: string;
   value?: string;
   onChange: (url: string) => void;
   className?: string;
   /** Lien externe (YouTube, etc.) — utile surtout pour la vidéo. */
   allowExternalLink?: boolean;
+}
+
+async function readApiError(response: Response): Promise<string> {
+  const text = await response.text();
+  if (response.status === 413) {
+    return "Fichier trop volumineux pour le serveur. L'envoi direct cloud est requis.";
+  }
+  try {
+    const payload = JSON.parse(text) as { error?: string; message?: string };
+    return payload.error ?? payload.message ?? "Échec de l'envoi du fichier";
+  } catch {
+    if (text.startsWith("Request Entity") || text.includes("Too Large")) {
+      return "Fichier trop volumineux (limite Vercel). Utilisez l'envoi direct cloud.";
+    }
+    return text.slice(0, 120) || "Échec de l'envoi du fichier";
+  }
 }
 
 export function AdminMediaUpload({
@@ -41,26 +59,28 @@ export function AdminMediaUpload({
 
   const accept =
     kind === "audio"
-      ? "audio/mpeg,audio/mp3,audio/wav,audio/webm,audio/ogg"
+      ? "audio/mpeg,audio/mp3,audio/wav,audio/webm,audio/ogg,audio/mp4"
       : kind === "image"
         ? "image/jpeg,image/png,image/webp,image/gif"
         : kind === "video"
           ? "video/mp4,video/webm,video/quicktime"
           : undefined;
 
-  const uploadVideoClient = async (file: File) => {
-    const validationError = validateVideoFile(file);
+  /** Envoi direct navigateur → Vercel Blob (contourne la limite 4,5 Mo des API Routes). */
+  const uploadViaBlobClient = async (file: File) => {
+    const validationError = validateContentMediaFile(file, kind);
     if (validationError) throw new Error(validationError);
 
-    const pathname = videoBlobPathname(file);
+    const pathname = contentMediaBlobPathname(kind, file);
     const blob = await upload(pathname, file, {
       access: "public",
-      handleUploadUrl: "/api/admin/upload/video",
+      handleUploadUrl: "/api/admin/upload/media",
       contentType: file.type,
     });
     return blob.url;
   };
 
+  /** Fallback FormData (dev local sans Blob, petits fichiers). */
   const uploadMediaServer = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -71,13 +91,17 @@ export function AdminMediaUpload({
       body: formData,
     });
 
+    if (!response.ok) {
+      throw new Error(await readApiError(response));
+    }
+
     const payload = (await response.json()) as {
       success?: boolean;
       data?: { url: string };
       error?: string;
     };
 
-    if (!response.ok || !payload.success || !payload.data?.url) {
+    if (!payload.success || !payload.data?.url) {
       throw new Error(payload.error ?? "Échec de l'envoi du fichier");
     }
 
@@ -89,10 +113,15 @@ export function AdminMediaUpload({
 
     setUploading(true);
     try {
-      const url =
-        kind === "video"
-          ? await uploadVideoClient(file)
-          : await uploadMediaServer(file);
+      let url: string;
+      try {
+        url = await uploadViaBlobClient(file);
+      } catch (blobError) {
+        // Vidéo : Blob obligatoire. Audio/image : fallback FormData en local.
+        if (kind === "video") throw blobError;
+        if (file.size > 3.5 * 1024 * 1024) throw blobError;
+        url = await uploadMediaServer(file);
+      }
 
       onChange(url);
       setExternalUrl("");
@@ -104,8 +133,12 @@ export function AdminMediaUpload({
             : "Image enregistrée sur le cloud"
       );
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Impossible d'envoyer le fichier";
       toast.error(
-        error instanceof Error ? error.message : "Impossible d'envoyer le fichier"
+        message.includes("BLOB") || message.includes("Vercel Blob")
+          ? "Vercel Blob non configuré (BLOB_READ_WRITE_TOKEN). Requis pour audio/vidéo en production."
+          : message
       );
     } finally {
       setUploading(false);
@@ -182,14 +215,17 @@ export function AdminMediaUpload({
           {!value && (
             <p className="font-label-sm text-[11px] text-on-surface-variant">
               {kind === "video"
-                ? "MP4, WebM ou MOV — envoi direct vers Vercel Blob (jusqu'à 150 Mo)."
-                : "Depuis votre ordinateur ou téléphone — enregistrement automatique sur le cloud."}
+                ? `MP4, WebM ou MOV — envoi direct vers Vercel Blob (jusqu'à ${maxBytesLabel(kind)}).`
+                : kind === "audio"
+                  ? `MP3, WAV, WebM ou OGG — envoi direct cloud (jusqu'à ${maxBytesLabel(kind)}), sans passer par la limite serveur.`
+                  : `JPEG, PNG, WebP ou GIF — jusqu'à ${maxBytesLabel(kind)}.`}
             </p>
           )}
         </div>
       )}
 
       {value && kind === "image" && (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={value}
           alt=""

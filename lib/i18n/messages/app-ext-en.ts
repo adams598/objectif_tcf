@@ -477,6 +477,7 @@ export const appExtEn = {
     toPaySuffix: "to pay.",
     unitPrice: "Unit price: {{xaf}} / {{usd}} / day",
     noAccountYet: "Don't have an account yet?",
+    noOffersAvailable: "No offers available at the moment.",
     loginRequired: "Sign in required",
     loginRequiredDesc:
       "Create an account or sign in to complete your payment.",

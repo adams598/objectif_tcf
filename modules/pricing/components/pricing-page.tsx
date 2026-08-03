@@ -340,7 +340,7 @@ export function PricingPage() {
       </motion.div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-lg max-w-6xl mx-auto w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-lg max-w-6xl mx-auto w-full">
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
@@ -348,8 +348,12 @@ export function PricingPage() {
             />
           ))}
         </div>
+      ) : (data?.offers ?? []).length === 0 ? (
+        <p className="text-center font-body-md text-body-md text-on-surface-variant">
+          {t("pricing.noOffersAvailable")}
+        </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-lg max-w-6xl mx-auto w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-lg max-w-6xl mx-auto w-full">
           {(data?.offers ?? []).map((offer, index) => (
             <OfferCard
               key={offer.id}

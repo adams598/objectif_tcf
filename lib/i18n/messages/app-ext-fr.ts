@@ -485,6 +485,7 @@ export const appExtFr = {
     toPaySuffix: "pour payer.",
     unitPrice: "Tarif unitaire : {{xaf}} / {{usd}} / jour",
     noAccountYet: "Pas encore de compte ?",
+    noOffersAvailable: "Aucune offre disponible pour le moment.",
     loginRequired: "Connexion requise",
     loginRequiredDesc:
       "Créez un compte ou connectez-vous pour finaliser votre paiement.",

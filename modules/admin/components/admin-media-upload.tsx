@@ -19,24 +19,39 @@ interface AdminMediaUploadProps {
   value?: string;
   onChange: (url: string) => void;
   className?: string;
-  /** Lien externe (YouTube, etc.) — utile surtout pour la vidéo. */
   allowExternalLink?: boolean;
 }
 
-async function readApiError(response: Response): Promise<string> {
-  const text = await response.text();
-  if (response.status === 413) {
-    return "Fichier trop volumineux pour le serveur. L'envoi direct cloud est requis.";
+function isBrowserLocalhost() {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  return host === "localhost" || host === "127.0.0.1";
+}
+
+function formatUploadError(error: unknown): string {
+  const message =
+    error instanceof Error ? error.message : "Impossible d'envoyer le fichier";
+
+  if (
+    message.includes("Unexpected token") ||
+    message.includes("is not valid JSON") ||
+    message.includes("Request Entity") ||
+    message.includes("Too Large") ||
+    message.includes("413")
+  ) {
+    return "Fichier trop volumineux pour l'ancien upload serveur. Rechargez la page (Ctrl+F5) puis réessayez — l'envoi doit aller vers Vercel Blob.";
   }
-  try {
-    const payload = JSON.parse(text) as { error?: string; message?: string };
-    return payload.error ?? payload.message ?? "Échec de l'envoi du fichier";
-  } catch {
-    if (text.startsWith("Request Entity") || text.includes("Too Large")) {
-      return "Fichier trop volumineux (limite Vercel). Utilisez l'envoi direct cloud.";
-    }
-    return text.slice(0, 120) || "Échec de l'envoi du fichier";
+
+  if (
+    message.includes("BLOB") ||
+    message.includes("Vercel Blob") ||
+    message.includes("client token") ||
+    message.includes("Failed to retrieve")
+  ) {
+    return "Vercel Blob non configuré ou inaccessible (BLOB_READ_WRITE_TOKEN). Vérifiez Storage → Blob sur Vercel.";
   }
+
+  return message;
 }
 
 export function AdminMediaUpload({
@@ -66,22 +81,32 @@ export function AdminMediaUpload({
           ? "video/mp4,video/webm,video/quicktime"
           : undefined;
 
-  /** Envoi direct navigateur → Vercel Blob (contourne la limite 4,5 Mo des API Routes). */
+  /**
+   * Navigateur → token JSON (petit) → fichier direct vers Blob.
+   * Ne passe JAMAIS le fichier dans le body d'une API Route Vercel.
+   */
   const uploadViaBlobClient = async (file: File) => {
     const validationError = validateContentMediaFile(file, kind);
     if (validationError) throw new Error(validationError);
 
     const pathname = contentMediaBlobPathname(kind, file);
+    const useMultipart = file.size > 4 * 1024 * 1024;
+
     const blob = await upload(pathname, file, {
       access: "public",
-      handleUploadUrl: "/api/admin/upload/media",
-      contentType: file.type,
+      handleUploadUrl: "/api/admin/upload/blob",
+      contentType: file.type || undefined,
+      multipart: useMultipart,
     });
     return blob.url;
   };
 
-  /** Fallback FormData (dev local sans Blob, petits fichiers). */
-  const uploadMediaServer = async (file: File) => {
+  /** Uniquement localhost sans Blob — jamais sur Vercel. */
+  const uploadMediaLocalFallback = async (file: File) => {
+    if (kind === "video") {
+      throw new Error("Vidéo : Vercel Blob requis (BLOB_READ_WRITE_TOKEN).");
+    }
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("kind", kind);
@@ -91,17 +116,23 @@ export function AdminMediaUpload({
       body: formData,
     });
 
-    if (!response.ok) {
-      throw new Error(await readApiError(response));
-    }
-
-    const payload = (await response.json()) as {
+    const text = await response.text();
+    let payload: {
       success?: boolean;
       data?: { url: string };
       error?: string;
-    };
+    } = {};
+    try {
+      payload = JSON.parse(text) as typeof payload;
+    } catch {
+      throw new Error(
+        response.status === 413
+          ? "Fichier trop volumineux pour l'upload local."
+          : text.slice(0, 120) || "Échec de l'envoi"
+      );
+    }
 
-    if (!payload.success || !payload.data?.url) {
+    if (!response.ok || !payload.success || !payload.data?.url) {
       throw new Error(payload.error ?? "Échec de l'envoi du fichier");
     }
 
@@ -117,10 +148,11 @@ export function AdminMediaUpload({
       try {
         url = await uploadViaBlobClient(file);
       } catch (blobError) {
-        // Vidéo : Blob obligatoire. Audio/image : fallback FormData en local.
-        if (kind === "video") throw blobError;
-        if (file.size > 3.5 * 1024 * 1024) throw blobError;
-        url = await uploadMediaServer(file);
+        // Fallback FormData uniquement en local (pas de limite 4,5 Mo Vercel)
+        if (!isBrowserLocalhost()) {
+          throw blobError;
+        }
+        url = await uploadMediaLocalFallback(file);
       }
 
       onChange(url);
@@ -133,13 +165,7 @@ export function AdminMediaUpload({
             : "Image enregistrée sur le cloud"
       );
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Impossible d'envoyer le fichier";
-      toast.error(
-        message.includes("BLOB") || message.includes("Vercel Blob")
-          ? "Vercel Blob non configuré (BLOB_READ_WRITE_TOKEN). Requis pour audio/vidéo en production."
-          : message
-      );
+      toast.error(formatUploadError(error));
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -215,10 +241,10 @@ export function AdminMediaUpload({
           {!value && (
             <p className="font-label-sm text-[11px] text-on-surface-variant">
               {kind === "video"
-                ? `MP4, WebM ou MOV — envoi direct vers Vercel Blob (jusqu'à ${maxBytesLabel(kind)}).`
+                ? `MP4, WebM ou MOV — envoi direct Vercel Blob (max ${maxBytesLabel(kind)}).`
                 : kind === "audio"
-                  ? `MP3, WAV, WebM ou OGG — envoi direct cloud (jusqu'à ${maxBytesLabel(kind)}), sans passer par la limite serveur.`
-                  : `JPEG, PNG, WebP ou GIF — jusqu'à ${maxBytesLabel(kind)}.`}
+                  ? `MP3, WAV, WebM, OGG — envoi direct cloud (max ${maxBytesLabel(kind)}), hors limite serveur.`
+                  : `JPEG, PNG, WebP, GIF — max ${maxBytesLabel(kind)}.`}
             </p>
           )}
         </div>

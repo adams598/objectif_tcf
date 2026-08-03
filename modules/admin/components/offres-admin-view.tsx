@@ -108,9 +108,29 @@ export function OffresAdminView() {
     },
   });
 
+  const toggleFeaturedMutation = useMutation({
+    mutationFn: ({ id, isFeatured }: { id: string; isFeatured: boolean }) =>
+      fetchJson(`/api/admin/offres/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ isFeatured }),
+      }),
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-offers"] });
+      queryClient.invalidateQueries({ queryKey: ["offers"] });
+      toast.success(
+        vars.isFeatured
+          ? "Offre visible sur la page publique."
+          : "Offre masquée de la page publique."
+      );
+    },
+    onError: () => toast.error("Impossible de modifier la visibilité."),
+  });
+
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const offers = offersQuery.data ?? [];
+  const visibleCount = offers.filter((o) => o.isFeatured && o.isActive).length;
+  const activeOffers = offers.filter((o) => o.isActive);
 
   return (
     <div className="flex flex-col gap-xl">
@@ -119,8 +139,8 @@ export function OffresAdminView() {
           Gestion des offres
         </h1>
         <p className="font-body-md text-body-md text-on-surface-variant">
-          Configurez les tarifs unitaires et les 3 offres affichées par type
-          d&apos;examen.
+          Créez autant d&apos;offres que nécessaire, choisissez celles visibles
+          côté client, et accordez un accès par email.
         </p>
       </div>
 
@@ -192,11 +212,19 @@ export function OffresAdminView() {
         </Button>
       </section>
 
+      <GrantAccessSection offers={activeOffers} examTab={activeTab} />
+
       <section className="space-y-md">
-        <div className="flex items-center justify-between">
-          <h2 className="font-headline-lg text-[20px] font-semibold text-on-surface">
-            Offres affichées ({offers.filter((o) => o.isFeatured).length}/3)
-          </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-sm">
+          <div>
+            <h2 className="font-headline-lg text-[20px] font-semibold text-on-surface">
+              Offres — {EXAM_TAB_LABELS[activeTab]}
+            </h2>
+            <p className="font-label-sm text-label-sm text-on-surface-variant">
+              {visibleCount} visible{visibleCount > 1 ? "s" : ""} côté client ·{" "}
+              {offers.length} au total. Activez « Visible » pour publier une offre.
+            </p>
+          </div>
           <Button
             variant="secondary"
             size="sm"
@@ -245,25 +273,43 @@ export function OffresAdminView() {
                 key={offer.id}
                 className="bg-surface border border-outline-variant rounded-2xl p-lg flex flex-col md:flex-row md:items-center justify-between gap-md"
               >
-                <div>
-                  <div className="flex items-center gap-sm mb-xs">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-sm mb-xs">
                     <h3 className="font-label-md text-label-md font-bold text-on-surface">
                       {offer.name}
                     </h3>
                     {!offer.isActive && (
                       <span className="text-xs text-error">Inactive</span>
                     )}
-                    {offer.isFeatured && (
-                      <span className="text-xs text-primary">Affichée</span>
+                    {offer.isFeatured && offer.isActive && (
+                      <span className="text-xs px-sm py-xs rounded-full bg-primary/10 text-primary">
+                        Visible
+                      </span>
                     )}
                   </div>
                   <p className="font-label-sm text-label-sm text-on-surface-variant">
                     {offer.priceXaf.toLocaleString("fr-CA")} XAF · {offer.priceUsd}$ ·{" "}
-                    {offer.priceXof.toLocaleString("fr-CA")} XOF — {offer.baseDays}+
-                    {offer.bonusDays} jours
+                    {offer.priceXof.toLocaleString("fr-CA")} XOF —{" "}
+                    {offer.baseDays + offer.bonusDays} jours
+                    {offer.bonusDays > 0
+                      ? ` (${offer.baseDays}+${offer.bonusDays})`
+                      : ""}
                   </p>
+                  <label className="mt-sm inline-flex items-center gap-sm font-label-sm text-label-sm text-on-surface">
+                    <Switch
+                      checked={offer.isFeatured}
+                      disabled={toggleFeaturedMutation.isPending}
+                      onCheckedChange={(v) =>
+                        toggleFeaturedMutation.mutate({
+                          id: offer.id,
+                          isFeatured: v,
+                        })
+                      }
+                    />
+                    Visible sur la page offres
+                  </label>
                 </div>
-                <div className="flex gap-sm">
+                <div className="flex gap-sm shrink-0">
                   <Button
                     variant="secondary"
                     size="sm"
@@ -294,6 +340,143 @@ export function OffresAdminView() {
       </section>
       {confirmDialog}
     </div>
+  );
+}
+
+function GrantAccessSection({
+  offers,
+  examTab,
+}: {
+  offers: AdminOffer[];
+  examTab: ExamTab;
+}) {
+  const [offerId, setOfferId] = useState("");
+  const [emailsText, setEmailsText] = useState("");
+
+  React.useEffect(() => {
+    if (!offerId && offers.length > 0) {
+      setOfferId(offers[0].id);
+    }
+    if (offerId && !offers.some((o) => o.id === offerId)) {
+      setOfferId(offers[0]?.id ?? "");
+    }
+  }, [offers, offerId]);
+
+  const selectedOffer = offers.find((o) => o.id === offerId);
+  const totalDays = selectedOffer
+    ? selectedOffer.baseDays + selectedOffer.bonusDays
+    : 0;
+
+  const grantMutation = useMutation({
+    mutationFn: () => {
+      const emails = emailsText
+        .split(/[\n,;]+/)
+        .map((e) => e.trim())
+        .filter(Boolean);
+
+      return fetchJson<{
+        offerName: string;
+        days: number;
+        results: Array<{
+          email: string;
+          status: string;
+          emailSent: boolean;
+          error?: string;
+        }>;
+      }>("/api/admin/offres/grant-access", {
+        method: "POST",
+        body: JSON.stringify({ offerId, emails }),
+      });
+    },
+    onSuccess: (data) => {
+      const granted = data.results.filter((r) => r.status === "granted").length;
+      const mailOk = data.results.filter((r) => r.emailSent).length;
+      toast.success(
+        `Accès « ${data.offerName} » accordé à ${granted} personne${granted > 1 ? "s" : ""} (${data.days} j). ${mailOk} email${mailOk > 1 ? "s" : ""} envoyé${mailOk > 1 ? "s" : ""}.`
+      );
+      setEmailsText("");
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Échec de l'attribution"
+      );
+    },
+  });
+
+  return (
+    <section className="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md">
+      <div>
+        <h2 className="font-headline-lg text-[20px] font-semibold text-on-surface mb-xs">
+          Accorder un accès par email
+        </h2>
+        <p className="font-body-md text-body-md text-on-surface-variant">
+          Ajoutez une ou plusieurs adresses, choisissez une offre {EXAM_TAB_LABELS[examTab]} :
+          la durée d&apos;accès est celle de l&apos;offre. Un email d&apos;invitation
+          précise qui a donné l&apos;accès.
+        </p>
+      </div>
+
+      {offers.length === 0 ? (
+        <p className="font-label-sm text-label-sm text-on-surface-variant">
+          Créez d&apos;abord une offre active pour pouvoir inviter des clients.
+        </p>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+            <div>
+              <label className="font-label-md text-label-md text-on-surface-variant block mb-sm">
+                Offre
+              </label>
+              <select
+                className="w-full rounded-xl border border-outline-variant bg-surface px-md py-sm font-body-md text-body-md"
+                value={offerId}
+                onChange={(e) => setOfferId(e.target.value)}
+              >
+                {offers.map((offer) => (
+                  <option key={offer.id} value={offer.id}>
+                    {offer.name} — {offer.baseDays + offer.bonusDays} jours
+                  </option>
+                ))}
+              </select>
+              {selectedOffer && (
+                <p className="font-label-sm text-label-sm text-primary mt-xs">
+                  Durée incluse : {totalDays} jour{totalDays > 1 ? "s" : ""}
+                  {selectedOffer.bonusDays > 0
+                    ? ` (${selectedOffer.baseDays} + ${selectedOffer.bonusDays} offerts)`
+                    : ""}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="font-label-md text-label-md text-on-surface-variant block mb-sm">
+                Adresses email
+              </label>
+              <textarea
+                className="w-full min-h-[110px] rounded-xl border border-outline-variant bg-surface p-md font-body-md text-body-md"
+                placeholder={"client@email.com\nautre@email.com"}
+                value={emailsText}
+                onChange={(e) => setEmailsText(e.target.value)}
+              />
+              <p className="font-label-sm text-label-sm text-on-surface-variant mt-xs">
+                Une adresse par ligne, ou séparées par des virgules.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Button
+              onClick={() => grantMutation.mutate()}
+              disabled={
+                grantMutation.isPending || !offerId || !emailsText.trim()
+              }
+              loading={grantMutation.isPending}
+            >
+              Accorder l&apos;accès et envoyer l&apos;invitation
+            </Button>
+          </div>
+        </>
+      )}
+    </section>
   );
 }
 
@@ -449,7 +632,7 @@ function OfferForm({
             checked={form.isFeatured}
             onCheckedChange={(v) => setForm((f) => ({ ...f, isFeatured: v }))}
           />
-          Afficher sur la page offres
+          Visible sur la page offres (côté client)
         </label>
         <label className="flex items-center gap-sm font-label-md text-label-md">
           <Switch

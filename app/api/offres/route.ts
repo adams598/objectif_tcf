@@ -65,8 +65,7 @@ export async function GET(req: NextRequest) {
           isFeatured: true,
           deletedAt: null,
         },
-        orderBy: { sortOrder: "asc" },
-        take: 3,
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       }),
     ]);
 

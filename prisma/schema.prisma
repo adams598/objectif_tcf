@@ -199,6 +199,8 @@ model User {
   role              Role      @default(USER)
   isActive          Boolean   @default(true)
   deletedAt         DateTime?
+  /** Mot de passe chiffré (AES) pour consultation admin uniquement — pas le hash de connexion. */
+  adminPasswordEnc  String?
 
   // Onboarding
   onboardingCompleted Boolean  @default(false)

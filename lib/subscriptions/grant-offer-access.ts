@@ -1,16 +1,16 @@
-import { randomBytes, randomUUID } from "crypto";
-import bcrypt from "bcryptjs";
 import type { ExamType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { inferSubscriptionPlan } from "@/lib/payments/plan-from-offer";
 import { sendOfferAccessEmail } from "@/lib/email/send-offer-access-email";
 import { EXAM_TYPE_TO_TAB, EXAM_TAB_LABELS } from "@/lib/pricing/constants";
+import { setUserCredentials } from "@/lib/admin/learner-credentials";
 
 export type GrantOfferAccessResult = {
   email: string;
   status: "granted" | "failed";
   isNewUser: boolean;
   emailSent: boolean;
+  password?: string;
   periodEnd?: string;
   error?: string;
 };
@@ -21,11 +21,13 @@ function normalizeEmail(email: string): string {
 
 function displayNameFromEmail(email: string): string {
   const local = email.split("@")[0] ?? "Apprenant";
-  return local
-    .replace(/[._-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/^\w/, (c) => c.toUpperCase()) || "Apprenant";
+  return (
+    local
+      .replace(/[._-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/^\w/, (c) => c.toUpperCase()) || "Apprenant"
+  );
 }
 
 function formatPeriodEnd(date: Date): string {
@@ -78,13 +80,11 @@ export async function grantOfferAccessByEmails(input: {
     try {
       const existing = await prisma.user.findFirst({
         where: { email, deletedAt: null },
-        include: { accounts: { where: { provider: "credentials" }, take: 1 } },
       });
 
       let userId: string;
       let recipientName: string;
       let isNewUser = false;
-      let setupToken: string | null = null;
 
       if (existing) {
         userId = existing.id;
@@ -92,63 +92,20 @@ export async function grantOfferAccessByEmails(input: {
       } else {
         isNewUser = true;
         recipientName = displayNameFromEmail(email);
-        const rounds = parseInt(process.env.BCRYPT_ROUNDS ?? "12", 10);
-        const tempPassword = randomBytes(24).toString("hex");
-        const hashedPassword = await bcrypt.hash(tempPassword, rounds);
-
         const created = await prisma.user.create({
           data: {
             email,
             name: recipientName,
             emailVerified: true,
-            accounts: {
-              create: {
-                provider: "credentials",
-                providerAccountId: randomUUID(),
-                accessToken: hashedPassword,
-              },
-            },
+            role: "USER",
             settings: { create: {} },
           },
         });
         userId = created.id;
-
-        setupToken = randomUUID();
-        await prisma.passwordReset.create({
-          data: {
-            userId,
-            token: setupToken,
-            // Invitation : 7 jours pour définir le mot de passe
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          },
-        });
       }
 
-      // Compte existant sans credentials : créer un reset pour qu'il puisse se connecter
-      if (
-        existing &&
-        existing.accounts.length === 0
-      ) {
-        isNewUser = true;
-        setupToken = randomUUID();
-        await prisma.passwordReset.create({
-          data: {
-            userId,
-            token: setupToken,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          },
-        });
-        const rounds = parseInt(process.env.BCRYPT_ROUNDS ?? "12", 10);
-        const tempPassword = randomBytes(24).toString("hex");
-        await prisma.account.create({
-          data: {
-            userId,
-            provider: "credentials",
-            providerAccountId: userId,
-            accessToken: await bcrypt.hash(tempPassword, rounds),
-          },
-        });
-      }
+      // Mot de passe généré (visible admin + envoyé par email)
+      const password = await setUserCredentials(userId);
 
       const now = new Date();
       const periodEnd = new Date(now);
@@ -160,7 +117,6 @@ export async function grantOfferAccessByEmails(input: {
 
       let finalEnd = periodEnd;
       if (existingSub && existingSub.currentPeriodEnd > now) {
-        // Prolonge à partir de la fin actuelle si déjà abonné
         finalEnd = new Date(existingSub.currentPeriodEnd);
         finalEnd.setDate(finalEnd.getDate() + days);
       }
@@ -207,8 +163,7 @@ export async function grantOfferAccessByEmails(input: {
         examLabel,
         days,
         periodEndLabel: formatPeriodEnd(subscription.currentPeriodEnd),
-        isNewUser: Boolean(setupToken),
-        setupToken,
+        password,
       });
 
       await prisma.auditLog.create({
@@ -234,6 +189,7 @@ export async function grantOfferAccessByEmails(input: {
         status: "granted",
         isNewUser,
         emailSent: emailResult.ok,
+        password,
         periodEnd: subscription.currentPeriodEnd.toISOString(),
         error: emailResult.ok ? undefined : emailResult.error,
       });

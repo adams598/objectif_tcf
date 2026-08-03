@@ -392,8 +392,11 @@ function GrantAccessSection({
       const granted = data.results.filter((r) => r.status === "granted").length;
       const mailOk = data.results.filter((r) => r.emailSent).length;
       toast.success(
-        `Accès « ${data.offerName} » accordé à ${granted} personne${granted > 1 ? "s" : ""} (${data.days} j). ${mailOk} email${mailOk > 1 ? "s" : ""} envoyé${mailOk > 1 ? "s" : ""}.`
+        `Accès « ${data.offerName} » accordé à ${granted} personne${granted > 1 ? "s" : ""} (${data.days} j). Identifiants envoyés par email — consultables aussi dans Admin → Apprenants.`
       );
+      if (mailOk < granted) {
+        toast.message("Certains emails n'ont pas pu être envoyés. Vérifiez Resend.");
+      }
       setEmailsText("");
     },
     onError: (error) => {
@@ -411,8 +414,8 @@ function GrantAccessSection({
         </h2>
         <p className="font-body-md text-body-md text-on-surface-variant">
           Ajoutez une ou plusieurs adresses, choisissez une offre {EXAM_TAB_LABELS[examTab]} :
-          la durée d&apos;accès est celle de l&apos;offre. Un email d&apos;invitation
-          précise qui a donné l&apos;accès.
+          durée = offre. Chaque destinataire reçoit un email avec le lien, son email et un
+          mot de passe généré (aussi visible dans Admin → Apprenants).
         </p>
       </div>
 

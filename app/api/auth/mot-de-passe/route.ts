@@ -80,6 +80,11 @@ export async function POST(request: NextRequest) {
         where: { userId: reset.userId, provider: "credentials" },
         data: { accessToken: hashedPassword },
       }),
+      // Mot de passe changé par l'utilisateur → plus visible côté admin
+      prisma.user.update({
+        where: { id: reset.userId },
+        data: { adminPasswordEnc: null },
+      }),
       // Mark reset as used
       prisma.passwordReset.update({
         where: { id: reset.id },

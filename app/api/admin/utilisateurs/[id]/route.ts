@@ -3,6 +3,9 @@ import { z } from "zod";
 import type { ExamType, Role, SubscriptionPlan } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { requireRole } from "@/lib/auth/session";
+import { decryptAdminPassword } from "@/lib/auth/admin-password";
+import { setUserCredentials } from "@/lib/admin/learner-credentials";
+import { inferSubscriptionPlan } from "@/lib/payments/plan-from-offer";
 import {
   successResponse,
   serverErrorResponse,
@@ -10,13 +13,23 @@ import {
   notFoundResponse,
   unauthorizedResponse,
   forbiddenResponse,
+  errorResponse,
 } from "@/lib/utils/api-response";
 
 const updateUserSchema = z.object({
   role: z.enum(["USER", "ADMIN", "SUPER_ADMIN", "CORRECTOR"]).optional(),
   isActive: z.boolean().optional(),
-  firstName: z.string().min(1).max(50).optional(),
-  lastName: z.string().min(1).max(50).optional(),
+  firstName: z.string().min(1).max(50).optional().nullable(),
+  lastName: z.string().min(1).max(50).optional().nullable(),
+  email: z.string().email().optional(),
+  password: z.string().min(8).max(64).optional(),
+  /** Accorder / remplacer l'accès via une offre (durée = offre) */
+  offerId: z.string().uuid().optional().nullable(),
+  /** Retirer l'accès pour un type d'examen */
+  revokeExamType: z
+    .enum(["TCF_CANADA", "TEF_CANADA", "IELTS"])
+    .optional()
+    .nullable(),
 });
 
 const grantSubscriptionSchema = z.object({
@@ -69,6 +82,7 @@ export async function GET(
         currentStreak: true,
         longestStreak: true,
         totalStudyTime: true,
+        adminPasswordEnc: true,
         subscriptions: {
           orderBy: { createdAt: "desc" },
           select: {
@@ -79,6 +93,9 @@ export async function GET(
             currentPeriodStart: true,
             currentPeriodEnd: true,
             cancelAtPeriodEnd: true,
+            offerId: true,
+            renewalDays: true,
+            autoRenew: true,
           },
         },
         payments: {
@@ -111,7 +128,11 @@ export async function GET(
 
     if (!user) return notFoundResponse("Utilisateur");
 
-    return successResponse(user);
+    const { adminPasswordEnc, ...rest } = user;
+    return successResponse({
+      ...rest,
+      password: decryptAdminPassword(adminPasswordEnc),
+    });
   } catch (error) {
     return handleAuthError(error) ?? serverErrorResponse(error);
   }
@@ -143,16 +164,128 @@ export async function PATCH(
       return forbiddenResponse();
     }
 
-    const firstName = parsed.data.firstName ?? existing.firstName;
-    const lastName = parsed.data.lastName ?? existing.lastName;
+    if (parsed.data.email) {
+      const email = parsed.data.email.trim().toLowerCase();
+      const conflict = await prisma.user.findFirst({
+        where: { email, deletedAt: null, NOT: { id } },
+      });
+      if (conflict) {
+        return errorResponse("Cet email est déjà utilisé", 409);
+      }
+    }
+
+    const firstName =
+      parsed.data.firstName !== undefined
+        ? parsed.data.firstName
+        : existing.firstName;
+    const lastName =
+      parsed.data.lastName !== undefined
+        ? parsed.data.lastName
+        : existing.lastName;
     const name =
       [firstName, lastName].filter(Boolean).join(" ") || existing.name;
+
+    let plainPassword: string | null = null;
+    if (parsed.data.password) {
+      plainPassword = await setUserCredentials(id, parsed.data.password);
+    }
+
+    if (parsed.data.offerId) {
+      const offer = await prisma.subscriptionOffer.findFirst({
+        where: {
+          id: parsed.data.offerId,
+          isActive: true,
+          deletedAt: null,
+        },
+      });
+      if (!offer) return errorResponse("Offre introuvable", 404);
+
+      const days = offer.baseDays + offer.bonusDays;
+      const now = new Date();
+      const end = new Date(now);
+      end.setDate(end.getDate() + days);
+      const plan = inferSubscriptionPlan({
+        offerName: offer.name,
+        offerSlug: offer.slug,
+        subscriptionDays: days,
+      });
+
+      const existingSub = await prisma.subscription.findUnique({
+        where: {
+          userId_examType: { userId: id, examType: offer.examType },
+        },
+      });
+
+      let finalEnd = end;
+      if (existingSub && existingSub.currentPeriodEnd > now) {
+        finalEnd = new Date(existingSub.currentPeriodEnd);
+        finalEnd.setDate(finalEnd.getDate() + days);
+      }
+
+      await prisma.subscription.upsert({
+        where: {
+          userId_examType: { userId: id, examType: offer.examType },
+        },
+        create: {
+          userId: id,
+          examType: offer.examType,
+          plan,
+          status: "ACTIVE",
+          currentPeriodStart: now,
+          currentPeriodEnd: finalEnd,
+          autoRenew: false,
+          cancelAtPeriodEnd: false,
+          renewalDays: days,
+          offerId: offer.id,
+        },
+        update: {
+          plan,
+          status: "ACTIVE",
+          currentPeriodStart:
+            existingSub && existingSub.currentPeriodEnd > now
+              ? existingSub.currentPeriodStart
+              : now,
+          currentPeriodEnd: finalEnd,
+          autoRenew: false,
+          cancelAtPeriodEnd: false,
+          renewalDays: days,
+          offerId: offer.id,
+        },
+      });
+
+      await prisma.user.update({
+        where: { id },
+        data: { targetExamDate: finalEnd },
+      });
+    }
+
+    if (parsed.data.revokeExamType) {
+      await prisma.subscription.updateMany({
+        where: {
+          userId: id,
+          examType: parsed.data.revokeExamType as ExamType,
+        },
+        data: {
+          status: "CANCELLED",
+          autoRenew: false,
+          cancelAtPeriodEnd: false,
+          currentPeriodEnd: new Date(),
+        },
+      });
+    }
 
     const user = await prisma.user.update({
       where: { id },
       data: {
-        ...parsed.data,
-        ...(parsed.data.firstName || parsed.data.lastName
+        ...(parsed.data.role ? { role: parsed.data.role as Role } : {}),
+        ...(parsed.data.isActive !== undefined
+          ? { isActive: parsed.data.isActive }
+          : {}),
+        ...(parsed.data.email
+          ? { email: parsed.data.email.trim().toLowerCase() }
+          : {}),
+        ...(parsed.data.firstName !== undefined ||
+        parsed.data.lastName !== undefined
           ? { name, firstName, lastName }
           : {}),
       },
@@ -163,6 +296,8 @@ export async function PATCH(
         isActive: true,
         firstName: true,
         lastName: true,
+        name: true,
+        adminPasswordEnc: true,
       },
     });
 
@@ -172,11 +307,22 @@ export async function PATCH(
         action: "ADMIN_USER_UPDATE",
         entity: "User",
         entityId: id,
-        metadata: parsed.data,
+        metadata: {
+          ...parsed.data,
+          password: parsed.data.password ? "[updated]" : undefined,
+        },
       },
     });
 
-    return successResponse(user, "Utilisateur mis à jour");
+    return successResponse(
+      {
+        ...user,
+        adminPasswordEnc: undefined,
+        password:
+          plainPassword ?? decryptAdminPassword(user.adminPasswordEnc),
+      },
+      "Utilisateur mis à jour"
+    );
   } catch (error) {
     return handleAuthError(error) ?? serverErrorResponse(error);
   }
@@ -258,10 +404,23 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const admin = await requireRole("SUPER_ADMIN");
+    const admin = await requireRole("ADMIN", "SUPER_ADMIN");
     const { id } = await params;
 
     if (id === admin.userId) {
+      return forbiddenResponse();
+    }
+
+    const existing = await prisma.user.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!existing) return notFoundResponse("Utilisateur");
+
+    // Seul un SUPER_ADMIN peut supprimer un admin / correcteur
+    if (
+      existing.role !== "USER" &&
+      admin.role !== "SUPER_ADMIN"
+    ) {
       return forbiddenResponse();
     }
 
@@ -279,7 +438,7 @@ export async function DELETE(
       },
     });
 
-    return successResponse({ deleted: true });
+    return successResponse({ deleted: true }, "Apprenant supprimé");
   } catch (error) {
     return handleAuthError(error) ?? serverErrorResponse(error);
   }

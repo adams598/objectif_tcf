@@ -37,7 +37,7 @@ function handleAuthError(error: unknown) {
 
 export async function POST(req: NextRequest) {
   try {
-    await requireRole("ADMIN", "SUPER_ADMIN");
+    const admin = await requireRole("ADMIN", "SUPER_ADMIN");
     const parsed = createSchema.safeParse(await req.json());
 
     if (!parsed.success) {
@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
             isPublished: false,
             isFree,
             isCustomContent: true,
+            createdById: admin.userId,
           },
           select: { id: true, skill: true },
         })

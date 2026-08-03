@@ -30,6 +30,13 @@ export const SKILL_ICONS: Record<BundleSkill, string> = {
   EXPRESSION_ORALE: "mic",
 };
 
+export interface AdminSeriesAuthor {
+  id: string;
+  name: string;
+  firstName: string | null;
+  lastName: string | null;
+}
+
 export interface AdminFlatSeries {
   id: string;
   examId: string;
@@ -39,8 +46,23 @@ export interface AdminFlatSeries {
   isPublished: boolean;
   isFree: boolean;
   isCustomContent?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdById?: string | null;
+  createdBy?: AdminSeriesAuthor | null;
   exam: { type: string; title: string };
   _count: { questions: number; attempts: number };
+}
+
+export function formatSeriesAuthorName(
+  author: AdminSeriesAuthor | null | undefined
+): string | null {
+  if (!author) return null;
+  const full = [author.firstName, author.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  return full || author.name || null;
 }
 
 export interface AdminSkillEntry {
@@ -60,6 +82,10 @@ export interface AdminSeriesGroup {
   isPublished: boolean;
   isDraft: boolean;
   totalQuestions: number;
+  createdAt: string;
+  updatedAt: string;
+  createdById: string | null;
+  createdByName: string | null;
   skills: Partial<Record<BundleSkill, AdminSkillEntry>>;
 }
 
@@ -100,6 +126,22 @@ export function buildAdminSeriesGroups(series: AdminFlatSeries[]): AdminSeriesGr
         items.find((s) => s.title.trim())?.title ??
         `Série ${first.order}`;
 
+      const createdAt = items.reduce(
+        (min, s) => (s.createdAt < min ? s.createdAt : min),
+        items[0]!.createdAt
+      );
+      const updatedAt = items.reduce(
+        (max, s) => (s.updatedAt > max ? s.updatedAt : max),
+        items[0]!.updatedAt
+      );
+      const authorSource =
+        items.find((s) => s.createdAt === createdAt && s.createdBy) ??
+        items.find((s) => s.createdBy) ??
+        null;
+      const createdById =
+        authorSource?.createdById ?? authorSource?.createdBy?.id ?? null;
+      const createdByName = formatSeriesAuthorName(authorSource?.createdBy);
+
       return {
         key,
         examId: first.examId,
@@ -110,6 +152,10 @@ export function buildAdminSeriesGroups(series: AdminFlatSeries[]): AdminSeriesGr
         isPublished,
         isDraft: !isPublished,
         totalQuestions,
+        createdAt,
+        updatedAt,
+        createdById,
+        createdByName,
         skills,
       };
     })

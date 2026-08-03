@@ -39,6 +39,13 @@ function handleAuthError(error: unknown) {
   return null;
 }
 
+const createdBySelect = {
+  id: true,
+  name: true,
+  firstName: true,
+  lastName: true,
+} as const;
+
 export async function GET(req: NextRequest) {
   try {
     await requireRole("ADMIN", "SUPER_ADMIN");
@@ -55,6 +62,7 @@ export async function GET(req: NextRequest) {
       orderBy: [{ order: "asc" }, { skill: "asc" }],
       include: {
         exam: { select: { type: true, title: true } },
+        createdBy: { select: createdBySelect },
         _count: { select: { questions: true, attempts: true } },
       },
     });
@@ -67,7 +75,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    await requireRole("ADMIN", "SUPER_ADMIN");
+    const admin = await requireRole("ADMIN", "SUPER_ADMIN");
     const parsed = seriesSchema.safeParse(await req.json());
 
     if (!parsed.success) {
@@ -75,9 +83,14 @@ export async function POST(req: NextRequest) {
     }
 
     const series = await prisma.examSeries.create({
-      data: { ...parsed.data, isCustomContent: true },
+      data: {
+        ...parsed.data,
+        isCustomContent: true,
+        createdById: admin.userId,
+      },
       include: {
         exam: { select: { type: true, title: true } },
+        createdBy: { select: createdBySelect },
         _count: { select: { questions: true } },
       },
     });

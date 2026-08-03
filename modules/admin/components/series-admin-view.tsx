@@ -313,9 +313,35 @@ function SkillPanel({
   );
 }
 
+type StatusFilter = "ALL" | "DRAFT" | "PUBLISHED" | "FREE";
+
+function dayStart(isoDate: string) {
+  const d = new Date(`${isoDate}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function dayEnd(isoDate: string) {
+  const d = new Date(`${isoDate}T23:59:59.999`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function formatShortDate(iso: string) {
+  return new Date(iso).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export function SeriesAdminView() {
   const queryClient = useQueryClient();
   const [examFilter, setExamFilter] = useState("ALL");
+  const [authorFilter, setAuthorFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [createdFrom, setCreatedFrom] = useState("");
+  const [createdTo, setCreatedTo] = useState("");
+  const [updatedFrom, setUpdatedFrom] = useState("");
+  const [updatedTo, setUpdatedTo] = useState("");
   const [search, setSearch] = useState("");
   const [selectedGroupKey, setSelectedGroupKey] = useState<string | null>(null);
   const [activeSkill, setActiveSkill] = useState<BundleSkill | null>(null);
@@ -345,15 +371,68 @@ export function SeriesAdminView() {
     [seriesQuery.data]
   );
 
+  const authorOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const g of groups) {
+      if (g.createdById && g.createdByName) {
+        map.set(g.createdById, g.createdByName);
+      }
+    }
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+  }, [groups]);
+
+  const hasActiveFilters =
+    authorFilter !== "ALL" ||
+    statusFilter !== "ALL" ||
+    Boolean(createdFrom || createdTo || updatedFrom || updatedTo || search.trim());
+
   const filteredGroups = useMemo(() => {
-    if (!search.trim()) return groups;
-    const term = search.toLowerCase();
-    return groups.filter(
-      (g) =>
-        g.title.toLowerCase().includes(term) ||
-        g.examTitle.toLowerCase().includes(term)
-    );
-  }, [groups, search]);
+    const term = search.trim().toLowerCase();
+    const createdFromDate = createdFrom ? dayStart(createdFrom) : null;
+    const createdToDate = createdTo ? dayEnd(createdTo) : null;
+    const updatedFromDate = updatedFrom ? dayStart(updatedFrom) : null;
+    const updatedToDate = updatedTo ? dayEnd(updatedTo) : null;
+
+    return groups.filter((g) => {
+      if (term) {
+        const haystack = [g.title, g.examTitle, g.createdByName ?? ""]
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(term)) return false;
+      }
+
+      if (authorFilter === "UNKNOWN") {
+        if (g.createdById) return false;
+      } else if (authorFilter !== "ALL" && g.createdById !== authorFilter) {
+        return false;
+      }
+
+      if (statusFilter === "DRAFT" && !g.isDraft) return false;
+      if (statusFilter === "PUBLISHED" && !g.isPublished) return false;
+      if (statusFilter === "FREE" && !g.isFree) return false;
+
+      const created = new Date(g.createdAt);
+      if (createdFromDate && created < createdFromDate) return false;
+      if (createdToDate && created > createdToDate) return false;
+
+      const updated = new Date(g.updatedAt);
+      if (updatedFromDate && updated < updatedFromDate) return false;
+      if (updatedToDate && updated > updatedToDate) return false;
+
+      return true;
+    });
+  }, [
+    groups,
+    search,
+    authorFilter,
+    statusFilter,
+    createdFrom,
+    createdTo,
+    updatedFrom,
+    updatedTo,
+  ]);
 
   const selectedGroup = filteredGroups.find((g) => g.key === selectedGroupKey) ?? null;
 
@@ -448,25 +527,110 @@ export function SeriesAdminView() {
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-sm">
-        <select
-          className="rounded-xl border border-outline-variant px-md py-sm bg-surface font-label-sm"
-          value={examFilter}
-          onChange={(e) => setExamFilter(e.target.value)}
-        >
-          <option value="ALL">Tous les examens</option>
-          {examsQuery.data?.map((exam) => (
-            <option key={exam.id} value={exam.id}>
-              {exam.title}
-            </option>
-          ))}
-        </select>
-        <Input
-          placeholder="Rechercher…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-xs"
-        />
+      <div className="bg-surface border border-outline-variant rounded-2xl p-md flex flex-col gap-sm">
+        <div className="flex flex-wrap items-center justify-between gap-sm">
+          <p className="font-label-sm text-label-sm font-bold text-on-surface">
+            Filtres
+          </p>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              className="font-label-sm text-[12px] text-primary hover:underline"
+              onClick={() => {
+                setAuthorFilter("ALL");
+                setStatusFilter("ALL");
+                setCreatedFrom("");
+                setCreatedTo("");
+                setUpdatedFrom("");
+                setUpdatedTo("");
+                setSearch("");
+              }}
+            >
+              Réinitialiser
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-sm">
+          <select
+            className="rounded-xl border border-outline-variant px-md py-sm bg-surface font-label-sm"
+            value={examFilter}
+            onChange={(e) => setExamFilter(e.target.value)}
+          >
+            <option value="ALL">Tous les examens</option>
+            {examsQuery.data?.map((exam) => (
+              <option key={exam.id} value={exam.id}>
+                {exam.title}
+              </option>
+            ))}
+          </select>
+          <select
+            className="rounded-xl border border-outline-variant px-md py-sm bg-surface font-label-sm"
+            value={authorFilter}
+            onChange={(e) => setAuthorFilter(e.target.value)}
+          >
+            <option value="ALL">Tous les auteurs</option>
+            {authorOptions.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+            <option value="UNKNOWN">Sans auteur</option>
+          </select>
+          <select
+            className="rounded-xl border border-outline-variant px-md py-sm bg-surface font-label-sm"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+          >
+            <option value="ALL">Tous les statuts</option>
+            <option value="DRAFT">Brouillon</option>
+            <option value="PUBLISHED">Publié</option>
+            <option value="FREE">Gratuit</option>
+          </select>
+          <Input
+            placeholder="Rechercher titre, examen, auteur…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="max-w-xs"
+          />
+        </div>
+        <div className="flex flex-wrap gap-sm items-end">
+          <label className="flex flex-col gap-1 font-label-sm text-[11px] text-on-surface-variant">
+            Ajoutée du
+            <Input
+              type="date"
+              value={createdFrom}
+              onChange={(e) => setCreatedFrom(e.target.value)}
+              className="w-[150px]"
+            />
+          </label>
+          <label className="flex flex-col gap-1 font-label-sm text-[11px] text-on-surface-variant">
+            au
+            <Input
+              type="date"
+              value={createdTo}
+              onChange={(e) => setCreatedTo(e.target.value)}
+              className="w-[150px]"
+            />
+          </label>
+          <label className="flex flex-col gap-1 font-label-sm text-[11px] text-on-surface-variant">
+            Modifiée du
+            <Input
+              type="date"
+              value={updatedFrom}
+              onChange={(e) => setUpdatedFrom(e.target.value)}
+              className="w-[150px]"
+            />
+          </label>
+          <label className="flex flex-col gap-1 font-label-sm text-[11px] text-on-surface-variant">
+            au
+            <Input
+              type="date"
+              value={updatedTo}
+              onChange={(e) => setUpdatedTo(e.target.value)}
+              className="w-[150px]"
+            />
+          </label>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-lg">
@@ -502,6 +666,20 @@ export function SeriesAdminView() {
                   </p>
                   <p className="font-label-sm text-[11px] text-on-surface-variant mt-xs">
                     {g.examTitle} · #{g.order}
+                  </p>
+                  <p className="font-label-sm text-[10px] text-on-surface-variant/80 mt-xs flex flex-col gap-0.5">
+                    <span>
+                      Ajoutée le {formatShortDate(g.createdAt)}
+                      {g.createdByName ? ` · Par ${g.createdByName}` : ""}
+                    </span>
+                    <span>
+                      Modifiée le {formatShortDate(g.updatedAt)}
+                      {" · "}
+                      {new Date(g.updatedAt).toLocaleTimeString("fr-FR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
                   </p>
                   <div className="flex flex-wrap gap-xs mt-sm">
                     {g.isDraft && (
@@ -559,6 +737,35 @@ export function SeriesAdminView() {
                     <p className="font-label-sm text-label-sm text-on-surface-variant mt-xs">
                       {selectedGroup.examTitle}
                       {selectedGroup.isDraft && " · Brouillon — non visible des apprenants"}
+                    </p>
+                    <p className="font-label-sm text-[11px] text-on-surface-variant mt-xs">
+                      Ajoutée le{" "}
+                      {new Date(selectedGroup.createdAt).toLocaleDateString(
+                        "fr-FR",
+                        {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        }
+                      )}
+                      {selectedGroup.createdByName
+                        ? ` · Par ${selectedGroup.createdByName}`
+                        : ""}
+                      {" · "}
+                      Dernière modif. le{" "}
+                      {new Date(selectedGroup.updatedAt).toLocaleDateString(
+                        "fr-FR",
+                        {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        }
+                      )}{" "}
+                      à{" "}
+                      {new Date(selectedGroup.updatedAt).toLocaleTimeString(
+                        "fr-FR",
+                        { hour: "2-digit", minute: "2-digit" }
+                      )}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-sm">

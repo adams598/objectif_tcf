@@ -236,6 +236,7 @@ model User {
   corrections       Correction[]       @relation("CorrectorCorrections")
   submittedWork     Correction[]       @relation("StudentCorrections")
   writingCorrectionJobs WritingCorrectionJob[]
+  createdExamSeries ExamSeries[]       @relation("ExamSeriesCreatedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -424,8 +425,10 @@ model ExamSeries {
   videoUrl     String?
   imageUrl     String?
   deletedAt    DateTime?
+  createdById  String?
 
   exam      Exam       @relation(fields: [examId], references: [id], onDelete: Cascade)
+  createdBy User?      @relation("ExamSeriesCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   questions Question[]
   attempts  Attempt[]
 
@@ -436,6 +439,7 @@ model ExamSeries {
   @@index([skill])
   @@index([difficulty])
   @@index([isPublished])
+  @@index([createdById])
 }
 
 model Question {

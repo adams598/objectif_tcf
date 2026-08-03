@@ -19,7 +19,6 @@ import {
 import { cn } from "@/lib/utils";
 import { fetchJson } from "@/lib/api/fetch-json";
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EXAM_TYPE_LABELS } from "@/lib/exams/catalog";
 import { EXAM_TAB_LABELS, type ExamTab } from "@/lib/pricing/constants";
 
@@ -86,13 +85,6 @@ const ROLE_LABELS: Record<string, string> = {
   CORRECTOR: "Correcteur",
 };
 
-const ROLE_BADGE_CLASS: Record<string, string> = {
-  USER: "bg-surface-container text-on-surface-variant",
-  ADMIN: "bg-secondary-container text-on-secondary-container",
-  SUPER_ADMIN: "bg-primary/15 text-primary",
-  CORRECTOR: "bg-tertiary-container/30 text-tertiary",
-};
-
 const EXAM_TABS: ExamTab[] = ["tcf", "tef", "ielts"];
 const TAB_TO_EXAM: Record<ExamTab, string> = {
   tcf: "TCF_CANADA",
@@ -101,10 +93,10 @@ const TAB_TO_EXAM: Record<ExamTab, string> = {
 };
 
 const cellInputClass =
-  "w-full min-w-[140px] rounded-lg border border-outline-variant bg-surface px-sm py-xs font-label-sm text-label-sm text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all";
+  "w-full min-w-[120px] h-8 rounded-lg border border-outline-variant bg-surface px-2 py-1 text-[12px] leading-tight text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all";
 
 const selectClassName =
-  "w-full min-w-[120px] rounded-lg border border-outline-variant bg-surface px-sm py-xs font-label-sm text-label-sm text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all";
+  "w-full min-w-[110px] h-8 rounded-lg border border-outline-variant bg-surface px-2 py-1 text-[12px] leading-tight text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all";
 
 function draftFromUser(user: AdminUser): RowDraft {
   return {
@@ -167,7 +159,6 @@ function buildPatchBody(user: AdminUser, draft: RowDraft) {
 export function UtilisateursAdminView() {
   const queryClient = useQueryClient();
   const { role: currentRole } = useCurrentUser();
-  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("USER");
@@ -185,6 +176,7 @@ export function UtilisateursAdminView() {
     email: string;
     password: string;
   } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
 
   const query = useQuery({
     queryKey: ["admin-users", search, page, roleFilter],
@@ -353,20 +345,29 @@ export function UtilisateursAdminView() {
       ),
   });
 
-  const deleteLearner = useMutation({
-    mutationFn: (id: string) =>
-      fetchJson(`/api/admin/utilisateurs/${id}`, { method: "DELETE" }),
-    onSuccess: (_data, id) => {
+  const removeLearner = useMutation({
+    mutationFn: ({ id, mode }: { id: string; mode: "archive" | "permanent" }) =>
+      fetchJson(`/api/admin/utilisateurs/${id}?mode=${mode}`, {
+        method: "DELETE",
+      }),
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       setDrafts((prev) => {
         const next = { ...prev };
-        delete next[id];
+        delete next[variables.id];
         return next;
       });
-      toast.success("Utilisateur supprimé");
+      setDeleteTarget(null);
+      toast.success(
+        variables.mode === "permanent"
+          ? "Utilisateur définitivement supprimé"
+          : "Utilisateur archivé — accès retirés"
+      );
     },
     onError: (error) =>
-      toast.error(error instanceof Error ? error.message : "Suppression impossible"),
+      toast.error(
+        error instanceof Error ? error.message : "Suppression impossible"
+      ),
   });
 
   const from = meta.total === 0 ? 0 : (page - 1) * (meta.limit || 20) + 1;
@@ -673,12 +674,12 @@ export function UtilisateursAdminView() {
                         !draft.isActive && !dirty && "bg-error-container/10"
                       )}
                     >
-                      <td className="px-md py-md">
-                        <div className="flex items-start gap-sm min-w-[200px]">
+                      <td className="px-sm py-sm">
+                        <div className="flex items-start gap-sm min-w-[180px]">
                           <Link
                             href={`/admin/utilisateurs/${user.id}`}
                             className="shrink-0 rounded-full ring-offset-2 hover:ring-2 hover:ring-primary/40 transition-all"
-                            title="Voir la progression"
+                            title="Progression & statistiques"
                           >
                             <Avatar
                               src={user.avatarUrl ?? undefined}
@@ -687,10 +688,10 @@ export function UtilisateursAdminView() {
                                   .filter(Boolean)
                                   .join(" ") || user.name
                               }
-                              size="default"
+                              size="sm"
                             />
                           </Link>
-                          <div className="flex flex-col gap-xs flex-1">
+                          <div className="flex flex-col gap-1 flex-1">
                             <input
                               className={cellInputClass}
                               placeholder="Prénom"
@@ -711,17 +712,8 @@ export function UtilisateursAdminView() {
                                 })
                               }
                             />
-                            <Link
-                              href={`/admin/utilisateurs/${user.id}`}
-                              className="font-label-sm text-[11px] text-primary font-semibold hover:underline inline-flex items-center gap-xs w-fit"
-                            >
-                              <span className="material-symbols-outlined text-[14px]">
-                                analytics
-                              </span>
-                              Progression & stats
-                            </Link>
                             {dirty && (
-                              <span className="font-label-sm text-[10px] text-primary font-semibold">
+                              <span className="text-[10px] text-primary font-semibold">
                                 Modifié
                               </span>
                             )}
@@ -729,10 +721,10 @@ export function UtilisateursAdminView() {
                         </div>
                       </td>
 
-                      <td className="px-md py-md">
+                      <td className="px-sm py-sm">
                         <input
                           type="email"
-                          className={cn(cellInputClass, "min-w-[180px]")}
+                          className={cn(cellInputClass, "min-w-[160px]")}
                           value={draft.email}
                           onChange={(e) =>
                             updateDraft(user.id, user, { email: e.target.value })
@@ -740,7 +732,7 @@ export function UtilisateursAdminView() {
                         />
                       </td>
 
-                      <td className="px-md py-md">
+                      <td className="px-sm py-sm">
                         <select
                           className={selectClassName}
                           value={draft.role}
@@ -771,18 +763,10 @@ export function UtilisateursAdminView() {
                             </option>
                           ))}
                         </select>
-                        <span
-                          className={cn(
-                            "mt-xs inline-flex px-sm py-xs rounded-md font-label-sm text-[10px] font-semibold",
-                            ROLE_BADGE_CLASS[draft.role]
-                          )}
-                        >
-                          {ROLE_LABELS[draft.role]}
-                        </span>
                       </td>
 
-                      <td className="px-md py-md">
-                        <div className="flex flex-col items-start gap-xs">
+                      <td className="px-sm py-sm">
+                        <div className="flex flex-col items-start gap-1">
                           <Switch
                             checked={draft.isActive}
                             onCheckedChange={(checked) =>
@@ -791,7 +775,7 @@ export function UtilisateursAdminView() {
                           />
                           <span
                             className={cn(
-                              "font-label-sm text-label-sm",
+                              "text-[11px]",
                               draft.isActive
                                 ? "text-on-surface-variant"
                                 : "text-error"
@@ -802,18 +786,18 @@ export function UtilisateursAdminView() {
                         </div>
                       </td>
 
-                      <td className="px-md py-md min-w-[220px]">
-                        <div className="flex flex-col gap-sm">
+                      <td className="px-sm py-sm min-w-[200px]">
+                        <div className="flex flex-col gap-1">
                           {visibleSubs.length === 0 ? (
-                            <span className="font-label-sm text-on-surface-variant">
+                            <span className="text-[11px] text-on-surface-variant">
                               —
                             </span>
                           ) : (
-                            <div className="flex flex-wrap gap-xs">
+                            <div className="flex flex-wrap gap-1">
                               {visibleSubs.map((sub) => (
                                 <span
                                   key={sub.id}
-                                  className="inline-flex items-center gap-xs px-sm py-xs rounded-md bg-primary/10 text-primary font-label-sm text-[11px] font-semibold"
+                                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-semibold"
                                 >
                                   {EXAM_TYPE_LABELS[
                                     sub.examType as keyof typeof EXAM_TYPE_LABELS
@@ -831,7 +815,7 @@ export function UtilisateursAdminView() {
                                       })
                                     }
                                   >
-                                    <span className="material-symbols-outlined text-[14px]">
+                                    <span className="material-symbols-outlined text-[12px]">
                                       close
                                     </span>
                                   </button>
@@ -842,7 +826,7 @@ export function UtilisateursAdminView() {
                           {draft.revokeExamTypes.length > 0 && (
                             <button
                               type="button"
-                              className="font-label-sm text-[11px] text-on-surface-variant hover:text-primary text-left"
+                              className="text-[10px] text-on-surface-variant hover:text-primary text-left"
                               onClick={() =>
                                 updateDraft(user.id, user, {
                                   revokeExamTypes: [],
@@ -861,7 +845,7 @@ export function UtilisateursAdminView() {
                               })
                             }
                           >
-                            <option value="">+ Accorder une offre (envoie l’email)…</option>
+                            <option value="">+ Accorder une offre…</option>
                             {offers.map((o) => (
                               <option key={o.id} value={o.id}>
                                 {EXAM_TAB_LABELS[
@@ -876,10 +860,10 @@ export function UtilisateursAdminView() {
                         </div>
                       </td>
 
-                      <td className="px-md py-md min-w-[160px]">
-                        <div className="flex flex-col gap-xs">
-                          <div className="flex items-center gap-xs">
-                            <p className="font-mono text-[11px] text-on-surface-variant truncate max-w-[120px]">
+                      <td className="px-sm py-sm min-w-[140px]">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1">
+                            <p className="font-mono text-[11px] text-on-surface-variant truncate max-w-[100px]">
                               {user.password
                                 ? draft.showPassword
                                   ? user.password
@@ -897,7 +881,7 @@ export function UtilisateursAdminView() {
                                     })
                                   }
                                 >
-                                  <span className="material-symbols-outlined text-[16px]">
+                                  <span className="material-symbols-outlined text-[14px]">
                                     {draft.showPassword
                                       ? "visibility_off"
                                       : "visibility"}
@@ -913,7 +897,7 @@ export function UtilisateursAdminView() {
                                     toast.success("Mot de passe copié");
                                   }}
                                 >
-                                  <span className="material-symbols-outlined text-[16px]">
+                                  <span className="material-symbols-outlined text-[14px]">
                                     content_copy
                                   </span>
                                 </button>
@@ -933,9 +917,9 @@ export function UtilisateursAdminView() {
                         </div>
                       </td>
 
-                      <td className="px-md py-md whitespace-nowrap">
-                        <div className="flex items-center gap-xs text-on-surface-variant font-label-sm text-label-sm">
-                          <span className="material-symbols-outlined text-[18px]">
+                      <td className="px-sm py-sm whitespace-nowrap">
+                        <div className="flex items-center gap-1 text-on-surface-variant text-[11px]">
+                          <span className="material-symbols-outlined text-[16px]">
                             history
                           </span>
                           {user._count.attempts} examen
@@ -943,14 +927,14 @@ export function UtilisateursAdminView() {
                         </div>
                       </td>
 
-                      <td className="px-md py-md">
-                        <div className="flex items-center gap-xs">
+                      <td className="px-sm py-sm">
+                        <div className="flex items-center gap-0.5">
                           <Link
                             href={`/admin/utilisateurs/${user.id}`}
-                            className="p-sm rounded-lg text-primary hover:bg-primary/10 transition-colors"
+                            className="p-1.5 rounded-lg text-primary hover:bg-primary/10 transition-colors"
                             title="Progression & statistiques"
                           >
-                            <span className="material-symbols-outlined text-[20px]">
+                            <span className="material-symbols-outlined text-[18px]">
                               analytics
                             </span>
                           </Link>
@@ -958,21 +942,11 @@ export function UtilisateursAdminView() {
                             currentRole === "SUPER_ADMIN") && (
                             <button
                               type="button"
-                              className="p-sm rounded-lg text-error hover:bg-error-container/30 transition-colors"
-                              title="Supprimer"
-                              onClick={() =>
-                                confirm({
-                                  title: "Supprimer cet utilisateur ?",
-                                  description:
-                                    "Le compte sera désactivé (soft-delete).",
-                                  confirmLabel: "Supprimer",
-                                  destructive: true,
-                                  onConfirm: () =>
-                                    deleteLearner.mutateAsync(user.id),
-                                })
-                              }
+                              className="p-1.5 rounded-lg text-error hover:bg-error-container/30 transition-colors"
+                              title="Archiver ou supprimer"
+                              onClick={() => setDeleteTarget(user)}
                             >
-                              <span className="material-symbols-outlined text-[20px]">
+                              <span className="material-symbols-outlined text-[18px]">
                                 delete
                               </span>
                             </button>
@@ -1056,7 +1030,82 @@ export function UtilisateursAdminView() {
         </div>
       )}
 
-      {confirmDialog}
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open && !removeLearner.isPending) setDeleteTarget(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Que faire de ce compte ?</DialogTitle>
+            <DialogDescription>
+              {deleteTarget
+                ? `${deleteTarget.name} (${deleteTarget.email})`
+                : ""}
+              . Côté apprenant, les deux options retirent l&apos;accès. Côté
+              admin, le comportement diffère.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-sm">
+            <button
+              type="button"
+              disabled={removeLearner.isPending || !deleteTarget}
+              onClick={() =>
+                deleteTarget &&
+                removeLearner.mutate({
+                  id: deleteTarget.id,
+                  mode: "archive",
+                })
+              }
+              className="w-full text-left rounded-xl border border-outline-variant bg-surface-container-low p-md hover:border-primary transition-colors disabled:opacity-50"
+            >
+              <p className="font-label-md text-sm font-semibold text-on-surface flex items-center gap-sm">
+                <span className="material-symbols-outlined text-[20px] text-primary">
+                  inventory_2
+                </span>
+                Archiver
+              </p>
+              <p className="font-label-sm text-[12px] text-on-surface-variant mt-xs">
+                Retire tous les accès et sessions. Le compte reste en base
+                (invisible dans la liste).
+              </p>
+            </button>
+            <button
+              type="button"
+              disabled={removeLearner.isPending || !deleteTarget}
+              onClick={() =>
+                deleteTarget &&
+                removeLearner.mutate({
+                  id: deleteTarget.id,
+                  mode: "permanent",
+                })
+              }
+              className="w-full text-left rounded-xl border border-error/30 bg-error/5 p-md hover:border-error transition-colors disabled:opacity-50"
+            >
+              <p className="font-label-md text-sm font-semibold text-error flex items-center gap-sm">
+                <span className="material-symbols-outlined text-[20px]">
+                  delete_forever
+                </span>
+                Supprimer définitivement
+              </p>
+              <p className="font-label-sm text-[12px] text-on-surface-variant mt-xs">
+                Retire les accès puis efface entièrement le compte et ses
+                données liées.
+              </p>
+            </button>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              disabled={removeLearner.isPending}
+              onClick={() => setDeleteTarget(null)}
+            >
+              Annuler
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

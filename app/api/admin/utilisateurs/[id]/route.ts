@@ -446,12 +446,14 @@ export async function POST(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const admin = await requireRole("ADMIN", "SUPER_ADMIN");
     const { id } = await params;
+    const modeParam = new URL(req.url).searchParams.get("mode");
+    const mode = modeParam === "permanent" ? "permanent" : "archive";
 
     if (id === admin.userId) {
       return forbiddenResponse();
@@ -463,11 +465,50 @@ export async function DELETE(
     if (!existing) return notFoundResponse("Utilisateur");
 
     // Seul un SUPER_ADMIN peut supprimer un admin / correcteur
-    if (
-      existing.role !== "USER" &&
-      admin.role !== "SUPER_ADMIN"
-    ) {
+    if (existing.role !== "USER" && admin.role !== "SUPER_ADMIN") {
       return forbiddenResponse();
+    }
+
+    // Retirer tous les accès (abonnements + sessions)
+    await prisma.subscription.updateMany({
+      where: { userId: id },
+      data: {
+        status: "CANCELLED",
+        autoRenew: false,
+        cancelAtPeriodEnd: false,
+        currentPeriodEnd: new Date(),
+      },
+    });
+    await prisma.session.updateMany({
+      where: { userId: id },
+      data: { isRevoked: true },
+    });
+
+    if (mode === "permanent") {
+      // Relations sans Cascade explicite
+      await prisma.message.deleteMany({
+        where: { OR: [{ senderId: id }, { receiverId: id }] },
+      });
+      await prisma.correction.updateMany({
+        where: { correctorId: id },
+        data: { correctorId: null },
+      });
+      await prisma.correction.deleteMany({ where: { studentId: id } });
+
+      await prisma.user.delete({ where: { id } });
+      await prisma.auditLog.create({
+        data: {
+          userId: admin.userId,
+          action: "ADMIN_USER_HARD_DELETE",
+          entity: "User",
+          entityId: id,
+          metadata: { email: existing.email, mode: "permanent" },
+        },
+      });
+      return successResponse(
+        { deleted: true, mode: "permanent" },
+        "Utilisateur définitivement supprimé"
+      );
     }
 
     await prisma.user.update({
@@ -478,13 +519,17 @@ export async function DELETE(
     await prisma.auditLog.create({
       data: {
         userId: admin.userId,
-        action: "ADMIN_USER_DELETE",
+        action: "ADMIN_USER_ARCHIVE",
         entity: "User",
         entityId: id,
+        metadata: { email: existing.email, mode: "archive" },
       },
     });
 
-    return successResponse({ deleted: true }, "Apprenant supprimé");
+    return successResponse(
+      { deleted: true, mode: "archive" },
+      "Utilisateur archivé"
+    );
   } catch (error) {
     return handleAuthError(error) ?? serverErrorResponse(error);
   }

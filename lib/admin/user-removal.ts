@@ -73,14 +73,16 @@ export async function permanentlyDeleteUser(
     // Answers référencent User sans Cascade — supprimer avant le user
     await tx.answer.deleteMany({ where: { userId } });
 
+    // Paiements : pas de onDelete Cascade en base
+    await tx.payment.deleteMany({ where: { userId } });
+
     // Audit logs où l'utilisateur est l'acteur
     await tx.auditLog.updateMany({
       where: { userId },
       data: { userId: null },
     });
 
-    // Le reste (sessions, accounts, attempts, payments, subscriptions…)
-    // est en Cascade / SetNull côté schéma.
+    // Sessions / accounts / attempts / subscriptions / progress / settings : Cascade
     await tx.user.delete({ where: { id: userId } });
   });
 }

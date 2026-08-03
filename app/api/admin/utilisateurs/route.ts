@@ -1,12 +1,10 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import type { ExamType, Prisma, Role } from "@prisma/client";
+import type { Prisma, Role } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { requireRole } from "@/lib/auth/session";
 import { decryptAdminPassword } from "@/lib/auth/admin-password";
 import { setUserCredentials } from "@/lib/admin/learner-credentials";
-import { inferSubscriptionPlan } from "@/lib/payments/plan-from-offer";
-import { sendLearnerCredentialsEmail } from "@/lib/email/send-offer-access-email";
 import {
   successResponse,
   createdResponse,
@@ -27,13 +25,11 @@ function handleAuthError(error: unknown) {
   return null;
 }
 
+/** Création manuelle : email + mdp auto. L'email d'accès part à l'accord d'offre. */
 const createLearnerSchema = z.object({
   email: z.string().email(),
   firstName: z.string().min(1).max(50).optional(),
   lastName: z.string().min(1).max(50).optional(),
-  password: z.string().min(8).max(64).optional(),
-  offerId: z.string().uuid().optional().nullable(),
-  sendEmail: z.boolean().optional().default(true),
 });
 
 export async function GET(req: NextRequest) {
@@ -138,28 +134,6 @@ export async function POST(req: NextRequest) {
       email.split("@")[0] ||
       "Apprenant";
 
-    let offer: {
-      id: string;
-      name: string;
-      slug: string;
-      examType: ExamType;
-      baseDays: number;
-      bonusDays: number;
-    } | null = null;
-
-    if (parsed.data.offerId) {
-      offer = await prisma.subscriptionOffer.findFirst({
-        where: {
-          id: parsed.data.offerId,
-          isActive: true,
-          deletedAt: null,
-        },
-      });
-      if (!offer) {
-        return errorResponse("Offre introuvable ou inactive", 404);
-      }
-    }
-
     const user = await prisma.user.create({
       data: {
         email,
@@ -173,53 +147,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const password = await setUserCredentials(user.id, parsed.data.password);
-
-    let periodEnd: Date | null = null;
-    if (offer) {
-      const days = offer.baseDays + offer.bonusDays;
-      const now = new Date();
-      periodEnd = new Date(now);
-      periodEnd.setDate(periodEnd.getDate() + days);
-      const plan = inferSubscriptionPlan({
-        offerName: offer.name,
-        offerSlug: offer.slug,
-        subscriptionDays: days,
-      });
-
-      await prisma.subscription.create({
-        data: {
-          userId: user.id,
-          examType: offer.examType,
-          plan,
-          status: "ACTIVE",
-          currentPeriodStart: now,
-          currentPeriodEnd: periodEnd,
-          autoRenew: false,
-          cancelAtPeriodEnd: false,
-          renewalDays: days,
-          offerId: offer.id,
-        },
-      });
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { targetExamDate: periodEnd },
-      });
-    }
-
-    let emailSent = false;
-    if (parsed.data.sendEmail !== false) {
-      const sendResult = await sendLearnerCredentialsEmail({
-        to: email,
-        recipientName: name,
-        adminName: admin.name || admin.email,
-        password,
-        offerName: offer?.name,
-        days: offer ? offer.baseDays + offer.bonusDays : null,
-      });
-      emailSent = sendResult.ok;
-    }
+    // Mot de passe généré automatiquement, visible côté admin
+    const password = await setUserCredentials(user.id);
 
     await prisma.auditLog.create({
       data: {
@@ -227,11 +156,7 @@ export async function POST(req: NextRequest) {
         action: "ADMIN_LEARNER_CREATE",
         entity: "User",
         entityId: user.id,
-        metadata: {
-          email,
-          offerId: offer?.id ?? null,
-          emailSent,
-        },
+        metadata: { email },
       },
     });
 
@@ -241,10 +166,8 @@ export async function POST(req: NextRequest) {
         email: user.email,
         name: user.name,
         password,
-        emailSent,
-        periodEnd: periodEnd?.toISOString() ?? null,
       },
-      "Apprenant créé"
+      "Apprenant créé — accordez une offre pour envoyer l'email d'accès"
     );
   } catch (error) {
     return handleAuthError(error) ?? serverErrorResponse(error);

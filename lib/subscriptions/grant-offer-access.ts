@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { inferSubscriptionPlan } from "@/lib/payments/plan-from-offer";
 import { sendOfferAccessEmail } from "@/lib/email/send-offer-access-email";
 import { EXAM_TYPE_TO_TAB, EXAM_TAB_LABELS } from "@/lib/pricing/constants";
+import { decryptAdminPassword } from "@/lib/auth/admin-password";
 import { setUserCredentials } from "@/lib/admin/learner-credentials";
 
 export type GrantOfferAccessResult = {
@@ -104,8 +105,15 @@ export async function grantOfferAccessByEmails(input: {
         userId = created.id;
       }
 
-      // Mot de passe généré (visible admin + envoyé par email)
-      const password = await setUserCredentials(userId);
+      // Mot de passe : réutilise celui visible admin si présent, sinon génère
+      const withEnc = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { adminPasswordEnc: true },
+      });
+      let password = decryptAdminPassword(withEnc?.adminPasswordEnc ?? null);
+      if (!password) {
+        password = await setUserCredentials(userId);
+      }
 
       const now = new Date();
       const periodEnd = new Date(now);

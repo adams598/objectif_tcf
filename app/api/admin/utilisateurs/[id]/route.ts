@@ -6,6 +6,8 @@ import { requireRole } from "@/lib/auth/session";
 import { decryptAdminPassword } from "@/lib/auth/admin-password";
 import { setUserCredentials } from "@/lib/admin/learner-credentials";
 import { inferSubscriptionPlan } from "@/lib/payments/plan-from-offer";
+import { sendOfferAccessEmail } from "@/lib/email/send-offer-access-email";
+import { EXAM_TYPE_TO_TAB, EXAM_TAB_LABELS } from "@/lib/pricing/constants";
 import {
   successResponse,
   serverErrorResponse,
@@ -190,6 +192,9 @@ export async function PATCH(
       plainPassword = await setUserCredentials(id, parsed.data.password);
     }
 
+    let accessEmailSent = false;
+    let grantedOfferName: string | null = null;
+
     if (parsed.data.offerId) {
       const offer = await prisma.subscriptionOffer.findFirst({
         where: {
@@ -257,6 +262,39 @@ export async function PATCH(
         where: { id },
         data: { targetExamDate: finalEnd },
       });
+
+      // Réutilise le mdp admin visible, sinon en génère un
+      if (!plainPassword) {
+        plainPassword =
+          decryptAdminPassword(existing.adminPasswordEnc) ??
+          (await setUserCredentials(id));
+      }
+
+      const examLabel =
+        EXAM_TAB_LABELS[EXAM_TYPE_TO_TAB[offer.examType] ?? "tcf"] ??
+        offer.examType;
+      const recipientName =
+        [firstName, lastName].filter(Boolean).join(" ") ||
+        existing.name ||
+        existing.email;
+      const periodEndLabel = finalEnd.toLocaleDateString("fr-FR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      const emailResult = await sendOfferAccessEmail({
+        to: (parsed.data.email ?? existing.email).trim().toLowerCase(),
+        recipientName,
+        adminName: admin.name || admin.email,
+        offerName: offer.name,
+        examLabel,
+        days,
+        periodEndLabel,
+        password: plainPassword,
+      });
+      accessEmailSent = emailResult.ok;
+      grantedOfferName = offer.name;
     }
 
     if (parsed.data.revokeExamType) {
@@ -310,6 +348,8 @@ export async function PATCH(
         metadata: {
           ...parsed.data,
           password: parsed.data.password ? "[updated]" : undefined,
+          accessEmailSent,
+          grantedOfferName,
         },
       },
     });
@@ -320,8 +360,14 @@ export async function PATCH(
         adminPasswordEnc: undefined,
         password:
           plainPassword ?? decryptAdminPassword(user.adminPasswordEnc),
+        accessEmailSent,
+        grantedOfferName,
       },
-      "Utilisateur mis à jour"
+      grantedOfferName
+        ? accessEmailSent
+          ? `Accès « ${grantedOfferName} » accordé — email envoyé`
+          : `Accès « ${grantedOfferName} » accordé — email non envoyé`
+        : "Utilisateur mis à jour"
     );
   } catch (error) {
     return handleAuthError(error) ?? serverErrorResponse(error);

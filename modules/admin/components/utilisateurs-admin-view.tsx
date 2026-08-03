@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Avatar } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { fetchJson } from "@/lib/api/fetch-json";
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
@@ -56,6 +64,20 @@ interface UsersResponse {
   meta: { total: number; page: number; limit: number; totalPages: number };
 }
 
+type Role = AdminUser["role"];
+
+type RowDraft = {
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+  offerId: string;
+  isActive: boolean;
+  role: Role;
+  revokeExamTypes: string[];
+  showPassword: boolean;
+};
+
 const ROLE_LABELS: Record<string, string> = {
   USER: "Apprenant",
   ADMIN: "Admin",
@@ -77,20 +99,13 @@ const TAB_TO_EXAM: Record<ExamTab, string> = {
   ielts: "IELTS",
 };
 
+const cellInputClass =
+  "w-full min-w-[140px] rounded-lg border border-outline-variant bg-surface px-sm py-xs font-label-sm text-label-sm text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all";
+
 const selectClassName =
-  "w-full rounded-xl border border-outline-variant bg-surface-container-low px-md py-sm font-label-md text-label-md text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all";
+  "w-full min-w-[120px] rounded-lg border border-outline-variant bg-surface px-sm py-xs font-label-sm text-label-sm text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all";
 
-type EditForm = {
-  email: string;
-  firstName: string;
-  lastName: string;
-  password: string;
-  offerId: string;
-  isActive: boolean;
-  role: AdminUser["role"];
-};
-
-function formFromUser(user: AdminUser): EditForm {
+function draftFromUser(user: AdminUser): RowDraft {
   return {
     email: user.email,
     firstName: user.firstName ?? "",
@@ -99,7 +114,53 @@ function formFromUser(user: AdminUser): EditForm {
     offerId: "",
     isActive: user.isActive,
     role: user.role,
+    revokeExamTypes: [],
+    showPassword: false,
   };
+}
+
+function isRowDirty(user: AdminUser, draft: RowDraft): boolean {
+  return (
+    draft.email.trim().toLowerCase() !== user.email.toLowerCase() ||
+    draft.firstName !== (user.firstName ?? "") ||
+    draft.lastName !== (user.lastName ?? "") ||
+    draft.isActive !== user.isActive ||
+    draft.role !== user.role ||
+    draft.password.trim().length > 0 ||
+    draft.offerId.length > 0 ||
+    draft.revokeExamTypes.length > 0
+  );
+}
+
+function buildPatchBody(user: AdminUser, draft: RowDraft) {
+  const body: Record<string, unknown> = {};
+
+  if (draft.email.trim().toLowerCase() !== user.email.toLowerCase()) {
+    body.email = draft.email.trim();
+  }
+  if (draft.firstName !== (user.firstName ?? "")) {
+    body.firstName = draft.firstName.trim() || null;
+  }
+  if (draft.lastName !== (user.lastName ?? "")) {
+    body.lastName = draft.lastName.trim() || null;
+  }
+  if (draft.isActive !== user.isActive) {
+    body.isActive = draft.isActive;
+  }
+  if (draft.role !== user.role) {
+    body.role = draft.role;
+  }
+  if (draft.password.trim()) {
+    body.password = draft.password.trim();
+  }
+  if (draft.offerId) {
+    body.offerId = draft.offerId;
+  }
+  if (draft.revokeExamTypes[0]) {
+    body.revokeExamType = draft.revokeExamTypes[0];
+  }
+
+  return body;
 }
 
 export function UtilisateursAdminView() {
@@ -111,19 +172,18 @@ export function UtilisateursAdminView() {
   const [roleFilter, setRoleFilter] = useState<string>("USER");
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [editForm, setEditForm] = useState<EditForm | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, RowDraft>>({});
 
   const [createForm, setCreateForm] = useState({
     email: "",
     firstName: "",
     lastName: "",
-    password: "",
-    offerId: "",
-    sendEmail: true,
   });
+  const [createdAccount, setCreatedAccount] = useState<{
+    email: string;
+    password: string;
+  } | null>(null);
 
   const query = useQuery({
     queryKey: ["admin-users", search, page, roleFilter],
@@ -157,24 +217,27 @@ export function UtilisateursAdminView() {
     totalPages: 1,
     limit: 20,
   };
-  const expandedUser = users.find((u) => u.id === expandedId) ?? null;
 
-  const openRow = (user: AdminUser) => {
-    if (expandedId === user.id) {
-      setExpandedId(null);
-      setEditForm(null);
-      setShowPassword(false);
-      return;
-    }
-    setExpandedId(user.id);
-    setEditForm(formFromUser(user));
-    setShowPassword(false);
-    setShowCreate(false);
+  const getDraft = (user: AdminUser): RowDraft =>
+    drafts[user.id] ?? draftFromUser(user);
+
+  const updateDraft = (userId: string, user: AdminUser, patch: Partial<RowDraft>) => {
+    setDrafts((prev) => {
+      const base = prev[userId] ?? draftFromUser(user);
+      return { ...prev, [userId]: { ...base, ...patch } };
+    });
   };
+
+  const dirtyUsers = useMemo(
+    () => users.filter((u) => drafts[u.id] && isRowDirty(u, drafts[u.id]!)),
+    [users, drafts]
+  );
+
+  const discardDrafts = () => setDrafts({});
 
   const createLearner = useMutation({
     mutationFn: () =>
-      fetchJson<{ id: string; password: string; emailSent: boolean }>(
+      fetchJson<{ id: string; password: string }>(
         "/api/admin/utilisateurs",
         {
           method: "POST",
@@ -182,123 +245,144 @@ export function UtilisateursAdminView() {
             email: createForm.email,
             firstName: createForm.firstName || undefined,
             lastName: createForm.lastName || undefined,
-            password: createForm.password || undefined,
-            offerId: createForm.offerId || null,
-            sendEmail: createForm.sendEmail,
           }),
         }
       ),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-      toast.success(
-        data.emailSent
-          ? `Apprenant créé — identifiants envoyés (mdp: ${data.password})`
-          : `Apprenant créé — mot de passe: ${data.password}`
-      );
-      setShowCreate(false);
-      setCreateForm({
-        email: "",
-        firstName: "",
-        lastName: "",
-        password: "",
-        offerId: "",
-        sendEmail: true,
+      setCreatedAccount({
+        email: createForm.email.trim().toLowerCase(),
+        password: data.password,
       });
-      setExpandedId(data.id);
+      setCreateForm({ email: "", firstName: "", lastName: "" });
+      toast.success("Compte créé");
     },
     onError: (error) =>
       toast.error(error instanceof Error ? error.message : "Création impossible"),
   });
 
-  const updateLearner = useMutation({
-    mutationFn: () => {
-      if (!expandedId || !editForm) throw new Error("Aucune ligne sélectionnée");
-      return fetchJson(`/api/admin/utilisateurs/${expandedId}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          email: editForm.email,
-          firstName: editForm.firstName || null,
-          lastName: editForm.lastName || null,
-          isActive: editForm.isActive,
-          role: editForm.role,
-          ...(editForm.password.trim()
-            ? { password: editForm.password.trim() }
-            : {}),
-          ...(editForm.offerId ? { offerId: editForm.offerId } : {}),
-        }),
-      });
+  const saveAll = useMutation({
+    mutationFn: async () => {
+      const targets = users.filter(
+        (u) => drafts[u.id] && isRowDirty(u, drafts[u.id]!)
+      );
+      if (targets.length === 0) return { ok: 0, fail: 0, grantedOffers: 0 };
+
+      for (const user of targets) {
+        const draft = drafts[user.id]!;
+        if (draft.password.trim() && draft.password.trim().length < 8) {
+          throw new Error(
+            `Mot de passe trop court pour ${user.email} (min. 8 caractères)`
+          );
+        }
+        if (
+          draft.role === "SUPER_ADMIN" &&
+          currentRole !== "SUPER_ADMIN" &&
+          draft.role !== user.role
+        ) {
+          throw new Error(
+            `Seul un super admin peut attribuer ce rôle (${user.email})`
+          );
+        }
+      }
+
+      let ok = 0;
+      let fail = 0;
+      let grantedOffers = 0;
+      const errors: string[] = [];
+
+      for (const user of targets) {
+        const draft = drafts[user.id]!;
+        try {
+          const body = buildPatchBody(user, draft);
+          if (Object.keys(body).length > 0) {
+            await fetchJson(`/api/admin/utilisateurs/${user.id}`, {
+              method: "PATCH",
+              body: JSON.stringify(body),
+            });
+          }
+          for (const examType of draft.revokeExamTypes.slice(1)) {
+            await fetchJson(`/api/admin/utilisateurs/${user.id}`, {
+              method: "PATCH",
+              body: JSON.stringify({ revokeExamType: examType }),
+            });
+          }
+          if (draft.offerId) grantedOffers += 1;
+          ok += 1;
+        } catch (error) {
+          fail += 1;
+          errors.push(
+            error instanceof Error ? error.message : `Échec pour ${user.email}`
+          );
+        }
+      }
+
+      if (fail > 0 && ok === 0) {
+        throw new Error(errors[0] ?? "Enregistrement impossible");
+      }
+      return { ok, fail, errors, grantedOffers };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-      toast.success("Utilisateur mis à jour");
-      setEditForm((f) => (f ? { ...f, password: "", offerId: "" } : f));
-      setShowPassword(false);
+      setDrafts({});
+      setCreatedAccount(null);
+      if (result.fail > 0) {
+        toast.warning(
+          `${result.ok} enregistré(s), ${result.fail} échec(s)${
+            result.errors?.[0] ? ` — ${result.errors[0]}` : ""
+          }`
+        );
+      } else if (result.grantedOffers > 0) {
+        toast.success(
+          result.grantedOffers > 1
+            ? `${result.ok} mis à jour — ${result.grantedOffers} emails d'accès envoyés`
+            : "Accès accordé — email avec identifiants envoyé"
+        );
+      } else {
+        toast.success(
+          result.ok > 1
+            ? `${result.ok} utilisateurs mis à jour`
+            : "Modifications enregistrées"
+        );
+      }
     },
     onError: (error) =>
-      toast.error(error instanceof Error ? error.message : "Mise à jour impossible"),
-  });
-
-  const revokeAccess = useMutation({
-    mutationFn: (examType: string) =>
-      fetchJson(`/api/admin/utilisateurs/${expandedId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ revokeExamType: examType }),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-      toast.success("Accès retiré");
-    },
-    onError: () => toast.error("Impossible de retirer l'accès"),
+      toast.error(
+        error instanceof Error ? error.message : "Enregistrement impossible"
+      ),
   });
 
   const deleteLearner = useMutation({
     mutationFn: (id: string) =>
       fetchJson(`/api/admin/utilisateurs/${id}`, { method: "DELETE" }),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-      setExpandedId(null);
-      setEditForm(null);
+      setDrafts((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
       toast.success("Utilisateur supprimé");
     },
     onError: (error) =>
       toast.error(error instanceof Error ? error.message : "Suppression impossible"),
   });
 
-  const offerLabel = useMemo(() => {
-    const map = new Map(offers.map((o) => [o.id, o]));
-    return (offerId?: string | null) => {
-      if (!offerId) return null;
-      const o = map.get(offerId);
-      return o ? `${o.name} (${o.baseDays + o.bonusDays} j)` : null;
-    };
-  }, [offers]);
-
   const from = meta.total === 0 ? 0 : (page - 1) * (meta.limit || 20) + 1;
   const to = Math.min(page * (meta.limit || 20), meta.total);
-
-  // Resync form when list refreshes for the expanded user
-  React.useEffect(() => {
-    if (!expandedUser) return;
-    setEditForm((prev) => {
-      if (!prev) return formFromUser(expandedUser);
-      return {
-        ...formFromUser(expandedUser),
-        password: prev.password,
-        offerId: prev.offerId,
-      };
-    });
-  }, [expandedUser]);
+  const activeSubsCount = users.filter((u) => u.subscriptions.length > 0).length;
+  const inactiveCount = users.filter((u) => !u.isActive).length;
 
   return (
-    <div className="flex flex-col gap-lg">
+    <div className={cn("flex flex-col gap-lg", dirtyUsers.length > 0 && "pb-24")}>
       <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-md">
         <div>
           <h1 className="font-display-md text-display-md text-on-surface font-bold">
             Gestion des Utilisateurs
           </h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">
-            Gérez vos membres, attribuez des rôles et contrôlez les accès aux
-            abonnements.
+            Modifiez directement dans le tableau, puis enregistrez toutes les
+            modifications d&apos;un coup.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-sm">
@@ -307,7 +391,7 @@ export function UtilisateursAdminView() {
               search
             </span>
             <input
-              className="w-full bg-surface border border-outline-variant rounded-xl py-sm pl-10 pr-md font-body-md text-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+              className="w-full bg-surface border border-outline-variant rounded-xl py-sm pl-10 pr-md font-body-md text-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-[0_4px_20px_rgba(79,55,138,0.04)]"
               placeholder="Rechercher un utilisateur…"
               value={search}
               onChange={(e) => {
@@ -326,9 +410,9 @@ export function UtilisateursAdminView() {
           </Button>
           <Button
             onClick={() => {
-              setShowCreate((v) => !v);
-              setExpandedId(null);
-              setEditForm(null);
+              setCreatedAccount(null);
+              setCreateForm({ email: "", firstName: "", lastName: "" });
+              setShowCreate(true);
             }}
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
@@ -336,6 +420,52 @@ export function UtilisateursAdminView() {
           </Button>
         </div>
       </header>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-md">
+        {[
+          {
+            label: "Total",
+            value: meta.total,
+            hint: "comptes filtrés",
+          },
+          {
+            label: "Avec abonnement",
+            value: activeSubsCount,
+            hint: "sur cette page",
+          },
+          {
+            label: "Inactifs",
+            value: inactiveCount,
+            hint: "sur cette page",
+          },
+          {
+            label: "Modifs en cours",
+            value: dirtyUsers.length,
+            hint: dirtyUsers.length ? "à enregistrer" : "aucune",
+            accent: dirtyUsers.length > 0,
+          },
+        ].map((kpi) => (
+          <div
+            key={kpi.label}
+            className="bg-surface border border-outline-variant rounded-2xl p-md shadow-[0_4px_20px_rgba(79,55,138,0.05)]"
+          >
+            <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+              {kpi.label}
+            </p>
+            <p
+              className={cn(
+                "font-display-md text-[28px] font-bold mt-xs",
+                kpi.accent ? "text-primary" : "text-on-surface"
+              )}
+            >
+              {kpi.value}
+            </p>
+            <p className="font-label-sm text-[11px] text-on-surface-variant mt-xs">
+              {kpi.hint}
+            </p>
+          </div>
+        ))}
+      </div>
 
       {showFilters && (
         <div className="flex flex-wrap gap-sm p-md rounded-2xl border border-outline-variant bg-surface shadow-[0_4px_20px_rgba(79,55,138,0.05)]">
@@ -370,106 +500,124 @@ export function UtilisateursAdminView() {
         </div>
       )}
 
-      {showCreate && (
-        <section className="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md shadow-[0_4px_20px_rgba(79,55,138,0.05)]">
-          <div className="flex items-center justify-between">
-            <h2 className="font-headline-lg text-[20px] font-semibold text-on-surface">
-              Ajouter un apprenant
-            </h2>
-            <button
-              type="button"
-              className="text-on-surface-variant hover:text-on-surface"
-              onClick={() => setShowCreate(false)}
-            >
-              <span className="material-symbols-outlined">close</span>
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-md">
-            <Input
-              label="Email *"
-              type="email"
-              value={createForm.email}
-              onChange={(e) =>
-                setCreateForm((f) => ({ ...f, email: e.target.value }))
-              }
-            />
-            <Input
-              label="Mot de passe (optionnel)"
-              value={createForm.password}
-              onChange={(e) =>
-                setCreateForm((f) => ({ ...f, password: e.target.value }))
-              }
-            />
-            <Input
-              label="Prénom"
-              value={createForm.firstName}
-              onChange={(e) =>
-                setCreateForm((f) => ({ ...f, firstName: e.target.value }))
-              }
-            />
-            <Input
-              label="Nom"
-              value={createForm.lastName}
-              onChange={(e) =>
-                setCreateForm((f) => ({ ...f, lastName: e.target.value }))
-              }
-            />
-            <div className="md:col-span-2 xl:col-span-3">
-              <label className="font-label-sm text-label-sm text-on-surface-variant mb-xs block">
-                Offre d&apos;accès (optionnel)
-              </label>
-              <select
-                className={selectClassName}
-                value={createForm.offerId}
-                onChange={(e) =>
-                  setCreateForm((f) => ({ ...f, offerId: e.target.value }))
-                }
-              >
-                <option value="">Sans offre pour le moment</option>
-                {offers.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {EXAM_TYPE_LABELS[o.examType as keyof typeof EXAM_TYPE_LABELS] ??
-                      o.examType}{" "}
-                    — {o.name} ({o.baseDays + o.bonusDays} j)
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-end pb-xs">
-              <label className="inline-flex items-center gap-sm font-label-sm text-label-sm">
-                <Switch
-                  checked={createForm.sendEmail}
-                  onCheckedChange={(v) =>
-                    setCreateForm((f) => ({ ...f, sendEmail: v }))
+      <Dialog
+        open={showCreate}
+        onOpenChange={(open) => {
+          setShowCreate(open);
+          if (!open) {
+            setCreatedAccount(null);
+            setCreateForm({ email: "", firstName: "", lastName: "" });
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          {createdAccount ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Compte créé</DialogTitle>
+                <DialogDescription>
+                  Le mot de passe est visible ci-dessous. Accordez ensuite une
+                  offre sur la ligne du tableau pour envoyer l&apos;email
+                  d&apos;accès.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="rounded-xl border border-outline-variant bg-surface-container-low p-md space-y-sm">
+                <p className="font-label-sm text-label-sm text-on-surface-variant">
+                  Email
+                </p>
+                <p className="font-label-md text-label-md font-semibold break-all">
+                  {createdAccount.email}
+                </p>
+                <p className="font-label-sm text-label-sm text-on-surface-variant pt-xs">
+                  Mot de passe
+                </p>
+                <p className="font-mono text-lg text-primary font-semibold tracking-wide">
+                  {createdAccount.password}
+                </p>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="secondary"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(createdAccount.password);
+                    toast.success("Mot de passe copié");
+                  }}
+                >
+                  Copier le mdp
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowCreate(false);
+                    setCreatedAccount(null);
+                  }}
+                >
+                  Fermer
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>Créer un compte apprenant</DialogTitle>
+                <DialogDescription>
+                  Le mot de passe est généré automatiquement. Vous pourrez
+                  ensuite accorder une offre directement sur sa ligne.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-md">
+                <Input
+                  label="Email *"
+                  type="email"
+                  value={createForm.email}
+                  onChange={(e) =>
+                    setCreateForm((f) => ({ ...f, email: e.target.value }))
                   }
+                  autoFocus
                 />
-                Envoyer l&apos;email
-              </label>
-            </div>
-          </div>
-          <div className="flex justify-end gap-sm">
-            <Button variant="secondary" onClick={() => setShowCreate(false)}>
-              Annuler
-            </Button>
-            <Button
-              onClick={() => createLearner.mutate()}
-              disabled={!createForm.email.trim() || createLearner.isPending}
-              loading={createLearner.isPending}
-            >
-              Créer l&apos;apprenant
-            </Button>
-          </div>
-        </section>
-      )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
+                  <Input
+                    label="Prénom"
+                    value={createForm.firstName}
+                    onChange={(e) =>
+                      setCreateForm((f) => ({ ...f, firstName: e.target.value }))
+                    }
+                  />
+                  <Input
+                    label="Nom"
+                    value={createForm.lastName}
+                    onChange={(e) =>
+                      setCreateForm((f) => ({ ...f, lastName: e.target.value }))
+                    }
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowCreate(false)}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={() => createLearner.mutate()}
+                  disabled={!createForm.email.trim() || createLearner.isPending}
+                  loading={createLearner.isPending}
+                >
+                  Créer le compte
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <div className="bg-surface border border-outline-variant rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(79,55,138,0.05)]">
-        <div className="px-lg py-md border-b border-outline-variant bg-surface-container-low flex items-center justify-between">
+        <div className="px-lg py-md border-b border-outline-variant bg-surface-container-low flex flex-wrap items-center justify-between gap-sm">
           <h2 className="font-headline-lg text-[18px] md:text-[20px] font-semibold text-on-surface">
             Liste des utilisateurs
           </h2>
           <span className="font-label-sm text-label-sm text-on-surface-variant">
-            Cliquez une ligne pour modifier · {meta.total} compte
-            {meta.total > 1 ? "s" : ""}
+            Édition en ligne · {meta.total} compte{meta.total > 1 ? "s" : ""}
           </span>
         </div>
 
@@ -483,20 +631,22 @@ export function UtilisateursAdminView() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[1100px]">
               <thead>
                 <tr className="border-b border-outline-variant bg-surface">
                   {[
                     "Utilisateur",
+                    "Email",
                     "Rôle",
-                    "Statut",
-                    "Abonnements",
+                    "Actif",
+                    "Abonnements / offre",
+                    "Mot de passe",
                     "Activité",
                     "",
                   ].map((h) => (
                     <th
                       key={h || "actions"}
-                      className="px-md py-sm font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold"
+                      className="px-md py-sm font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold whitespace-nowrap"
                     >
                       {h}
                     </th>
@@ -505,394 +655,304 @@ export function UtilisateursAdminView() {
               </thead>
               <tbody>
                 {users.map((user) => {
-                  const isExpanded = expandedId === user.id;
+                  const draft = getDraft(user);
+                  const dirty = isRowDirty(user, draft);
+                  const visibleSubs = user.subscriptions.filter(
+                    (s) => !draft.revokeExamTypes.includes(s.examType)
+                  );
+
                   return (
-                    <React.Fragment key={user.id}>
-                      <tr
-                        onClick={() => openRow(user)}
-                        className={cn(
-                          "cursor-pointer transition-colors border-b border-outline-variant/60 group",
-                          isExpanded
-                            ? "bg-primary/5 border-b-0"
-                            : "hover:bg-surface-container-low",
-                          !user.isActive && !isExpanded && "bg-error-container/10"
-                        )}
-                      >
-                        <td className="px-md py-md">
-                          <div className="flex items-center gap-md">
-                            <Avatar
-                              src={user.avatarUrl ?? undefined}
-                              name={user.name}
-                              size="default"
+                    <tr
+                      key={user.id}
+                      className={cn(
+                        "border-b border-outline-variant/60 align-top transition-colors",
+                        dirty
+                          ? "bg-primary/5"
+                          : "hover:bg-surface-container-low",
+                        !draft.isActive && !dirty && "bg-error-container/10"
+                      )}
+                    >
+                      <td className="px-md py-md">
+                        <div className="flex items-start gap-sm min-w-[200px]">
+                          <Avatar
+                            src={user.avatarUrl ?? undefined}
+                            name={
+                              [draft.firstName, draft.lastName]
+                                .filter(Boolean)
+                                .join(" ") || user.name
+                            }
+                            size="default"
+                          />
+                          <div className="flex flex-col gap-xs flex-1">
+                            <input
+                              className={cellInputClass}
+                              placeholder="Prénom"
+                              value={draft.firstName}
+                              onChange={(e) =>
+                                updateDraft(user.id, user, {
+                                  firstName: e.target.value,
+                                })
+                              }
                             />
-                            <div className="min-w-0">
-                              <p
-                                className={cn(
-                                  "font-label-md text-label-md font-semibold text-on-surface truncate",
-                                  !user.isActive && "line-through opacity-70"
-                                )}
-                              >
-                                {user.name}
-                              </p>
-                              <p className="font-label-sm text-label-sm text-on-surface-variant truncate">
-                                {user.email}
-                              </p>
-                            </div>
+                            <input
+                              className={cellInputClass}
+                              placeholder="Nom"
+                              value={draft.lastName}
+                              onChange={(e) =>
+                                updateDraft(user.id, user, {
+                                  lastName: e.target.value,
+                                })
+                              }
+                            />
+                            {dirty && (
+                              <span className="font-label-sm text-[10px] text-primary font-semibold">
+                                Modifié
+                              </span>
+                            )}
                           </div>
-                        </td>
-                        <td className="px-md py-md">
+                        </div>
+                      </td>
+
+                      <td className="px-md py-md">
+                        <input
+                          type="email"
+                          className={cn(cellInputClass, "min-w-[180px]")}
+                          value={draft.email}
+                          onChange={(e) =>
+                            updateDraft(user.id, user, { email: e.target.value })
+                          }
+                        />
+                      </td>
+
+                      <td className="px-md py-md">
+                        <select
+                          className={selectClassName}
+                          value={draft.role}
+                          onChange={(e) => {
+                            const nextRole = e.target.value as Role;
+                            if (
+                              nextRole === "SUPER_ADMIN" &&
+                              currentRole !== "SUPER_ADMIN"
+                            ) {
+                              toast.error(
+                                "Seul un super admin peut attribuer ce rôle"
+                              );
+                              return;
+                            }
+                            updateDraft(user.id, user, { role: nextRole });
+                          }}
+                        >
+                          {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                            <option
+                              key={value}
+                              value={value}
+                              disabled={
+                                value === "SUPER_ADMIN" &&
+                                currentRole !== "SUPER_ADMIN"
+                              }
+                            >
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                        <span
+                          className={cn(
+                            "mt-xs inline-flex px-sm py-xs rounded-md font-label-sm text-[10px] font-semibold",
+                            ROLE_BADGE_CLASS[draft.role]
+                          )}
+                        >
+                          {ROLE_LABELS[draft.role]}
+                        </span>
+                      </td>
+
+                      <td className="px-md py-md">
+                        <div className="flex flex-col items-start gap-xs">
+                          <Switch
+                            checked={draft.isActive}
+                            onCheckedChange={(checked) =>
+                              updateDraft(user.id, user, { isActive: checked })
+                            }
+                          />
                           <span
                             className={cn(
-                              "inline-flex px-sm py-xs rounded-md font-label-sm text-label-sm font-semibold",
-                              ROLE_BADGE_CLASS[user.role]
+                              "font-label-sm text-label-sm",
+                              draft.isActive
+                                ? "text-on-surface-variant"
+                                : "text-error"
                             )}
                           >
-                            {ROLE_LABELS[user.role]}
+                            {draft.isActive ? "Actif" : "Inactif"}
                           </span>
-                        </td>
-                        <td className="px-md py-md">
-                          <div className="flex items-center gap-xs">
-                            <span
-                              className={cn(
-                                "w-2 h-2 rounded-full",
-                                user.isActive ? "bg-[#10b981]" : "bg-error"
-                              )}
-                            />
-                            <span
-                              className={cn(
-                                "font-label-md text-label-md",
-                                !user.isActive && "text-error"
-                              )}
-                            >
-                              {user.isActive ? "Actif" : "Inactif"}
+                        </div>
+                      </td>
+
+                      <td className="px-md py-md min-w-[220px]">
+                        <div className="flex flex-col gap-sm">
+                          {visibleSubs.length === 0 ? (
+                            <span className="font-label-sm text-on-surface-variant">
+                              —
                             </span>
-                          </div>
-                        </td>
-                        <td className="px-md py-md">
-                          {user.subscriptions.length === 0 ? (
-                            <span className="text-on-surface-variant">—</span>
                           ) : (
                             <div className="flex flex-wrap gap-xs">
-                              {user.subscriptions.map((s) => (
+                              {visibleSubs.map((sub) => (
                                 <span
-                                  key={s.id}
-                                  className="inline-flex px-sm py-xs rounded-md bg-primary/10 text-primary font-label-sm text-label-sm font-semibold"
+                                  key={sub.id}
+                                  className="inline-flex items-center gap-xs px-sm py-xs rounded-md bg-primary/10 text-primary font-label-sm text-[11px] font-semibold"
                                 >
                                   {EXAM_TYPE_LABELS[
-                                    s.examType as keyof typeof EXAM_TYPE_LABELS
-                                  ] ?? s.examType}
+                                    sub.examType as keyof typeof EXAM_TYPE_LABELS
+                                  ] ?? sub.examType}
+                                  <button
+                                    type="button"
+                                    title="Retirer à l'enregistrement"
+                                    className="hover:text-error"
+                                    onClick={() =>
+                                      updateDraft(user.id, user, {
+                                        revokeExamTypes: [
+                                          ...draft.revokeExamTypes,
+                                          sub.examType,
+                                        ],
+                                      })
+                                    }
+                                  >
+                                    <span className="material-symbols-outlined text-[14px]">
+                                      close
+                                    </span>
+                                  </button>
                                 </span>
                               ))}
                             </div>
                           )}
-                        </td>
-                        <td className="px-md py-md">
-                          <div className="flex items-center gap-xs text-on-surface-variant font-label-sm text-label-sm">
-                            <span className="material-symbols-outlined text-[18px]">
-                              history
-                            </span>
-                            {user._count.attempts} examen
-                            {user._count.attempts > 1 ? "s" : ""}
-                          </div>
-                        </td>
-                        <td className="px-md py-md text-right">
-                          <span
-                            className={cn(
-                              "material-symbols-outlined text-on-surface-variant transition-transform",
-                              isExpanded && "rotate-180 text-primary"
-                            )}
-                          >
-                            expand_more
-                          </span>
-                        </td>
-                      </tr>
-
-                      {isExpanded && editForm && (
-                        <tr className="border-b border-outline-variant bg-surface-container-low/80">
-                          <td colSpan={6} className="px-md py-lg">
-                            <div
-                              className="rounded-2xl border border-outline-variant bg-surface p-lg space-y-md shadow-sm"
-                              onClick={(e) => e.stopPropagation()}
+                          {draft.revokeExamTypes.length > 0 && (
+                            <button
+                              type="button"
+                              className="font-label-sm text-[11px] text-on-surface-variant hover:text-primary text-left"
+                              onClick={() =>
+                                updateDraft(user.id, user, {
+                                  revokeExamTypes: [],
+                                })
+                              }
                             >
-                              <div className="flex flex-wrap items-center justify-between gap-sm">
-                                <p className="font-label-md text-label-md font-semibold text-on-surface">
-                                  Modifier {user.name}
-                                </p>
+                              Annuler retraits ({draft.revokeExamTypes.length})
+                            </button>
+                          )}
+                          <select
+                            className={selectClassName}
+                            value={draft.offerId}
+                            onChange={(e) =>
+                              updateDraft(user.id, user, {
+                                offerId: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="">+ Accorder une offre (envoie l’email)…</option>
+                            {offers.map((o) => (
+                              <option key={o.id} value={o.id}>
+                                {EXAM_TAB_LABELS[
+                                  (Object.entries(TAB_TO_EXAM).find(
+                                    ([, v]) => v === o.examType
+                                  )?.[0] as ExamTab) ?? "tcf"
+                                ]}{" "}
+                                — {o.name} ({o.baseDays + o.bonusDays} j)
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </td>
+
+                      <td className="px-md py-md min-w-[160px]">
+                        <div className="flex flex-col gap-xs">
+                          <div className="flex items-center gap-xs">
+                            <p className="font-mono text-[11px] text-on-surface-variant truncate max-w-[120px]">
+                              {user.password
+                                ? draft.showPassword
+                                  ? user.password
+                                  : "••••••••"
+                                : "—"}
+                            </p>
+                            {user.password && (
+                              <>
                                 <button
                                   type="button"
-                                  className="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface flex items-center gap-xs"
-                                  onClick={() => {
-                                    setExpandedId(null);
-                                    setEditForm(null);
-                                  }}
+                                  className="text-primary"
+                                  onClick={() =>
+                                    updateDraft(user.id, user, {
+                                      showPassword: !draft.showPassword,
+                                    })
+                                  }
                                 >
-                                  <span className="material-symbols-outlined text-[18px]">
-                                    close
+                                  <span className="material-symbols-outlined text-[16px]">
+                                    {draft.showPassword
+                                      ? "visibility_off"
+                                      : "visibility"}
                                   </span>
-                                  Fermer
                                 </button>
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-md">
-                                <Input
-                                  label="Email"
-                                  type="email"
-                                  value={editForm.email}
-                                  onChange={(e) =>
-                                    setEditForm((f) =>
-                                      f ? { ...f, email: e.target.value } : f
-                                    )
-                                  }
-                                />
-                                <Input
-                                  label="Prénom"
-                                  value={editForm.firstName}
-                                  onChange={(e) =>
-                                    setEditForm((f) =>
-                                      f ? { ...f, firstName: e.target.value } : f
-                                    )
-                                  }
-                                />
-                                <Input
-                                  label="Nom"
-                                  value={editForm.lastName}
-                                  onChange={(e) =>
-                                    setEditForm((f) =>
-                                      f ? { ...f, lastName: e.target.value } : f
-                                    )
-                                  }
-                                />
-                                <div>
-                                  <label className="font-label-sm text-label-sm text-on-surface-variant mb-xs block">
-                                    Rôle
-                                  </label>
-                                  <select
-                                    className={selectClassName}
-                                    value={editForm.role}
-                                    onChange={(e) => {
-                                      const nextRole = e.target
-                                        .value as AdminUser["role"];
-                                      if (
-                                        nextRole === "SUPER_ADMIN" &&
-                                        currentRole !== "SUPER_ADMIN"
-                                      ) {
-                                        toast.error(
-                                          "Seul un super admin peut attribuer ce rôle"
-                                        );
-                                        return;
-                                      }
-                                      setEditForm((f) =>
-                                        f ? { ...f, role: nextRole } : f
-                                      );
-                                    }}
-                                  >
-                                    {Object.entries(ROLE_LABELS).map(
-                                      ([value, label]) => (
-                                        <option
-                                          key={value}
-                                          value={value}
-                                          disabled={
-                                            value === "SUPER_ADMIN" &&
-                                            currentRole !== "SUPER_ADMIN"
-                                          }
-                                        >
-                                          {label}
-                                        </option>
-                                      )
-                                    )}
-                                  </select>
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-md items-end">
-                                <div className="rounded-xl bg-surface-container-low border border-outline-variant p-md">
-                                  <div className="flex items-center justify-between mb-xs">
-                                    <p className="font-label-sm text-label-sm font-semibold">
-                                      Mot de passe actuel
-                                    </p>
-                                    <button
-                                      type="button"
-                                      className="font-label-sm text-[11px] text-primary font-semibold"
-                                      onClick={() => setShowPassword((v) => !v)}
-                                    >
-                                      {showPassword ? "Masquer" : "Afficher"}
-                                    </button>
-                                  </div>
-                                  <p className="font-mono text-sm break-all">
-                                    {user.password
-                                      ? showPassword
-                                        ? user.password
-                                        : "••••••••••"
-                                      : "Non disponible"}
-                                  </p>
-                                  {user.password && (
-                                    <button
-                                      type="button"
-                                      className="mt-xs font-label-sm text-[11px] text-primary flex items-center gap-xs"
-                                      onClick={async () => {
-                                        await navigator.clipboard.writeText(
-                                          user.password!
-                                        );
-                                        toast.success("Mot de passe copié");
-                                      }}
-                                    >
-                                      <span className="material-symbols-outlined text-[14px]">
-                                        content_copy
-                                      </span>
-                                      Copier
-                                    </button>
-                                  )}
-                                </div>
-                                <Input
-                                  label="Nouveau mot de passe"
-                                  placeholder="Laisser vide pour ne pas changer"
-                                  value={editForm.password}
-                                  onChange={(e) =>
-                                    setEditForm((f) =>
-                                      f ? { ...f, password: e.target.value } : f
-                                    )
-                                  }
-                                />
-                                <div className="flex items-center justify-between rounded-xl border border-outline-variant bg-surface-container-low px-md py-md">
-                                  <div>
-                                    <p className="font-label-md text-label-md font-semibold">
-                                      Compte actif
-                                    </p>
-                                    <p className="font-label-sm text-[11px] text-on-surface-variant">
-                                      Suspendre l&apos;accès si désactivé
-                                    </p>
-                                  </div>
-                                  <Switch
-                                    checked={editForm.isActive}
-                                    onCheckedChange={(checked) =>
-                                      setEditForm((f) =>
-                                        f ? { ...f, isActive: checked } : f
-                                      )
-                                    }
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-md">
-                                <div>
-                                  <p className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-sm font-semibold">
-                                    Accès actifs
-                                  </p>
-                                  {user.subscriptions.length === 0 ? (
-                                    <p className="font-label-sm text-on-surface-variant">
-                                      Aucun abonnement
-                                    </p>
-                                  ) : (
-                                    <div className="flex flex-wrap gap-sm">
-                                      {user.subscriptions.map((sub) => (
-                                        <div
-                                          key={sub.id}
-                                          className="inline-flex items-center gap-sm rounded-xl bg-primary/5 border border-primary/15 px-md py-sm"
-                                        >
-                                          <div>
-                                            <p className="font-label-sm text-label-sm font-semibold text-primary">
-                                              {EXAM_TYPE_LABELS[
-                                                sub.examType as keyof typeof EXAM_TYPE_LABELS
-                                              ] ?? sub.examType}{" "}
-                                              · {sub.plan}
-                                            </p>
-                                            <p className="font-label-sm text-[11px] text-on-surface-variant">
-                                              jusqu&apos;au{" "}
-                                              {new Date(
-                                                sub.currentPeriodEnd
-                                              ).toLocaleDateString("fr-FR")}
-                                              {offerLabel(sub.offerId)
-                                                ? ` · ${offerLabel(sub.offerId)}`
-                                                : ""}
-                                            </p>
-                                          </div>
-                                          <button
-                                            type="button"
-                                            className="text-[11px] font-semibold text-error hover:underline"
-                                            onClick={() =>
-                                              revokeAccess.mutate(sub.examType)
-                                            }
-                                          >
-                                            Retirer
-                                          </button>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                                <div>
-                                  <label className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-sm block font-semibold">
-                                    Accorder / prolonger une offre
-                                  </label>
-                                  <select
-                                    className={selectClassName}
-                                    value={editForm.offerId}
-                                    onChange={(e) =>
-                                      setEditForm((f) =>
-                                        f ? { ...f, offerId: e.target.value } : f
-                                      )
-                                    }
-                                  >
-                                    <option value="">Choisir une offre…</option>
-                                    {offers.map((o) => (
-                                      <option key={o.id} value={o.id}>
-                                        {EXAM_TAB_LABELS[
-                                          (Object.entries(TAB_TO_EXAM).find(
-                                            ([, v]) => v === o.examType
-                                          )?.[0] as ExamTab) ?? "tcf"
-                                        ]}{" "}
-                                        — {o.name} ({o.baseDays + o.bonusDays} j)
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              </div>
-
-                              <div className="flex flex-wrap justify-end gap-sm pt-sm border-t border-outline-variant">
-                                {(user.role === "USER" ||
-                                  currentRole === "SUPER_ADMIN") && (
-                                  <Button
-                                    variant="destructive"
-                                    onClick={() =>
-                                      confirm({
-                                        title: "Supprimer cet utilisateur ?",
-                                        description:
-                                          "Le compte sera désactivé (soft-delete).",
-                                        confirmLabel: "Supprimer",
-                                        destructive: true,
-                                        onConfirm: () =>
-                                          deleteLearner.mutateAsync(user.id),
-                                      })
-                                    }
-                                  >
-                                    Supprimer
-                                  </Button>
-                                )}
-                                <Button
-                                  variant="secondary"
-                                  onClick={() => {
-                                    setExpandedId(null);
-                                    setEditForm(null);
+                                <button
+                                  type="button"
+                                  className="text-primary"
+                                  onClick={async () => {
+                                    await navigator.clipboard.writeText(
+                                      user.password!
+                                    );
+                                    toast.success("Mot de passe copié");
                                   }}
                                 >
-                                  Annuler
-                                </Button>
-                                <Button
-                                  onClick={() => updateLearner.mutate()}
-                                  disabled={
-                                    updateLearner.isPending ||
-                                    !editForm.email.trim()
-                                  }
-                                  loading={updateLearner.isPending}
-                                >
-                                  Enregistrer
-                                </Button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
+                                  <span className="material-symbols-outlined text-[16px]">
+                                    content_copy
+                                  </span>
+                                </button>
+                              </>
+                            )}
+                          </div>
+                          <input
+                            className={cellInputClass}
+                            placeholder="Nouveau mdp…"
+                            value={draft.password}
+                            onChange={(e) =>
+                              updateDraft(user.id, user, {
+                                password: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </td>
+
+                      <td className="px-md py-md whitespace-nowrap">
+                        <div className="flex items-center gap-xs text-on-surface-variant font-label-sm text-label-sm">
+                          <span className="material-symbols-outlined text-[18px]">
+                            history
+                          </span>
+                          {user._count.attempts} examen
+                          {user._count.attempts > 1 ? "s" : ""}
+                        </div>
+                      </td>
+
+                      <td className="px-md py-md">
+                        {(user.role === "USER" ||
+                          currentRole === "SUPER_ADMIN") && (
+                          <button
+                            type="button"
+                            className="p-sm rounded-lg text-error hover:bg-error-container/30 transition-colors"
+                            title="Supprimer"
+                            onClick={() =>
+                              confirm({
+                                title: "Supprimer cet utilisateur ?",
+                                description:
+                                  "Le compte sera désactivé (soft-delete).",
+                                confirmLabel: "Supprimer",
+                                destructive: true,
+                                onConfirm: () =>
+                                  deleteLearner.mutateAsync(user.id),
+                              })
+                            }
+                          >
+                            <span className="material-symbols-outlined text-[20px]">
+                              delete
+                            </span>
+                          </button>
+                        )}
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>
@@ -934,6 +994,41 @@ export function UtilisateursAdminView() {
           </div>
         </div>
       </div>
+
+      {dirtyUsers.length > 0 && (
+        <div className="fixed bottom-0 inset-x-0 z-40 pointer-events-none">
+          <div className="max-w-7xl mx-auto px-md pb-md pointer-events-auto">
+            <div className="flex flex-wrap items-center justify-between gap-md rounded-2xl border border-primary/20 bg-surface px-lg py-md shadow-[0_-8px_40px_rgba(79,55,138,0.18)]">
+              <div>
+                <p className="font-label-md text-label-md font-semibold text-on-surface">
+                  {dirtyUsers.length} modification
+                  {dirtyUsers.length > 1 ? "s" : ""} en attente
+                </p>
+                <p className="font-label-sm text-[11px] text-on-surface-variant">
+                  Les lignes surlignées seront enregistrées ensemble.
+                </p>
+              </div>
+              <div className="flex items-center gap-sm">
+                <Button
+                  variant="secondary"
+                  onClick={discardDrafts}
+                  disabled={saveAll.isPending}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={() => saveAll.mutate()}
+                  loading={saveAll.isPending}
+                  disabled={saveAll.isPending}
+                >
+                  Enregistrer tout
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {confirmDialog}
     </div>
   );

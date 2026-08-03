@@ -64,19 +64,21 @@ export function SessionIdleGuard() {
       warnShownRef.current = false;
     };
 
-    const events: Array<keyof WindowEventMap> = [
+    const windowEvents: Array<keyof WindowEventMap> = [
       "mousemove",
       "mousedown",
       "keydown",
       "scroll",
       "touchstart",
       "pointerdown",
-      "visibilitychange",
     ];
 
-    for (const event of events) {
+    for (const event of windowEvents) {
       window.addEventListener(event, markActivity, { passive: true });
     }
+    document.addEventListener("visibilitychange", markActivity, {
+      passive: true,
+    });
 
     const tick = async () => {
       if (cancelled || loggingOutRef.current || !hasSessionRef.current) return;
@@ -128,9 +130,10 @@ export function SessionIdleGuard() {
 
     return () => {
       cancelled = true;
-      for (const event of events) {
+      for (const event of windowEvents) {
         window.removeEventListener(event, markActivity);
       }
+      document.removeEventListener("visibilitychange", markActivity);
       window.clearInterval(interval);
     };
   }, [pathname, router]);

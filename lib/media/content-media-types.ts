@@ -164,17 +164,20 @@ export function validateContentMediaFile(
   }
 
   if (kind === "audio") {
-    if (detected !== "audio" && !file.type.startsWith("audio/") && !AUDIO_EXT.has(fileExtension(file.name))) {
-      // Accepte tout fichier audio/* ou extension connue ; sinon tolère mime vide + extension audio
-      if (!(file.type === "" && AUDIO_EXT.has(fileExtension(file.name)))) {
-        if (detected && detected !== "audio") {
-          return "Ce fichier n'est pas un audio. Utilisez l'upload vidéo si besoin.";
-        }
-      }
-    }
-    // Très permissif : si l’admin force un fichier, on accepte sauf image évidente
+    const ext = fileExtension(file.name);
+    const looksAudio =
+      detected === "audio" ||
+      file.type.startsWith("audio/") ||
+      AUDIO_EXT.has(ext);
+
     if (detected === "image") {
       return "Format image non accepté ici — utilisez l'upload image.";
+    }
+    if (detected === "video") {
+      return "Ce fichier n'est pas un audio. Utilisez l'upload vidéo si besoin.";
+    }
+    if (!looksAudio && detected !== null) {
+      return "Format audio non supporté (MP3, WAV, WebM, OGG, M4A…).";
     }
     if (file.size > MAX_AUDIO_BYTES) {
       return "L'audio ne doit pas dépasser 25 Mo.";

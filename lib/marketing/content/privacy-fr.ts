@@ -69,7 +69,7 @@ export const privacyFr: LegalContent = {
               list: [
                 { text: "Adresse e-mail" },
                 { text: "Prénom et nom" },
-                { text: "Numéro de téléphone" },
+                // { text: "Numéro de téléphone" },
                 { text: "Des données d'utilisation" },
               ],
             },

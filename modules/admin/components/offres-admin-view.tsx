@@ -119,8 +119,8 @@ export function OffresAdminView() {
       queryClient.invalidateQueries({ queryKey: ["offers"] });
       toast.success(
         vars.isFeatured
-          ? "Offre visible sur la page publique."
-          : "Offre masquée de la page publique."
+          ? "Offre visible sur l'accueil et la page offres."
+          : "Offre masquée de l'accueil et de la page offres."
       );
     },
     onError: () => toast.error("Impossible de modifier la visibilité."),
@@ -306,7 +306,7 @@ export function OffresAdminView() {
                         })
                       }
                     />
-                    Visible sur la page offres
+                    Visible sur l&apos;accueil et la page offres
                   </label>
                 </div>
                 <div className="flex gap-sm shrink-0">
@@ -635,7 +635,7 @@ function OfferForm({
             checked={form.isFeatured}
             onCheckedChange={(v) => setForm((f) => ({ ...f, isFeatured: v }))}
           />
-          Visible sur la page offres (côté client)
+          Visible sur l&apos;accueil et la page offres (côté client)
         </label>
         <label className="flex items-center gap-sm font-label-md text-label-md">
           <Switch

@@ -176,7 +176,11 @@ export function UtilisateursAdminView() {
     email: string;
     password: string;
   } | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
+  const [deleteTargets, setDeleteTargets] = useState<AdminUser[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkPanel, setBulkPanel] = useState<"role" | "offer" | null>(null);
+  const [bulkRole, setBulkRole] = useState<Role>("USER");
+  const [bulkOfferId, setBulkOfferId] = useState("");
 
   const query = useQuery({
     queryKey: ["admin-users", search, page, roleFilter],
@@ -209,6 +213,45 @@ export function UtilisateursAdminView() {
     page: 1,
     totalPages: 1,
     limit: 20,
+  };
+
+  // Reset sélection quand la page / filtres changent
+  React.useEffect(() => {
+    setSelectedIds([]);
+    setBulkPanel(null);
+  }, [search, page, roleFilter]);
+
+  const selectedUsers = useMemo(
+    () => users.filter((u) => selectedIds.includes(u.id)),
+    [users, selectedIds]
+  );
+  const allPageSelected =
+    users.length > 0 && users.every((u) => selectedIds.includes(u.id));
+  const somePageSelected = users.some((u) => selectedIds.includes(u.id));
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAllPage = () => {
+    if (allPageSelected) {
+      setSelectedIds((prev) =>
+        prev.filter((id) => !users.some((u) => u.id === id))
+      );
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        users.forEach((u) => next.add(u.id));
+        return [...next];
+      });
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedIds([]);
+    setBulkPanel(null);
   };
 
   const getDraft = (user: AdminUser): RowDraft =>
@@ -282,6 +325,8 @@ export function UtilisateursAdminView() {
       let ok = 0;
       let fail = 0;
       let grantedOffers = 0;
+      let emailsSent = 0;
+      let emailErrors: string[] = [];
       const errors: string[] = [];
 
       for (const user of targets) {
@@ -289,10 +334,24 @@ export function UtilisateursAdminView() {
         try {
           const body = buildPatchBody(user, draft);
           if (Object.keys(body).length > 0) {
-            await fetchJson(`/api/admin/utilisateurs/${user.id}`, {
+            const updated = await fetchJson<{
+              accessEmailSent?: boolean;
+              accessEmailError?: string | null;
+              grantedOfferName?: string | null;
+            }>(`/api/admin/utilisateurs/${user.id}`, {
               method: "PATCH",
               body: JSON.stringify(body),
             });
+            if (draft.offerId) {
+              grantedOffers += 1;
+              if (updated.accessEmailSent) {
+                emailsSent += 1;
+              } else if (updated.accessEmailError) {
+                emailErrors.push(`${user.email}: ${updated.accessEmailError}`);
+              } else if (updated.grantedOfferName) {
+                emailErrors.push(`${user.email}: email non envoyé`);
+              }
+            }
           }
           for (const examType of draft.revokeExamTypes.slice(1)) {
             await fetchJson(`/api/admin/utilisateurs/${user.id}`, {
@@ -300,7 +359,6 @@ export function UtilisateursAdminView() {
               body: JSON.stringify({ revokeExamType: examType }),
             });
           }
-          if (draft.offerId) grantedOffers += 1;
           ok += 1;
         } catch (error) {
           fail += 1;
@@ -313,7 +371,7 @@ export function UtilisateursAdminView() {
       if (fail > 0 && ok === 0) {
         throw new Error(errors[0] ?? "Enregistrement impossible");
       }
-      return { ok, fail, errors, grantedOffers };
+      return { ok, fail, errors, grantedOffers, emailsSent, emailErrors };
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
@@ -326,11 +384,19 @@ export function UtilisateursAdminView() {
           }`
         );
       } else if (result.grantedOffers > 0) {
-        toast.success(
-          result.grantedOffers > 1
-            ? `${result.ok} mis à jour — ${result.grantedOffers} emails d'accès envoyés`
-            : "Accès accordé — email avec identifiants envoyé"
-        );
+        if (result.emailsSent === result.grantedOffers) {
+          toast.success(
+            result.grantedOffers > 1
+              ? `${result.ok} mis à jour — ${result.emailsSent} emails d'accès envoyés`
+              : "Accès accordé — email avec identifiants envoyé"
+          );
+        } else {
+          toast.warning(
+            `Accès accordé, mais email non envoyé${
+              result.emailErrors?.[0] ? ` — ${result.emailErrors[0]}` : ""
+            }`
+          );
+        }
       } else {
         toast.success(
           result.ok > 1
@@ -345,28 +411,146 @@ export function UtilisateursAdminView() {
       ),
   });
 
-  const removeLearner = useMutation({
-    mutationFn: ({ id, mode }: { id: string; mode: "archive" | "permanent" }) =>
-      fetchJson(`/api/admin/utilisateurs/${id}?mode=${mode}`, {
-        method: "DELETE",
-      }),
-    onSuccess: (_data, variables) => {
+  const removeLearners = useMutation({
+    mutationFn: async ({
+      ids,
+      mode,
+    }: {
+      ids: string[];
+      mode: "archive" | "permanent";
+    }) => {
+      let ok = 0;
+      let fail = 0;
+      const errors: string[] = [];
+      for (const id of ids) {
+        try {
+          await fetchJson(`/api/admin/utilisateurs/${id}?mode=${mode}`, {
+            method: "DELETE",
+          });
+          ok += 1;
+        } catch (error) {
+          fail += 1;
+          errors.push(
+            error instanceof Error ? error.message : `Échec pour ${id}`
+          );
+        }
+      }
+      if (fail > 0 && ok === 0) {
+        throw new Error(errors[0] ?? "Suppression impossible");
+      }
+      return { ok, fail, errors, mode };
+    },
+    onSuccess: (result, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       setDrafts((prev) => {
         const next = { ...prev };
-        delete next[variables.id];
+        variables.ids.forEach((id) => delete next[id]);
         return next;
       });
-      setDeleteTarget(null);
-      toast.success(
-        variables.mode === "permanent"
-          ? "Utilisateur définitivement supprimé"
-          : "Utilisateur archivé — accès retirés"
-      );
+      setDeleteTargets([]);
+      clearSelection();
+      if (result.fail > 0) {
+        toast.warning(
+          `${result.ok} traité(s), ${result.fail} échec(s)${
+            result.errors[0] ? ` — ${result.errors[0]}` : ""
+          }`
+        );
+      } else {
+        toast.success(
+          result.mode === "permanent"
+            ? `${result.ok} utilisateur(s) définitivement supprimé(s)`
+            : `${result.ok} utilisateur(s) archivé(s)`
+        );
+      }
     },
     onError: (error) =>
       toast.error(
         error instanceof Error ? error.message : "Suppression impossible"
+      ),
+  });
+
+  const bulkUpdate = useMutation({
+    mutationFn: async ({
+      ids,
+      body,
+    }: {
+      ids: string[];
+      body: Record<string, unknown>;
+    }) => {
+      let ok = 0;
+      let fail = 0;
+      let emailsSent = 0;
+      const emailErrors: string[] = [];
+      const errors: string[] = [];
+
+      for (const id of ids) {
+        try {
+          const updated = await fetchJson<{
+            accessEmailSent?: boolean;
+            accessEmailError?: string | null;
+            email?: string;
+          }>(`/api/admin/utilisateurs/${id}`, {
+            method: "PATCH",
+            body: JSON.stringify(body),
+          });
+          ok += 1;
+          if (body.offerId) {
+            if (updated.accessEmailSent) emailsSent += 1;
+            else if (updated.accessEmailError) {
+              emailErrors.push(
+                `${updated.email ?? id}: ${updated.accessEmailError}`
+              );
+            }
+          }
+        } catch (error) {
+          fail += 1;
+          errors.push(
+            error instanceof Error ? error.message : `Échec pour ${id}`
+          );
+        }
+      }
+      if (fail > 0 && ok === 0) {
+        throw new Error(errors[0] ?? "Mise à jour impossible");
+      }
+      return {
+        ok,
+        fail,
+        errors,
+        emailsSent,
+        emailErrors,
+        grantedOffers: body.offerId ? ok : 0,
+      };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      setBulkPanel(null);
+      setBulkOfferId("");
+      clearSelection();
+      if (result.fail > 0) {
+        toast.warning(
+          `${result.ok} mis à jour, ${result.fail} échec(s)${
+            result.errors[0] ? ` — ${result.errors[0]}` : ""
+          }`
+        );
+      } else if (result.grantedOffers > 0) {
+        if (result.emailsSent === result.grantedOffers) {
+          toast.success(
+            `${result.ok} accès accordé(s) — emails envoyés`
+          );
+        } else {
+          toast.warning(
+            `Accès accordé(s), email partiel${
+              result.emailErrors[0] ? ` — ${result.emailErrors[0]}` : ""
+            }`
+          );
+        }
+      } else {
+        toast.success(`${result.ok} utilisateur(s) mis à jour`);
+      }
+    },
+    onError: (error) =>
+      toast.error(
+        error instanceof Error ? error.message : "Mise à jour impossible"
       ),
   });
 
@@ -376,7 +560,12 @@ export function UtilisateursAdminView() {
   const inactiveCount = users.filter((u) => !u.isActive).length;
 
   return (
-    <div className={cn("flex flex-col gap-lg", dirtyUsers.length > 0 && "pb-24")}>
+    <div
+      className={cn(
+        "flex flex-col gap-lg",
+        (dirtyUsers.length > 0 || selectedIds.length > 0) && "pb-28"
+      )}
+    >
       <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-md">
         <div>
           <h1 className="font-display-md text-display-md text-on-surface font-bold">
@@ -619,7 +808,8 @@ export function UtilisateursAdminView() {
             Liste des utilisateurs
           </h2>
           <span className="font-label-sm text-label-sm text-on-surface-variant">
-            Édition en ligne · {meta.total} compte{meta.total > 1 ? "s" : ""}
+            Sélection multiple · édition en ligne · {meta.total} compte
+            {meta.total > 1 ? "s" : ""}
           </span>
         </div>
 
@@ -636,6 +826,21 @@ export function UtilisateursAdminView() {
             <table className="w-full text-left border-collapse min-w-[1100px]">
               <thead>
                 <tr className="border-b border-outline-variant bg-surface">
+                  <th className="px-sm py-sm w-10">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer"
+                      checked={allPageSelected}
+                      ref={(el) => {
+                        if (el) {
+                          el.indeterminate =
+                            somePageSelected && !allPageSelected;
+                        }
+                      }}
+                      onChange={toggleSelectAllPage}
+                      title="Tout sélectionner sur la page"
+                    />
+                  </th>
                   {[
                     "Utilisateur",
                     "Email",
@@ -659,6 +864,7 @@ export function UtilisateursAdminView() {
                 {users.map((user) => {
                   const draft = getDraft(user);
                   const dirty = isRowDirty(user, draft);
+                  const selected = selectedIds.includes(user.id);
                   const visibleSubs = user.subscriptions.filter(
                     (s) => !draft.revokeExamTypes.includes(s.examType)
                   );
@@ -668,12 +874,25 @@ export function UtilisateursAdminView() {
                       key={user.id}
                       className={cn(
                         "border-b border-outline-variant/60 align-top transition-colors",
-                        dirty
-                          ? "bg-primary/5"
-                          : "hover:bg-surface-container-low",
-                        !draft.isActive && !dirty && "bg-error-container/10"
+                        selected && "bg-primary/8",
+                        dirty && !selected && "bg-primary/5",
+                        !selected &&
+                          !dirty &&
+                          "hover:bg-surface-container-low",
+                        !draft.isActive &&
+                          !dirty &&
+                          !selected &&
+                          "bg-error-container/10"
                       )}
                     >
+                      <td className="px-sm py-sm">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer"
+                          checked={selected}
+                          onChange={() => toggleSelect(user.id)}
+                        />
+                      </td>
                       <td className="px-sm py-sm">
                         <div className="flex items-start gap-sm min-w-[180px]">
                           <Link
@@ -944,7 +1163,7 @@ export function UtilisateursAdminView() {
                               type="button"
                               className="p-1.5 rounded-lg text-error hover:bg-error-container/30 transition-colors"
                               title="Archiver ou supprimer"
-                              onClick={() => setDeleteTarget(user)}
+                              onClick={() => setDeleteTargets([user])}
                             >
                               <span className="material-symbols-outlined text-[18px]">
                                 delete
@@ -996,65 +1215,121 @@ export function UtilisateursAdminView() {
         </div>
       </div>
 
-      {dirtyUsers.length > 0 && (
+      {(selectedIds.length > 0 || dirtyUsers.length > 0) && (
         <div className="fixed bottom-0 inset-x-0 z-40 pointer-events-none">
-          <div className="max-w-7xl mx-auto px-md pb-md pointer-events-auto">
-            <div className="flex flex-wrap items-center justify-between gap-md rounded-2xl border border-primary/20 bg-surface px-lg py-md shadow-[0_-8px_40px_rgba(79,55,138,0.18)]">
-              <div>
-                <p className="font-label-md text-label-md font-semibold text-on-surface">
-                  {dirtyUsers.length} modification
-                  {dirtyUsers.length > 1 ? "s" : ""} en attente
-                </p>
-                <p className="font-label-sm text-[11px] text-on-surface-variant">
-                  Les lignes surlignées seront enregistrées ensemble.
-                </p>
+          <div className="max-w-7xl mx-auto px-md pb-md flex flex-col gap-sm pointer-events-auto">
+            {selectedIds.length > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-md rounded-2xl border border-primary/25 bg-surface px-lg py-md shadow-[0_-8px_40px_rgba(79,55,138,0.18)]">
+                <div>
+                  <p className="font-label-md text-label-md font-semibold text-on-surface">
+                    {selectedIds.length} sélectionné
+                    {selectedIds.length > 1 ? "s" : ""}
+                  </p>
+                  <p className="font-label-sm text-[11px] text-on-surface-variant">
+                    Actions groupées sur la sélection
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-sm">
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setBulkRole("USER");
+                      setBulkPanel("role");
+                    }}
+                    disabled={bulkUpdate.isPending || removeLearners.isPending}
+                  >
+                    Changer le rôle
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setBulkOfferId("");
+                      setBulkPanel("offer");
+                    }}
+                    disabled={bulkUpdate.isPending || removeLearners.isPending}
+                  >
+                    Accorder une offre
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      setDeleteTargets(
+                        selectedUsers.length > 0
+                          ? selectedUsers
+                          : users.filter((u) => selectedIds.includes(u.id))
+                      )
+                    }
+                    disabled={bulkUpdate.isPending || removeLearners.isPending}
+                    className="text-error border-error/30"
+                  >
+                    Archiver / Supprimer
+                  </Button>
+                  <Button variant="secondary" onClick={clearSelection}>
+                    Tout désélectionner
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-sm">
-                <Button
-                  variant="secondary"
-                  onClick={discardDrafts}
-                  disabled={saveAll.isPending}
-                >
-                  Annuler
-                </Button>
-                <Button
-                  onClick={() => saveAll.mutate()}
-                  loading={saveAll.isPending}
-                  disabled={saveAll.isPending}
-                >
-                  Enregistrer tout
-                </Button>
+            )}
+            {dirtyUsers.length > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-md rounded-2xl border border-primary/20 bg-surface px-lg py-md shadow-[0_-8px_40px_rgba(79,55,138,0.18)]">
+                <div>
+                  <p className="font-label-md text-label-md font-semibold text-on-surface">
+                    {dirtyUsers.length} modification
+                    {dirtyUsers.length > 1 ? "s" : ""} en attente
+                  </p>
+                  <p className="font-label-sm text-[11px] text-on-surface-variant">
+                    Les lignes surlignées seront enregistrées ensemble.
+                  </p>
+                </div>
+                <div className="flex items-center gap-sm">
+                  <Button
+                    variant="secondary"
+                    onClick={discardDrafts}
+                    disabled={saveAll.isPending}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    onClick={() => saveAll.mutate()}
+                    loading={saveAll.isPending}
+                    disabled={saveAll.isPending}
+                  >
+                    Enregistrer tout
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
 
       <Dialog
-        open={Boolean(deleteTarget)}
+        open={deleteTargets.length > 0}
         onOpenChange={(open) => {
-          if (!open && !removeLearner.isPending) setDeleteTarget(null);
+          if (!open && !removeLearners.isPending) setDeleteTargets([]);
         }}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Que faire de ce compte ?</DialogTitle>
+            <DialogTitle>
+              {deleteTargets.length > 1
+                ? `Que faire de ces ${deleteTargets.length} comptes ?`
+                : "Que faire de ce compte ?"}
+            </DialogTitle>
             <DialogDescription>
-              {deleteTarget
-                ? `${deleteTarget.name} (${deleteTarget.email})`
-                : ""}
-              . Côté apprenant, les deux options retirent l&apos;accès. Côté
-              admin, le comportement diffère.
+              {deleteTargets.length === 1
+                ? `${deleteTargets[0].name} (${deleteTargets[0].email}). `
+                : `${deleteTargets.length} utilisateurs sélectionnés. `}
+              Côté apprenant, les deux options retirent l&apos;accès.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-sm">
             <button
               type="button"
-              disabled={removeLearner.isPending || !deleteTarget}
+              disabled={removeLearners.isPending || deleteTargets.length === 0}
               onClick={() =>
-                deleteTarget &&
-                removeLearner.mutate({
-                  id: deleteTarget.id,
+                removeLearners.mutate({
+                  ids: deleteTargets.map((u) => u.id),
                   mode: "archive",
                 })
               }
@@ -1067,17 +1342,15 @@ export function UtilisateursAdminView() {
                 Archiver
               </p>
               <p className="font-label-sm text-[12px] text-on-surface-variant mt-xs">
-                Retire tous les accès et sessions. Le compte reste en base
-                (invisible dans la liste).
+                Retire tous les accès et sessions. Les comptes restent en base.
               </p>
             </button>
             <button
               type="button"
-              disabled={removeLearner.isPending || !deleteTarget}
+              disabled={removeLearners.isPending || deleteTargets.length === 0}
               onClick={() =>
-                deleteTarget &&
-                removeLearner.mutate({
-                  id: deleteTarget.id,
+                removeLearners.mutate({
+                  ids: deleteTargets.map((u) => u.id),
                   mode: "permanent",
                 })
               }
@@ -1090,18 +1363,134 @@ export function UtilisateursAdminView() {
                 Supprimer définitivement
               </p>
               <p className="font-label-sm text-[12px] text-on-surface-variant mt-xs">
-                Retire les accès puis efface entièrement le compte et ses
-                données liées.
+                Retire les accès puis efface entièrement les comptes et données
+                liées.
               </p>
             </button>
           </div>
           <DialogFooter>
             <Button
               variant="secondary"
-              disabled={removeLearner.isPending}
-              onClick={() => setDeleteTarget(null)}
+              disabled={removeLearners.isPending}
+              onClick={() => setDeleteTargets([])}
             >
               Annuler
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={bulkPanel === "role"}
+        onOpenChange={(open) => !open && setBulkPanel(null)}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Changer le rôle</DialogTitle>
+            <DialogDescription>
+              Appliquer un rôle à {selectedIds.length} utilisateur
+              {selectedIds.length > 1 ? "s" : ""}.
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <label className="font-label-sm text-[12px] text-on-surface-variant mb-xs block">
+              Nouveau rôle
+            </label>
+            <select
+              className={selectClassName}
+              value={bulkRole}
+              onChange={(e) => setBulkRole(e.target.value as Role)}
+            >
+              {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                <option
+                  key={value}
+                  value={value}
+                  disabled={
+                    value === "SUPER_ADMIN" && currentRole !== "SUPER_ADMIN"
+                  }
+                >
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setBulkPanel(null)}>
+              Annuler
+            </Button>
+            <Button
+              loading={bulkUpdate.isPending}
+              disabled={bulkUpdate.isPending}
+              onClick={() => {
+                if (
+                  bulkRole === "SUPER_ADMIN" &&
+                  currentRole !== "SUPER_ADMIN"
+                ) {
+                  toast.error("Seul un super admin peut attribuer ce rôle");
+                  return;
+                }
+                bulkUpdate.mutate({
+                  ids: selectedIds,
+                  body: { role: bulkRole },
+                });
+              }}
+            >
+              Appliquer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={bulkPanel === "offer"}
+        onOpenChange={(open) => !open && setBulkPanel(null)}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Accorder une offre</DialogTitle>
+            <DialogDescription>
+              Accorde l&apos;accès et envoie l&apos;email d&apos;identifiants à{" "}
+              {selectedIds.length} utilisateur
+              {selectedIds.length > 1 ? "s" : ""}.
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <label className="font-label-sm text-[12px] text-on-surface-variant mb-xs block">
+              Offre
+            </label>
+            <select
+              className={selectClassName}
+              value={bulkOfferId}
+              onChange={(e) => setBulkOfferId(e.target.value)}
+            >
+              <option value="">Choisir une offre…</option>
+              {offers.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {EXAM_TAB_LABELS[
+                    (Object.entries(TAB_TO_EXAM).find(
+                      ([, v]) => v === o.examType
+                    )?.[0] as ExamTab) ?? "tcf"
+                  ]}{" "}
+                  — {o.name} ({o.baseDays + o.bonusDays} j)
+                </option>
+              ))}
+            </select>
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setBulkPanel(null)}>
+              Annuler
+            </Button>
+            <Button
+              loading={bulkUpdate.isPending}
+              disabled={!bulkOfferId || bulkUpdate.isPending}
+              onClick={() =>
+                bulkUpdate.mutate({
+                  ids: selectedIds,
+                  body: { offerId: bulkOfferId },
+                })
+              }
+            >
+              Accorder &amp; envoyer
             </Button>
           </DialogFooter>
         </DialogContent>

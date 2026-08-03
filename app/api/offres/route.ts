@@ -48,12 +48,33 @@ function mapOffer(offer: {
 
 export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const allFeatured = searchParams.get("all") === "1";
+
+    if (allFeatured) {
+      const offers = await prisma.subscriptionOffer.findMany({
+        where: {
+          isActive: true,
+          isFeatured: true,
+          deletedAt: null,
+        },
+        orderBy: [
+          { examType: "asc" },
+          { sortOrder: "asc" },
+          { createdAt: "asc" },
+        ],
+      });
+
+      return successResponse({
+        offers: offers.map(mapOffer),
+      });
+    }
+
     const examTab = parseExamTab(
-      new URL(req.url).searchParams.get("examen") ??
-        new URL(req.url).searchParams.get("examType")
+      searchParams.get("examen") ?? searchParams.get("examType")
     );
     const examType = EXAM_TAB_TO_TYPE[examTab];
-    const daysParam = new URL(req.url).searchParams.get("days");
+    const daysParam = searchParams.get("days");
     const days = daysParam ? parseInt(daysParam, 10) : null;
 
     const [config, offers] = await Promise.all([

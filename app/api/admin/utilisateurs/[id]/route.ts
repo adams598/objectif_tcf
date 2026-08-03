@@ -197,6 +197,7 @@ export async function PATCH(
     }
 
     let accessEmailSent = false;
+    let accessEmailError: string | null = null;
     let grantedOfferName: string | null = null;
 
     if (parsed.data.offerId) {
@@ -299,6 +300,12 @@ export async function PATCH(
       });
       accessEmailSent = emailResult.ok;
       grantedOfferName = offer.name;
+      if (!emailResult.ok) {
+        accessEmailError =
+          "error" in emailResult
+            ? emailResult.error
+            : "Échec d'envoi de l'email d'accès";
+      }
     }
 
     if (parsed.data.revokeExamType) {
@@ -353,6 +360,7 @@ export async function PATCH(
           ...parsed.data,
           password: parsed.data.password ? "[updated]" : undefined,
           accessEmailSent,
+          accessEmailError,
           grantedOfferName,
         },
       },
@@ -365,12 +373,15 @@ export async function PATCH(
         password:
           plainPassword ?? decryptAdminPassword(user.adminPasswordEnc),
         accessEmailSent,
+        accessEmailError,
         grantedOfferName,
       },
       grantedOfferName
         ? accessEmailSent
           ? `Accès « ${grantedOfferName} » accordé — email envoyé`
-          : `Accès « ${grantedOfferName} » accordé — email non envoyé`
+          : `Accès « ${grantedOfferName} » accordé — email non envoyé${
+              accessEmailError ? ` : ${accessEmailError}` : ""
+            }`
         : "Utilisateur mis à jour"
     );
   } catch (error) {

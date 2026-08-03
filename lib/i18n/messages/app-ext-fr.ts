@@ -405,6 +405,8 @@ export const appExtFr = {
       phone: "Numéro de téléphone",
       hours: "Heures de service",
       hoursValue: "Lun – Sam, 8h – 20h (HE / WAT)",
+      email: "Email de contact",
+      emailHint: "Utilisez le formulaire ci-contre — nous vous répondrons sous 24 h.",
       namePlaceholder: "Nom",
       emailPlaceholder: "Email",
       phonePlaceholder: "Numéro de téléphone",

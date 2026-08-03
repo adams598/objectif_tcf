@@ -395,6 +395,8 @@ export const appExtEn = {
       phone: "Phone number",
       hours: "Service hours",
       hoursValue: "Mon – Sat, 8am – 8pm (ET / WAT)",
+      email: "Contact email",
+      emailHint: "Use the form on the right — we'll reply within 24 hours.",
       namePlaceholder: "Name",
       emailPlaceholder: "Email",
       phonePlaceholder: "Phone number",

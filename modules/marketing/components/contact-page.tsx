@@ -33,7 +33,12 @@ export function ContactPage() {
       toast.success(t("marketingPages.contact.success"));
       setForm({ name: "", email: "", phone: "", message: "" });
     },
-    onError: () => toast.error(t("marketingPages.contact.error")),
+    onError: (e) =>
+      toast.error(
+        e instanceof Error && e.message
+          ? e.message
+          : t("marketingPages.contact.error")
+      ),
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -110,28 +115,32 @@ export function ContactPage() {
         <div>
           <MarketingPageHero title={t("marketingPages.contact.formTitle")} />
           <div className="space-y-md">
-            {[
-              {
-                icon: "location_on",
-                title: t("marketingPages.contact.office"),
-                value: "Canada · Cameroun",
-              },
-              {
-                icon: "call",
-                title: t("marketingPages.contact.phone"),
-                value: "Canada : +1 (418) 554-2131\nCameroun : +237 686 87 68 73",
-              },
-              {
-                icon: "schedule",
-                title: t("marketingPages.contact.hours"),
-                value: t("marketingPages.contact.hoursValue"),
-              },
-              {
-                icon: "mail",
-                title: "Email",
-                value: "contact@objectifcanada-tcf.com",
-              },
-            ].map((item) => (
+            {(
+              [
+                {
+                  icon: "location_on",
+                  title: t("marketingPages.contact.office"),
+                  value: "Canada · Cameroun",
+                },
+                {
+                  icon: "call",
+                  title: t("marketingPages.contact.phone"),
+                  value:
+                    "Canada : +1 (418) 554-2131\nCameroun : +237 686 87 68 73",
+                },
+                {
+                  icon: "schedule",
+                  title: t("marketingPages.contact.hours"),
+                  value: t("marketingPages.contact.hoursValue"),
+                },
+                {
+                  icon: "mail",
+                  title: t("marketingPages.contact.email"),
+                  value: "contact@objectifcanada-tcf.com",
+                  hint: t("marketingPages.contact.emailHint"),
+                },
+              ] as const
+            ).map((item) => (
               <div key={item.title} className="flex gap-md">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <span className="material-symbols-outlined text-primary">
@@ -143,7 +152,18 @@ export function ContactPage() {
                     {item.title}
                   </p>
                   <p className="font-body-sm text-body-sm text-on-surface-variant whitespace-pre-line">
-                    {item.value}
+                    {"hint" in item ? (
+                      <>
+                        <span className="text-on-surface font-medium">
+                          {item.value}
+                        </span>
+                        <span className="block mt-xs text-[12px] text-on-surface-variant/80 whitespace-normal">
+                          {item.hint}
+                        </span>
+                      </>
+                    ) : (
+                      item.value
+                    )}
                   </p>
                 </div>
               </div>

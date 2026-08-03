@@ -199,7 +199,34 @@ export function ExamView({ seriesId, guestMode, examTab }: ExamViewProps) {
           documentType={question.documentType}
           fallbackIcon="hearing"
           fallbackLabel={t("exam.audioDocumentQuestion", { n: question.order })}
+          showFallback={!question.videoUrl && !question.audioUrl && !question.imageUrl}
         />
+
+        {question.videoUrl && (
+          <ExamVideoPlayer
+            videoUrl={question.videoUrl}
+            label={
+              question.documentType
+                ? t("exam.watchDocumentType", {
+                    type: question.documentType,
+                  })
+                : t("exam.videoDocument")
+            }
+          />
+        )}
+        {!question.videoUrl && (question.audioUrl || question.audioScript) && (
+          <ExamAudioPlayer
+            audioUrl={question.audioUrl}
+            audioScript={question.audioScript}
+            label={
+              question.documentType
+                ? t("exam.listenDocumentType", {
+                    type: question.documentType,
+                  })
+                : t("exam.audioDocument")
+            }
+          />
+        )}
 
         {/* Question card */}
         <AnimatePresence mode="wait">
@@ -210,38 +237,11 @@ export function ExamView({ seriesId, guestMode, examTab }: ExamViewProps) {
             exit={{ opacity: 0, y: -8 }}
             className="bg-surface rounded-xl border-2 border-primary/20 overflow-hidden shadow-violet-sm"
           >
-            <div className="flex">
-              <div className="w-10 bg-primary text-on-primary flex items-center justify-center font-label-md text-label-md font-bold shrink-0">
+            <div className="flex flex-col sm:flex-row">
+              <div className="sm:w-10 h-9 sm:h-auto bg-primary text-on-primary flex items-center justify-center font-label-md text-label-md font-bold shrink-0">
                 {question.order}
               </div>
-              <div className="flex-1 p-sm md:p-md">
-                {question.videoUrl ? (
-                  <ExamVideoPlayer
-                    videoUrl={question.videoUrl}
-                    label={
-                      question.documentType
-                        ? t("exam.watchDocumentType", {
-                            type: question.documentType,
-                          })
-                        : t("exam.videoDocument")
-                    }
-                    className="mb-md"
-                  />
-                ) : (
-                  <ExamAudioPlayer
-                    audioUrl={question.audioUrl}
-                    audioScript={question.audioScript}
-                    label={
-                      question.documentType
-                        ? t("exam.listenDocumentType", {
-                            type: question.documentType,
-                          })
-                        : t("exam.audioDocument")
-                    }
-                    className="mb-md"
-                  />
-                )}
-
+              <div className="flex-1 p-sm md:p-md min-w-0">
                 <p className="font-body-md text-body-md text-on-surface mb-md">
                   {question.content}
                 </p>

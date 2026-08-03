@@ -58,9 +58,16 @@ export async function GET(req: NextRequest) {
         _count: { select: { questions: true } },
         attempts: {
           where: { userId: user.userId },
-          orderBy: { createdAt: "desc" },
-          take: 1,
-          select: { status: true, score: true, percentage: true },
+          orderBy: { updatedAt: "desc" },
+          take: 8,
+          select: {
+            status: true,
+            score: true,
+            percentage: true,
+            updatedAt: true,
+            startedAt: true,
+            completedAt: true,
+          },
         },
       },
     });

@@ -21,7 +21,7 @@ export function getInvoiceCompanyConfig(): InvoiceCompanyConfig {
       process.env.INVOICE_COMPANY_ADDRESS ||
       "Plateforme e-learning\nService numérique de préparation aux examens"
     )
-      .split("\\n")
+      .split(/\r?\n|\\n/)
       .map((l) => l.trim())
       .filter(Boolean),
     email:

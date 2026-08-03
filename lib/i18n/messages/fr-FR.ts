@@ -165,6 +165,8 @@ export const frFR: CoreMessages = {
     freeAccess: "Accès gratuit",
     premiumAccess: "Accès premium",
     disciplinesProgress: "{{done}} / {{total}} disciplines complétées",
+    partialCount: "{{count}} commencée(s)",
+    lastOpened: "Dernière ouverture : {{date}}",
     skillCo: "Compréhension Orale",
     skillCe: "Compréhension Écrite",
     skillEe: "Expression Écrite",

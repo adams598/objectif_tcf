@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ExamShell, useExamTimer } from "./shared/exam-shell";
 import { QuestionMap } from "./shared/question-map";
 import { QcmOptions } from "./shared/qcm-options";
+import { ExamMediaPanel } from "./shared/exam-media-panel";
 import { generateCeQuestions } from "@/lib/examen/mock/qcm-generator";
 import { getCeDocumentTag } from "@/lib/examen/media/assets";
 import { buildScoreResult, scoreQcm } from "@/lib/examen/scoring";
@@ -182,19 +183,32 @@ export function ReadingExamView({
           </div>
         )}
 
+        <ExamMediaPanel
+          imageUrl={question.imageUrl}
+          documentType={
+            question.documentType ??
+            (typeof question.meta?.documentTag === "string"
+              ? question.meta.documentTag
+              : getCeDocumentTag(question.order))
+          }
+          showFallback={false}
+        />
+
         {/* Passage à lire */}
-        <div className="bg-surface rounded-xl border border-outline-variant p-md md:p-lg shadow-violet-sm">
-          <span className="inline-flex items-center gap-xs px-sm py-0.5 bg-secondary/10 text-secondary rounded-md font-label-sm text-label-sm mb-sm">
-            <span className="material-symbols-outlined text-[14px]">article</span>
-            {question.documentType ??
-              (typeof question.meta?.documentTag === "string"
-                ? question.meta.documentTag
-                : getCeDocumentTag(question.order))}
-          </span>
-          <p className="font-body-md text-body-md text-on-surface leading-relaxed whitespace-pre-line">
-            {question.passage ?? question.instruction}
-          </p>
-        </div>
+        {(question.passage || question.instruction) && (
+          <div className="bg-surface rounded-xl border border-outline-variant p-md md:p-lg shadow-violet-sm">
+            <span className="inline-flex items-center gap-xs px-sm py-0.5 bg-secondary/10 text-secondary rounded-md font-label-sm text-label-sm mb-sm">
+              <span className="material-symbols-outlined text-[14px]">article</span>
+              {question.documentType ??
+                (typeof question.meta?.documentTag === "string"
+                  ? question.meta.documentTag
+                  : getCeDocumentTag(question.order))}
+            </span>
+            <p className="font-body-md text-body-md text-on-surface leading-relaxed whitespace-pre-line break-words">
+              {question.passage ?? question.instruction}
+            </p>
+          </div>
+        )}
 
         {/* Question */}
         <AnimatePresence mode="wait">
@@ -205,12 +219,12 @@ export function ReadingExamView({
             exit={{ opacity: 0, y: -8 }}
             className="bg-surface rounded-xl border-2 border-primary/20 overflow-hidden shadow-violet-sm"
           >
-            <div className="flex">
-              <div className="w-10 bg-primary text-on-primary flex items-center justify-center font-label-md text-label-md font-bold shrink-0">
+            <div className="flex flex-col sm:flex-row">
+              <div className="sm:w-10 h-9 sm:h-auto bg-primary text-on-primary flex items-center justify-center font-label-md text-label-md font-bold shrink-0">
                 {question.order}
               </div>
-              <div className="flex-1 p-sm md:p-md">
-                <p className="font-body-md text-body-md text-on-surface mb-md font-medium">
+              <div className="flex-1 p-sm md:p-md min-w-0">
+                <p className="font-body-md text-body-md text-on-surface mb-md font-medium break-words">
                   {question.content}
                 </p>
                 <QcmOptions

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Toaster } from "sonner";
 import { ThemeProvider, ThemeScript } from "@/components/providers/theme-provider";
 import { LocaleProvider } from "@/components/providers/locale-provider";
+import { SessionIdleGuard } from "@/components/providers/session-idle-guard";
 
 const ReactQueryDevtools =
   process.env.NODE_ENV === "development"
@@ -38,7 +39,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ThemeScript />
       <QueryClientProvider client={queryClient}>
         <LocaleProvider>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            <SessionIdleGuard />
+            {children}
+          </ThemeProvider>
         </LocaleProvider>
         <Toaster
           position="top-right"

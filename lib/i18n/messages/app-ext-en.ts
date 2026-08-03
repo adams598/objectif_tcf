@@ -593,14 +593,30 @@ export const appExtEn = {
       "Instant evaluation based on task completion and TCF criteria.",
     globalScore: "Overall score",
     correctAnswers: "{{correct}} / {{total}} correct answers",
+    reviewWrongTitle: "Review of your mistakes",
+    reviewWrongDesc:
+      "Here are the correct answers for the questions you missed — use them to improve.",
+    questionN: "Question {{n}}",
+    yourAnswer: "Your answer:",
+    correctAnswer: "Correct answer:",
+    noAnswer: "No answer",
     cecrlLevel: "Estimated CEFR level",
+    cecrlC2:
+      "Excellent — mastery level (C2). You are ready for the highest requirements.",
+    cecrlC1:
+      "Very advanced — C1 level. Excellent for most immigration goals.",
     cecrlC1C2:
-      "Excellent — you master French at an advanced level, close to C2.",
+      "Excellent — you master French at an advanced level (C1–C2).",
     cecrlB2:
       "Very good — upper intermediate level, a common immigration target.",
     cecrlB1: "Good — intermediate level, keep training regularly.",
     cecrlA2: "Progressing — consolidate basics before the official exam.",
     cecrlA1: "Beginner — focus on targeted series and structured follow-up.",
+    cecrlScale: "CEFR scale: A1 · A2 · B1 · B2 · C1 · C2",
+    seriesCompleted: "Series completed",
+    seriesPartial: "Series started (partial)",
+    lastActivity: "Last activity",
+    noActivityYet: "No history yet",
     nclcEquivalent: "NCLC equivalent",
     nclcReference: "Reference for immigration to Canada (IRCC)",
     performance: "Performance",

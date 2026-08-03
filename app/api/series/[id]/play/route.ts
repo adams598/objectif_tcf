@@ -35,6 +35,10 @@ import {
   getDocumentTypeFromInstruction,
   skillToAbbrev,
 } from "@/lib/examen/content-bank/helpers";
+import {
+  getLearnerActivityStats,
+  trackSeriesOpened,
+} from "@/lib/examen/learner-activity";
 
 export async function GET(
   _req: NextRequest,
@@ -74,6 +78,12 @@ export async function GET(
 
     if (!allowed) {
       return forbiddenResponse();
+    }
+
+    if (user?.userId) {
+      await trackSeriesOpened(user.userId, id).catch((err) =>
+        console.error("[play] trackSeriesOpened", err)
+      );
     }
 
     return successResponse({
@@ -183,6 +193,21 @@ export async function POST(
       correctCount = scored.correct;
       totalQuestions = scored.total;
       percentage = scored.percentage;
+
+      const answerReview = series.questions.map((q) => {
+        const correctChoice = q.choices.find((c) => c.isCorrect);
+        const selectedId = answers[q.id];
+        const selected = q.choices.find((c) => c.id === selectedId);
+        return {
+          questionId: q.id,
+          order: q.order,
+          question: q.content,
+          yourAnswer: selected?.content ?? null,
+          correctAnswer: correctChoice?.content ?? "—",
+          isCorrect: Boolean(selectedId && selectedId === correctChoice?.id),
+        };
+      });
+      details = { answerReview };
     } else if (skill === "EE") {
       const tasks = series.questions.map((q) => {
         const meta = parseQuestionMeta(q.instruction) as {
@@ -259,7 +284,7 @@ export async function POST(
       details = { tasksCompleted: completed, correctionMode: mode };
     }
 
-    const result = buildScoreResult({
+    let result = buildScoreResult({
       skill,
       seriesId: id,
       examTab: parsed.data.examTab,
@@ -329,9 +354,19 @@ export async function POST(
         percentage: result.percentage,
         nclcLevel: result.nclcLevel,
         durationSeconds: result.durationSeconds,
+        cecrLevel: result.cecrLevel,
         answers: persistAnswers.length > 0 ? persistAnswers : undefined,
         humanCorrectionRequested,
       });
+
+      const activityStats = await getLearnerActivityStats(user.userId);
+      result = {
+        ...result,
+        details: {
+          ...result.details,
+          activityStats,
+        },
+      };
     }
 
     return successResponse(result);

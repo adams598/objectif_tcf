@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { fetchJson } from "@/lib/api/fetch-json";
+import { ApiError, fetchJson } from "@/lib/api/fetch-json";
 import { useTranslation } from "@/components/providers/locale-provider";
 
 interface UserInvoice {
@@ -31,7 +31,16 @@ interface InvoicesResponse {
 async function downloadInvoice(invoice: UserInvoice, format: "pdf" | "html") {
   const path = format === "pdf" ? invoice.pdfDownloadPath : invoice.downloadPath;
   const response = await fetch(path);
-  if (!response.ok) throw new Error("download_failed");
+  if (!response.ok) {
+    let detail = "download_failed";
+    try {
+      const payload = (await response.json()) as { error?: string };
+      if (payload.error) detail = payload.error;
+    } catch {
+      /* réponse binaire ou vide */
+    }
+    throw new Error(detail);
+  }
   const blob = await response.blob();
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
@@ -64,7 +73,12 @@ export function UserInvoicesSection({
       toast.success(t("documents.invoiceEmailSent"));
       void queryClient.invalidateQueries({ queryKey: ["user-invoices"] });
     },
-    onError: () => toast.error(t("documents.invoiceEmailError")),
+    onError: (err) =>
+      toast.error(
+        err instanceof ApiError && err.message
+          ? err.message
+          : t("documents.invoiceEmailError")
+      ),
     onSettled: () => setSendingId(null),
   });
 
@@ -153,8 +167,12 @@ export function UserInvoicesSection({
                   <Button
                     variant="secondary"
                     onClick={() =>
-                      void downloadInvoice(invoice, "pdf").catch(() =>
-                        toast.error(t("documents.downloadError"))
+                      void downloadInvoice(invoice, "pdf").catch((err) =>
+                        toast.error(
+                          err instanceof Error && err.message !== "download_failed"
+                            ? err.message
+                            : t("documents.downloadError")
+                        )
                       )
                     }
                   >

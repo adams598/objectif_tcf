@@ -51,7 +51,7 @@ export function QcmOptions({
               </span>
               <span
                 className={cn(
-                  "font-body-md text-body-md",
+                  "font-body-md text-body-md break-words min-w-0",
                   isSelected ? "text-primary font-medium" : "text-on-surface"
                 )}
               >

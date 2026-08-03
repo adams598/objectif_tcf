@@ -1,11 +1,16 @@
 import { prisma } from "@/lib/db/prisma";
-import { getFromAddress, isEmailConfigured } from "@/lib/email/config";
+import {
+  getFromAddress,
+  getFromAddressIssue,
+  isEmailConfigured,
+} from "@/lib/email/config";
 import { getResendClient } from "@/lib/email/resend-client";
 import { buildInvoiceData } from "@/lib/invoices/build-invoice-data";
 import { renderInvoiceHtml } from "@/lib/invoices/invoice-html";
 import { generateInvoiceNumber } from "@/lib/invoices/invoice-number";
 import type { PaymentInvoiceMetadata } from "@/lib/invoices/types";
 import type { SendEmailResult } from "@/lib/email/send-verification-email";
+import { generateInvoicePdfFromData } from "@/lib/pdf/generate-documents";
 
 export async function getInvoicePayloadForPayment(paymentId: string) {
   const payment = await prisma.payment.findUnique({
@@ -66,34 +71,46 @@ export async function sendInvoiceEmailForPayment(
   }
 
   if (!isEmailConfigured()) {
-    console.log(
-      `[DEV] Invoice ${invoiceNumber} for ${payment.user.email}: ${invoice.downloadUrl}`
-    );
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        metadata: {
-          ...metadata,
-          invoiceNumber,
-          invoiceSentAt: new Date().toISOString(),
-        },
-      },
-    });
-    return { ok: true, devMode: true };
+    return {
+      ok: false,
+      error:
+        "RESEND_API_KEY manquant — configurez Resend pour envoyer les factures.",
+    };
+  }
+
+  const fromIssue = getFromAddressIssue();
+  if (fromIssue) {
+    return { ok: false, error: fromIssue };
   }
 
   try {
+    const pdfBytes = await generateInvoicePdfFromData(invoice);
     const resend = getResendClient();
     const { error } = await resend.emails.send({
       from: getFromAddress(),
       to: payment.user.email,
       subject: `Votre facture ${invoiceNumber} — Objectif TCF`,
       html: emailHtml,
+      attachments: [
+        {
+          filename: `${invoiceNumber}.pdf`,
+          content: Buffer.from(pdfBytes),
+        },
+      ],
     });
 
     if (error) {
       console.error("[Invoice] Email send failed:", error);
-      return { ok: false, error: error.message };
+      const msg = error.message ?? "Échec d'envoi Resend";
+      if (/only send testing emails to your own/i.test(msg)) {
+        return {
+          ok: false,
+          error:
+            `${msg} — Avec onboarding@resend.dev, la facture ne peut être envoyée ` +
+            `qu’à l’email du compte Resend. Vérifiez un domaine ou utilisez cet email.`,
+        };
+      }
+      return { ok: false, error: msg };
     }
 
     await prisma.payment.update({

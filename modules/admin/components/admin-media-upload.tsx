@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
+  acceptAttributeForKind,
   contentMediaBlobPathname,
+  detectMediaKindFromFile,
   maxBytesLabel,
   validateContentMediaFile,
   type ContentMediaKind,
@@ -17,7 +19,7 @@ interface AdminMediaUploadProps {
   kind: ContentMediaKind;
   label: string;
   value?: string;
-  onChange: (url: string) => void;
+  onChange: (url: string, detectedKind?: "audio" | "video" | "image") => void;
   className?: string;
   allowExternalLink?: boolean;
 }
@@ -66,25 +68,17 @@ export function AdminMediaUpload({
   const [uploading, setUploading] = useState(false);
   const [externalUrl, setExternalUrl] = useState("");
   const [showLinkOption, setShowLinkOption] = useState(kind === "video");
+  const [previewKind, setPreviewKind] = useState<"audio" | "video" | "image" | null>(
+    kind === "media" ? null : kind === "image" ? "image" : kind === "audio" ? "audio" : "video"
+  );
 
   const supportsFileUpload =
-    kind === "image" || kind === "audio" || kind === "video";
+    kind === "image" || kind === "audio" || kind === "video" || kind === "media";
   const showLink =
-    allowExternalLink ?? (kind === "video" || supportsFileUpload);
+    allowExternalLink ?? (kind === "video" || kind === "media" || supportsFileUpload);
 
-  const accept =
-    kind === "audio"
-      ? "audio/mpeg,audio/mp3,audio/wav,audio/webm,audio/ogg,audio/mp4"
-      : kind === "image"
-        ? "image/jpeg,image/png,image/webp,image/gif"
-        : kind === "video"
-          ? "video/mp4,video/webm,video/quicktime"
-          : undefined;
+  const accept = acceptAttributeForKind(kind);
 
-  /**
-   * Navigateur → token JSON (petit) → fichier direct vers Blob.
-   * Ne passe JAMAIS le fichier dans le body d'une API Route Vercel.
-   */
   const uploadViaBlobClient = async (file: File) => {
     const validationError = validateContentMediaFile(file, kind);
     if (validationError) throw new Error(validationError);
@@ -101,15 +95,18 @@ export function AdminMediaUpload({
     return blob.url;
   };
 
-  /** Uniquement localhost sans Blob — jamais sur Vercel. */
   const uploadMediaLocalFallback = async (file: File) => {
-    if (kind === "video") {
+    const detected = detectMediaKindFromFile(file);
+    if (detected === "video" || kind === "video") {
       throw new Error("Vidéo : Vercel Blob requis (BLOB_READ_WRITE_TOKEN).");
     }
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("kind", kind);
+    formData.append(
+      "kind",
+      kind === "media" ? detected ?? "audio" : kind
+    );
 
     const response = await fetch("/api/admin/upload/media", {
       method: "POST",
@@ -144,24 +141,36 @@ export function AdminMediaUpload({
 
     setUploading(true);
     try {
+      const detected = detectMediaKindFromFile(file);
       let url: string;
       try {
         url = await uploadViaBlobClient(file);
       } catch (blobError) {
-        // Fallback FormData uniquement en local (pas de limite 4,5 Mo Vercel)
         if (!isBrowserLocalhost()) {
           throw blobError;
         }
         url = await uploadMediaLocalFallback(file);
       }
 
-      onChange(url);
+      const resolvedKind =
+        kind === "media"
+          ? detected === "video" || detected === "audio"
+            ? detected
+            : "audio"
+          : kind === "image"
+            ? "image"
+            : kind === "audio"
+              ? "audio"
+              : "video";
+
+      setPreviewKind(resolvedKind);
+      onChange(url, resolvedKind);
       setExternalUrl("");
       toast.success(
-        kind === "audio"
+        resolvedKind === "audio"
           ? "Audio enregistré sur le cloud"
-          : kind === "video"
-            ? "Vidéo enregistrée sur Vercel Blob"
+          : resolvedKind === "video"
+            ? "Vidéo enregistrée sur le cloud"
             : "Image enregistrée sur le cloud"
       );
     } catch (error) {
@@ -179,18 +188,37 @@ export function AdminMediaUpload({
       toast.error("Le lien doit commencer par http:// ou https://");
       return;
     }
-    onChange(url);
+    const looksVideo =
+      /youtube|youtu\.be|vimeo|\.mp4|\.webm|\.mov/i.test(url) ||
+      kind === "video";
+    const detected =
+      kind === "media"
+        ? looksVideo
+          ? "video"
+          : "audio"
+        : kind === "image"
+          ? "image"
+          : kind === "audio"
+            ? "audio"
+            : "video";
+    setPreviewKind(detected);
+    onChange(url, detected);
     toast.success("Lien enregistré");
   };
 
   const uploadLabel =
-    kind === "audio"
-      ? "Choisir un fichier audio"
-      : kind === "image"
-        ? "Choisir une image"
-        : kind === "video"
-          ? "Choisir une vidéo"
-          : null;
+    kind === "image" ? "Choisir une image" : "Choisir un fichier";
+
+  const hint =
+    kind === "media"
+      ? `Audio ou vidéo — toute extension courante (max audio 25 Mo / vidéo ${maxBytesLabel("video")}).`
+      : kind === "video"
+        ? `Vidéo — MP4, WebM, MOV, AVI… (max ${maxBytesLabel(kind)}).`
+        : kind === "audio"
+          ? `Audio — MP3, WAV, OGG, M4A… (max ${maxBytesLabel(kind)}).`
+          : `JPEG, PNG, WebP, GIF — max ${maxBytesLabel(kind)}.`;
+
+  const displayKind = previewKind ?? (kind === "media" ? null : kind === "image" ? "image" : kind === "audio" ? "audio" : "video");
 
   return (
     <div className={cn("flex flex-col gap-sm", className)}>
@@ -216,11 +244,7 @@ export function AdminMediaUpload({
               onClick={() => inputRef.current?.click()}
             >
               <span className="material-symbols-outlined text-[18px]">
-                {kind === "audio"
-                  ? "upload_file"
-                  : kind === "video"
-                    ? "movie"
-                    : "add_photo_alternate"}
+                upload_file
               </span>
               {uploading ? "Envoi en cours…" : uploadLabel}
             </Button>
@@ -232,6 +256,15 @@ export function AdminMediaUpload({
                 onClick={() => {
                   onChange("");
                   setExternalUrl("");
+                  setPreviewKind(
+                    kind === "media"
+                      ? null
+                      : kind === "image"
+                        ? "image"
+                        : kind === "audio"
+                          ? "audio"
+                          : "video"
+                  );
                 }}
               >
                 Retirer
@@ -240,33 +273,35 @@ export function AdminMediaUpload({
           </div>
           {!value && (
             <p className="font-label-sm text-[11px] text-on-surface-variant">
-              {kind === "video"
-                ? `MP4, WebM ou MOV — envoi direct Vercel Blob (max ${maxBytesLabel(kind)}).`
-                : kind === "audio"
-                  ? `MP3, WAV, WebM, OGG — envoi direct cloud (max ${maxBytesLabel(kind)}), hors limite serveur.`
-                  : `JPEG, PNG, WebP, GIF — max ${maxBytesLabel(kind)}.`}
+              {hint}
             </p>
           )}
         </div>
       )}
 
-      {value && kind === "image" && (
+      {value && displayKind === "image" && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={value}
           alt=""
-          className="max-h-36 rounded-lg border border-outline-variant object-contain bg-surface-container"
+          className="max-h-36 w-full rounded-lg border border-outline-variant object-contain bg-surface-container"
         />
       )}
-      {value && kind === "audio" && (
+      {value && displayKind === "audio" && (
         <audio controls src={value} className="w-full max-w-md" />
       )}
-      {value && kind === "video" && (
+      {value && displayKind === "video" && (
         <video
           controls
+          playsInline
           src={value}
           className="w-full max-w-md rounded-lg border border-outline-variant bg-black/5"
         />
+      )}
+      {value && !displayKind && (
+        <p className="font-label-sm text-[11px] text-on-surface-variant truncate">
+          {value}
+        </p>
       )}
 
       {value && supportsFileUpload && (
@@ -293,8 +328,8 @@ export function AdminMediaUpload({
             <div className="flex flex-wrap items-center gap-sm">
               <Input
                 placeholder={
-                  kind === "video"
-                    ? "Lien vidéo (YouTube, Vimeo, MP4…)"
+                  kind === "video" || kind === "media"
+                    ? "Lien (YouTube, Vimeo, MP4, audio…)"
                     : "Lien https://… (optionnel)"
                 }
                 value={externalUrl}

@@ -12,6 +12,7 @@ import {
   type CorrectionMode,
 } from "./shared/correction-mode-dialog";
 import { ExamAudioPlayer } from "./shared/exam-audio-player";
+import { ExamVideoPlayer } from "./shared/exam-video-player";
 import { ExamMediaPanel } from "./shared/exam-media-panel";
 import { OralRecorder } from "./shared/oral-recorder";
 import { getEoPromptScript } from "@/lib/examen/media/assets";
@@ -37,6 +38,7 @@ type OralTaskItem = {
   prompt: string;
   promptAudioScript: string;
   promptAudioUrl?: string | null;
+  promptVideoUrl?: string | null;
   imageUrl?: string | null;
   preparationTime: number;
   speakingTime: number;
@@ -76,23 +78,25 @@ export function OralExamView({
             meta.promptAudioScript ??
             getEoPromptScript(q.order),
           promptAudioUrl: q.audioUrl ?? null,
+          promptVideoUrl: q.videoUrl ?? null,
           imageUrl: q.imageUrl ?? null,
           preparationTime: meta.preparationTime ?? 120,
           speakingTime: meta.speakingTime ?? 120,
         };
       });
     }
-    return ORAL_TASKS.map((t) => ({
-      id: t.id,
-      questionId: `oral-task-${t.id}`,
-      title: t.title,
-      instruction: t.instruction,
-      prompt: t.prompt,
-      promptAudioScript: getEoPromptScript(t.id),
+    return ORAL_TASKS.map((taskDef) => ({
+      id: taskDef.id,
+      questionId: `oral-task-${taskDef.id}`,
+      title: taskDef.title,
+      instruction: taskDef.instruction,
+      prompt: taskDef.prompt,
+      promptAudioScript: getEoPromptScript(taskDef.id),
       promptAudioUrl: null,
+      promptVideoUrl: null,
       imageUrl: null,
-      preparationTime: t.preparationTime,
-      speakingTime: t.speakingTime,
+      preparationTime: taskDef.preparationTime,
+      speakingTime: taskDef.speakingTime,
     }));
   }, [seriesData?.questions, t]);
 
@@ -302,25 +306,34 @@ export function OralExamView({
             animate={{ opacity: 1, y: 0 }}
             className="bg-surface rounded-2xl border border-outline-variant p-xl shadow-violet-sm text-center"
           >
-            <p className="font-body-lg text-body-lg text-on-surface mb-lg">
+            <p className="font-body-lg text-body-lg text-on-surface mb-lg break-words">
               {task.instruction}
             </p>
-            <p className="font-body-md text-body-md text-on-surface-variant mb-lg bg-surface-container-low rounded-xl p-lg">
+            <p className="font-body-md text-body-md text-on-surface-variant mb-lg bg-surface-container-low rounded-xl p-lg break-words">
               {task.prompt}
             </p>
 
-            <ExamAudioPlayer
-              audioUrl={task.promptAudioUrl}
-              audioScript={task.promptAudioScript}
-              label={t("exam.examinerInstruction")}
-              className="mb-xl text-left"
-            />
+            {task.promptVideoUrl ? (
+              <ExamVideoPlayer
+                videoUrl={task.promptVideoUrl}
+                label={t("exam.examinerInstruction")}
+                className="mb-xl text-left"
+              />
+            ) : (
+              <ExamAudioPlayer
+                audioUrl={task.promptAudioUrl}
+                audioScript={task.promptAudioScript}
+                label={t("exam.examinerInstruction")}
+                className="mb-xl text-left"
+              />
+            )}
 
             {task.imageUrl ? (
               <ExamMediaPanel
                 imageUrl={task.imageUrl}
                 className="mb-xl"
                 fallbackLabel={t("exam.subject")}
+                showFallback={false}
               />
             ) : null}
 

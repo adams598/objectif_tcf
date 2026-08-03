@@ -37,7 +37,11 @@ export async function handleAdminBlobClientUpload(
     onBeforeGenerateToken: async (pathname) => {
       if (pathname.startsWith("content/audio/")) {
         return {
-          allowedContentTypes: [...AUDIO_MIME_LIST],
+          // Liste large + types courants (Windows envoie parfois un mime atypique)
+          allowedContentTypes: [
+            ...AUDIO_MIME_LIST,
+            "application/octet-stream",
+          ],
           maximumSizeInBytes: MAX_AUDIO_BYTES,
           addRandomSuffix: false,
           tokenPayload: JSON.stringify({ scope: "admin-content-audio" }),
@@ -53,7 +57,10 @@ export async function handleAdminBlobClientUpload(
       }
       if (pathname.startsWith("content/video/")) {
         return {
-          allowedContentTypes: [...VIDEO_MIME_LIST],
+          allowedContentTypes: [
+            ...VIDEO_MIME_LIST,
+            "application/octet-stream",
+          ],
           maximumSizeInBytes: MAX_VIDEO_BYTES,
           addRandomSuffix: false,
           tokenPayload: JSON.stringify({ scope: "admin-content-video" }),

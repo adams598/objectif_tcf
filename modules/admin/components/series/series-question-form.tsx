@@ -245,10 +245,16 @@ export function SeriesQuestionForm({
           {skill === "EXPRESSION_ORALE" && (
             <>
               <AdminMediaUpload
-                kind="audio"
-                label="Consigne audio (optionnel)"
-                value={taskForm.audioUrl}
-                onChange={(url) => onTaskChange((f) => ({ ...f, audioUrl: url }))}
+                kind="media"
+                label="Consigne audio ou vidéo (optionnel)"
+                value={taskForm.videoUrl || taskForm.audioUrl}
+                onChange={(url, detected) =>
+                  onTaskChange((f) =>
+                    detected === "video"
+                      ? { ...f, videoUrl: url, audioUrl: "" }
+                      : { ...f, audioUrl: url, videoUrl: "" }
+                  )
+                }
               />
               <div className="grid grid-cols-2 gap-sm">
                 <Input

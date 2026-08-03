@@ -15,9 +15,9 @@ export function demoGroupsToSeriesGroups(
       durationMin: d.durationMin,
       questionCount: d.questionCount,
       completed: false,
+      partial: false,
+      lastOpenedAt: null as string | null,
     }));
-
-    const completedDisciplines = 0;
 
     return {
       order: group.order,
@@ -25,7 +25,9 @@ export function demoGroupsToSeriesGroups(
       isFree: group.isFree,
       isAccessible: group.isFree,
       isLocked: !group.isFree,
-      completedDisciplines,
+      completedDisciplines: 0,
+      partialDisciplines: 0,
+      lastOpenedAt: null,
       disciplines,
     };
   });

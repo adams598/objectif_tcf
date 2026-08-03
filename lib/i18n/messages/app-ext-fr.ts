@@ -601,14 +601,30 @@ export const appExtFr = {
       "Évaluation instantanée basée sur la complétion de vos tâches et les critères TCF.",
     globalScore: "Score global",
     correctAnswers: "{{correct}} / {{total}} bonnes réponses",
+    reviewWrongTitle: "Corrigé de vos erreurs",
+    reviewWrongDesc:
+      "Voici les bonnes réponses pour les questions que vous avez ratées — utilisez-les pour progresser.",
+    questionN: "Question {{n}}",
+    yourAnswer: "Votre réponse :",
+    correctAnswer: "Bonne réponse :",
+    noAnswer: "Aucune réponse",
     cecrlLevel: "Niveau CECRL estimé",
+    cecrlC2:
+      "Excellent — niveau de maîtrise (C2). Vous êtes prêt pour les exigences les plus élevées.",
+    cecrlC1:
+      "Très avancé — niveau C1. Excellent pour la plupart des projets d'immigration.",
     cecrlC1C2:
-      "Excellent — vous maîtrisez le français à un niveau avancé, proche du C2.",
+      "Excellent — vous maîtrisez le français à un niveau avancé (C1–C2).",
     cecrlB2:
       "Très bien — niveau indépendant avancé, objectif fréquent pour l'immigration.",
     cecrlB1: "Bien — niveau intermédiaire, continuez à vous entraîner régulièrement.",
     cecrlA2: "En progression — consolidez les bases avant l'examen officiel.",
     cecrlA1: "Débutant — privilégiez des séries ciblées et un suivi structuré.",
+    cecrlScale: "Échelle CECRL : A1 · A2 · B1 · B2 · C1 · C2",
+    seriesCompleted: "Séries terminées",
+    seriesPartial: "Séries commencées (partielles)",
+    lastActivity: "Dernière activité",
+    noActivityYet: "Pas encore d'historique",
     nclcEquivalent: "Équivalent NCLC",
     nclcReference: "Référence pour l'immigration au Canada (IRCC)",
     performance: "Performance",

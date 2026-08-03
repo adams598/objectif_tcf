@@ -16,6 +16,15 @@ export interface QcmQuestion {
   imageUrl?: string;
 }
 
+export interface AnswerReviewItem {
+  questionId: string;
+  order: number;
+  question: string;
+  yourAnswer: string | null;
+  correctAnswer: string;
+  isCorrect: boolean;
+}
+
 export interface ExamScoreResult {
   skill: SkillAbbrev;
   seriesId: string;
@@ -35,7 +44,19 @@ export interface ExamScoreResult {
     correctionToken?: string;
     correctionStatus?: "pending" | "processing" | "completed" | "failed";
     aiCorrection?: import("@/lib/ai/writing-correction-types").WritingCorrectionResult;
+    /** Revue QCM : surtout les questions ratées (+ éventuellement les bonnes). */
+    answerReview?: AnswerReviewItem[];
+    /** Stats d’activité apprenant (séries faites / dernière activité). */
+    activityStats?: LearnerActivityStats;
   };
+}
+
+export interface LearnerActivityStats {
+  seriesCompleted: number;
+  seriesPartial: number;
+  seriesStarted: number;
+  lastActivityAt: string | null;
+  lastOpenedSeriesAt: string | null;
 }
 
 export function scoreQcm(
@@ -51,8 +72,10 @@ export function scoreQcm(
   return { correct, total, percentage };
 }
 
+/** Niveau CECRL estimé (A1 → C2) à partir du score de la série. */
 export function percentageToCecr(percentage: number): string {
-  if (percentage >= 90) return "C1-C2";
+  if (percentage >= 95) return "C2";
+  if (percentage >= 85) return "C1";
   if (percentage >= 75) return "B2";
   if (percentage >= 60) return "B1";
   if (percentage >= 45) return "A2";

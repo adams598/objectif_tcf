@@ -113,6 +113,7 @@ export function SeriesGroupCard({
               const isHighlighted =
                 !highlightSkill || highlightSkill === abbrev;
               const done = entry?.completed;
+              const partial = entry?.partial;
 
               return (
                 <div
@@ -122,13 +123,19 @@ export function SeriesGroupCard({
                     !isHighlighted && "opacity-40",
                     done
                       ? "bg-success-container/50 text-success"
-                      : locked
-                        ? "bg-surface-container text-on-surface-variant"
-                        : "bg-surface-container-low text-on-surface-variant"
+                      : partial
+                        ? "bg-tertiary-container/40 text-tertiary"
+                        : locked
+                          ? "bg-surface-container text-on-surface-variant"
+                          : "bg-surface-container-low text-on-surface-variant"
                   )}
                 >
                   <span className="material-symbols-outlined text-[16px]">
-                    {done ? "check_circle" : discipline.icon}
+                    {done
+                      ? "check_circle"
+                      : partial
+                        ? "timelapse"
+                        : discipline.icon}
                   </span>
                   <span className="truncate">{abbrev}</span>
                 </div>
@@ -136,11 +143,28 @@ export function SeriesGroupCard({
             })}
           </div>
 
-          {!locked && progress > 0 && (
-            <p className="font-label-sm text-label-sm text-on-surface-variant mb-md">
+          {!locked && (progress > 0 || group.partialDisciplines > 0) && (
+            <p className="font-label-sm text-label-sm text-on-surface-variant mb-xs">
               {t("series.disciplinesProgress", {
                 done: group.completedDisciplines,
                 total: group.disciplines.length,
+              })}
+              {group.partialDisciplines > 0
+                ? ` · ${t("series.partialCount", {
+                    count: group.partialDisciplines,
+                  })}`
+                : ""}
+            </p>
+          )}
+
+          {!locked && group.lastOpenedAt && (
+            <p className="font-label-sm text-[11px] text-on-surface-variant/80 mb-md">
+              {t("series.lastOpened", {
+                date: new Date(group.lastOpenedAt).toLocaleDateString("fr-FR", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                }),
               })}
             </p>
           )}

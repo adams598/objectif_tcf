@@ -46,7 +46,7 @@ export function ExamVideoPlayer({
   return (
     <div
       className={cn(
-        "rounded-xl border border-outline-variant bg-surface-container-low overflow-hidden",
+        "rounded-xl border border-outline-variant bg-surface-container-low overflow-hidden w-full",
         className
       )}
     >
@@ -60,23 +60,26 @@ export function ExamVideoPlayer({
       </div>
 
       {embedUrl ? (
-        <div className="aspect-video w-full bg-black">
+        <div className="relative w-full bg-black aspect-video">
           <iframe
             src={embedUrl}
             title={label}
-            className="h-full w-full"
+            className="absolute inset-0 h-full w-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
         </div>
       ) : (
-        <video
-          controls
-          playsInline
-          preload="metadata"
-          src={videoUrl}
-          className="aspect-video w-full bg-black/90"
-        />
+        <div className="w-full bg-black">
+          <video
+            controls
+            playsInline
+            preload="metadata"
+            controlsList="nodownload"
+            src={videoUrl}
+            className="block w-full max-h-[55vh] md:max-h-[70vh] h-auto bg-black"
+          />
+        </div>
       )}
 
       {isBlobVideoUrl(videoUrl) && (

@@ -35,12 +35,27 @@ const SKILL_KEYS: Record<SkillAbbrev, string> = {
 };
 
 const CECR_KEYS: Record<string, string> = {
-  "C1-C2": "guestResults.cecrlC1C2",
+  C2: "guestResults.cecrlC2",
+  C1: "guestResults.cecrlC1",
+  "C1-C2": "guestResults.cecrlC1",
   B2: "guestResults.cecrlB2",
   B1: "guestResults.cecrlB1",
   A2: "guestResults.cecrlA2",
   A1: "guestResults.cecrlA1",
 };
+
+function formatActivityDate(iso: string | null | undefined, locale: string) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleString(locale === "en" ? "en-CA" : "fr-FR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 const RECOMMENDATION_KEYS: Record<SkillAbbrev, string[]> = {
   CO: ["guestResults.recCo1", "guestResults.recCo2", "guestResults.recCo3"],
@@ -50,7 +65,7 @@ const RECOMMENDATION_KEYS: Record<SkillAbbrev, string[]> = {
 };
 
 export function GuestResultsView({ examTab, skillParam }: GuestResultsViewProps) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [result, setResult] = useState<ExamScoreResult | null>(null);
   const correctionToken = result?.details?.correctionToken;
   const { status: correctionStatus, result: aiResult, resultSource } =
@@ -136,18 +151,22 @@ export function GuestResultsView({ examTab, skillParam }: GuestResultsViewProps)
           transition={{ delay: 0.1 }}
           className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-md"
         >
-          <div className="bg-surface rounded-2xl border border-outline-variant p-lg shadow-violet-sm">
+          <div className="bg-surface rounded-2xl border-2 border-primary/25 p-lg shadow-violet-sm relative overflow-hidden">
+            <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-primary" />
             <span className="material-symbols-outlined text-primary text-[28px] mb-sm">
               school
             </span>
             <p className="font-label-sm text-label-sm text-on-surface-variant mb-xs">
               {t("guestResults.cecrlLevel")}
             </p>
-            <p className="font-display-md text-display-md font-bold text-on-surface">
+            <p className="font-display-md text-[42px] md:text-[48px] font-bold text-primary leading-none">
               {result.cecrLevel}
             </p>
             <p className="font-label-sm text-label-sm text-on-surface-variant mt-sm">
               {t(CECR_KEYS[result.cecrLevel] ?? "guestResults.cecrlA1")}
+            </p>
+            <p className="font-label-sm text-[11px] text-on-surface-variant/80 mt-xs">
+              {t("guestResults.cecrlScale")}
             </p>
           </div>
 
@@ -168,6 +187,39 @@ export function GuestResultsView({ examTab, skillParam }: GuestResultsViewProps)
         </motion.div>
       </div>
 
+      {result.details?.activityStats && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-md mb-2xl">
+          <div className="bg-surface rounded-2xl border border-outline-variant p-md shadow-violet-sm">
+            <p className="font-label-sm text-label-sm text-on-surface-variant mb-xs">
+              {t("guestResults.seriesCompleted")}
+            </p>
+            <p className="font-headline-lg text-headline-lg font-bold text-success">
+              {result.details.activityStats.seriesCompleted}
+            </p>
+          </div>
+          <div className="bg-surface rounded-2xl border border-outline-variant p-md shadow-violet-sm">
+            <p className="font-label-sm text-label-sm text-on-surface-variant mb-xs">
+              {t("guestResults.seriesPartial")}
+            </p>
+            <p className="font-headline-lg text-headline-lg font-bold text-tertiary">
+              {result.details.activityStats.seriesPartial}
+            </p>
+          </div>
+          <div className="bg-surface rounded-2xl border border-outline-variant p-md shadow-violet-sm">
+            <p className="font-label-sm text-label-sm text-on-surface-variant mb-xs">
+              {t("guestResults.lastActivity")}
+            </p>
+            <p className="font-label-md text-label-md font-bold text-on-surface">
+              {formatActivityDate(
+                result.details.activityStats.lastOpenedSeriesAt ??
+                  result.details.activityStats.lastActivityAt,
+                locale
+              ) ?? t("guestResults.noActivityYet")}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="bg-surface rounded-2xl border border-outline-variant p-lg mb-2xl shadow-violet-sm">
         <div className="flex justify-between mb-sm">
           <span className="font-label-md text-label-md font-bold text-on-surface">
@@ -185,6 +237,49 @@ export function GuestResultsView({ examTab, skillParam }: GuestResultsViewProps)
           })}
         </p>
       </div>
+
+      {isQcm &&
+        result.details?.answerReview &&
+        result.details.answerReview.some((item) => !item.isCorrect) && (
+          <div className="bg-surface rounded-2xl border border-outline-variant p-lg mb-2xl shadow-violet-sm">
+            <h2 className="font-headline-lg text-headline-lg font-bold text-on-surface mb-sm flex items-center gap-sm">
+              <span className="material-symbols-outlined text-primary">
+                menu_book
+              </span>
+              {t("guestResults.reviewWrongTitle")}
+            </h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mb-md">
+              {t("guestResults.reviewWrongDesc")}
+            </p>
+            <div className="flex flex-col gap-md">
+              {result.details.answerReview
+                .filter((item) => !item.isCorrect)
+                .map((item) => (
+                  <div
+                    key={item.questionId}
+                    className="rounded-xl border border-outline-variant bg-surface-container-low p-md"
+                  >
+                    <p className="font-label-sm text-label-sm text-on-surface-variant mb-xs">
+                      {t("guestResults.questionN", { n: item.order })}
+                    </p>
+                    <p className="font-body-md text-body-md text-on-surface mb-sm break-words">
+                      {item.question}
+                    </p>
+                    <p className="font-label-sm text-label-sm text-error mb-xs">
+                      {t("guestResults.yourAnswer")}{" "}
+                      <span className="font-semibold">
+                        {item.yourAnswer ?? t("guestResults.noAnswer")}
+                      </span>
+                    </p>
+                    <p className="font-label-sm text-label-sm text-success">
+                      {t("guestResults.correctAnswer")}{" "}
+                      <span className="font-semibold">{item.correctAnswer}</span>
+                    </p>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
 
       {skill === "EE" && (
         <WritingCorrectionDetails

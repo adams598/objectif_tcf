@@ -1,7 +1,8 @@
-import type { NCLCLevel, Skill } from "@prisma/client";
+import type { LanguageLevel, NCLCLevel, Skill } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { nclcLevelToNumber } from "@/lib/dashboard/stats";
 import { createNotification } from "@/lib/notifications/create-notification";
+import { cecrToLanguageLevel } from "@/lib/examen/learner-activity";
 
 function toNclcEnum(level: number): NCLCLevel {
   const clamped = Math.min(12, Math.max(1, Math.round(level)));
@@ -25,24 +26,45 @@ export async function persistExamSubmission(params: {
   percentage: number;
   nclcLevel: number;
   durationSeconds: number;
+  cecrLevel?: string;
   answers?: PersistAnswerInput[];
   humanCorrectionRequested?: boolean;
 }) {
-  const attempt = await prisma.attempt.create({
-    data: {
+  const inProgress = await prisma.attempt.findFirst({
+    where: {
       userId: params.userId,
       seriesId: params.seriesId,
-      status: "COMPLETED",
-      completedAt: new Date(),
-      durationSec: params.durationSeconds,
-      score: params.correctCount,
-      maxScore: params.totalQuestions,
-      percentage: params.percentage,
-      nclcLevel: toNclcEnum(params.nclcLevel),
+      status: "IN_PROGRESS",
     },
+    orderBy: { updatedAt: "desc" },
+    select: { id: true },
   });
 
+  const attemptData = {
+    status: "COMPLETED" as const,
+    completedAt: new Date(),
+    durationSec: params.durationSeconds,
+    score: params.correctCount,
+    maxScore: params.totalQuestions,
+    percentage: params.percentage,
+    nclcLevel: toNclcEnum(params.nclcLevel),
+  };
+
+  const attempt = inProgress
+    ? await prisma.attempt.update({
+        where: { id: inProgress.id },
+        data: attemptData,
+      })
+    : await prisma.attempt.create({
+        data: {
+          userId: params.userId,
+          seriesId: params.seriesId,
+          ...attemptData,
+        },
+      });
+
   if (params.answers?.length) {
+    await prisma.answer.deleteMany({ where: { attemptId: attempt.id } });
     await prisma.answer.createMany({
       data: params.answers.map((a) => ({
         attemptId: attempt.id,
@@ -56,16 +78,19 @@ export async function persistExamSubmission(params: {
     });
   }
 
-  await prisma.result.create({
-    data: {
-      attemptId: attempt.id,
-      globalScore: params.percentage,
-      nclcLevel: toNclcEnum(params.nclcLevel),
-      ...(params.skill === "COMPREHENSION_ORALE" && { scoreCorale: params.percentage }),
-      ...(params.skill === "COMPREHENSION_ECRITE" && { scoreCecrit: params.percentage }),
-      ...(params.skill === "EXPRESSION_ECRITE" && { scoreEecrit: params.percentage }),
-      ...(params.skill === "EXPRESSION_ORALE" && { scoreEoral: params.percentage }),
-    },
+  const resultPayload = {
+    globalScore: params.percentage,
+    nclcLevel: toNclcEnum(params.nclcLevel),
+    ...(params.skill === "COMPREHENSION_ORALE" && { scoreCorale: params.percentage }),
+    ...(params.skill === "COMPREHENSION_ECRITE" && { scoreCecrit: params.percentage }),
+    ...(params.skill === "EXPRESSION_ECRITE" && { scoreEecrit: params.percentage }),
+    ...(params.skill === "EXPRESSION_ORALE" && { scoreEoral: params.percentage }),
+  };
+
+  await prisma.result.upsert({
+    where: { attemptId: attempt.id },
+    create: { attemptId: attempt.id, ...resultPayload },
+    update: resultPayload,
   });
 
   const existing = await prisma.progress.findUnique({
@@ -110,6 +135,10 @@ export async function persistExamSubmission(params: {
     else if (diffDays === 1) newStreak = (user.currentStreak || 0) + 1;
   }
 
+  const languageLevel: LanguageLevel | null = params.cecrLevel
+    ? cecrToLanguageLevel(params.cecrLevel)
+    : null;
+
   await prisma.user.update({
     where: { id: params.userId },
     data: {
@@ -119,6 +148,7 @@ export async function persistExamSubmission(params: {
       lastStudyDate: new Date(),
       currentStreak: newStreak,
       longestStreak: Math.max(user?.longestStreak ?? 0, newStreak),
+      ...(languageLevel ? { currentLevel: languageLevel } : {}),
     },
   });
 

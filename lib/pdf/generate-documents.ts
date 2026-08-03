@@ -2,8 +2,26 @@ import { PDFDocument, StandardFonts, rgb, type PDFPage, type PDFFont } from "pdf
 import type { InvoiceData } from "@/lib/invoices/types";
 import { getInvoiceCompanyConfig } from "@/lib/invoices/company-config";
 
+/**
+ * Helvetica (WinAnsi) ne supporte pas les accents / unicode.
+ * Sans normalisation, drawText plante sur « août », « émission », etc.
+ */
+function toPdfText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’‘]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[–—]/g, "-")
+    .replace(/…/g, "...")
+    .replace(/€/g, "EUR")
+    .replace(/[^\x20-\x7E\n]/g, "?")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n");
+}
+
 function wrapText(text: string, maxChars: number): string[] {
-  const words = text.split(/\s+/);
+  const words = toPdfText(text).split(/\s+/);
   const lines: string[] = [];
   let line = "";
   for (const word of words) {
@@ -49,14 +67,18 @@ function createWriter(
     draw(text, opts) {
       const size = opts?.size ?? 10;
       const x = opts?.x ?? margin;
-      state.page.drawText(text, {
-        x,
-        y: state.y,
-        size,
-        font: opts?.bold ? fontBold : font,
-        color: opts?.color ?? rgb(0.12, 0.11, 0.14),
-      });
-      state.y -= size + 6;
+      const safe = toPdfText(text);
+      // pdf-lib refuse les retours ligne dans drawText
+      for (const part of safe.split("\n")) {
+        state.page.drawText(part, {
+          x,
+          y: state.y,
+          size,
+          font: opts?.bold ? fontBold : font,
+          color: opts?.color ?? rgb(0.12, 0.11, 0.14),
+        });
+        state.y -= size + 6;
+      }
     },
     gap(n = 8) {
       state.y -= n;
@@ -201,14 +223,16 @@ export async function generateResultPdf(data: ResultPdfData): Promise<Uint8Array
       page = doc.addPage([595, 842]);
       y = 800;
     }
-    page.drawText(text, {
-      x: margin,
-      y,
-      size,
-      font: bold ? fontBold : font,
-      color: bold ? primary : rgb(0.15, 0.15, 0.18),
-    });
-    y -= lineHeight + (bold ? 4 : 0);
+    for (const part of toPdfText(text).split("\n")) {
+      page.drawText(part, {
+        x: margin,
+        y,
+        size,
+        font: bold ? fontBold : font,
+        color: bold ? primary : rgb(0.15, 0.15, 0.18),
+      });
+      y -= lineHeight + (bold ? 4 : 0);
+    }
   };
 
   drawLine("Objectif TCF — Rapport de résultats", true, 18);

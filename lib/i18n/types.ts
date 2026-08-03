@@ -158,6 +158,8 @@ export interface CoreMessages {
     freeAccess: string;
     premiumAccess: string;
     disciplinesProgress: string;
+    partialCount: string;
+    lastOpened: string;
     skillCo: string;
     skillCe: string;
     skillEe: string;

@@ -161,6 +161,8 @@ export const enCA: CoreMessages = {
     freeAccess: "Free access",
     premiumAccess: "Premium access",
     disciplinesProgress: "{{done}} / {{total}} disciplines completed",
+    partialCount: "{{count}} started",
+    lastOpened: "Last opened: {{date}}",
     skillCo: "Listening comprehension",
     skillCe: "Reading comprehension",
     skillEe: "Written expression",

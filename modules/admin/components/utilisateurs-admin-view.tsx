@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -674,15 +675,21 @@ export function UtilisateursAdminView() {
                     >
                       <td className="px-md py-md">
                         <div className="flex items-start gap-sm min-w-[200px]">
-                          <Avatar
-                            src={user.avatarUrl ?? undefined}
-                            name={
-                              [draft.firstName, draft.lastName]
-                                .filter(Boolean)
-                                .join(" ") || user.name
-                            }
-                            size="default"
-                          />
+                          <Link
+                            href={`/admin/utilisateurs/${user.id}`}
+                            className="shrink-0 rounded-full ring-offset-2 hover:ring-2 hover:ring-primary/40 transition-all"
+                            title="Voir la progression"
+                          >
+                            <Avatar
+                              src={user.avatarUrl ?? undefined}
+                              name={
+                                [draft.firstName, draft.lastName]
+                                  .filter(Boolean)
+                                  .join(" ") || user.name
+                              }
+                              size="default"
+                            />
+                          </Link>
                           <div className="flex flex-col gap-xs flex-1">
                             <input
                               className={cellInputClass}
@@ -704,6 +711,15 @@ export function UtilisateursAdminView() {
                                 })
                               }
                             />
+                            <Link
+                              href={`/admin/utilisateurs/${user.id}`}
+                              className="font-label-sm text-[11px] text-primary font-semibold hover:underline inline-flex items-center gap-xs w-fit"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">
+                                analytics
+                              </span>
+                              Progression & stats
+                            </Link>
                             {dirty && (
                               <span className="font-label-sm text-[10px] text-primary font-semibold">
                                 Modifié
@@ -928,29 +944,40 @@ export function UtilisateursAdminView() {
                       </td>
 
                       <td className="px-md py-md">
-                        {(user.role === "USER" ||
-                          currentRole === "SUPER_ADMIN") && (
-                          <button
-                            type="button"
-                            className="p-sm rounded-lg text-error hover:bg-error-container/30 transition-colors"
-                            title="Supprimer"
-                            onClick={() =>
-                              confirm({
-                                title: "Supprimer cet utilisateur ?",
-                                description:
-                                  "Le compte sera désactivé (soft-delete).",
-                                confirmLabel: "Supprimer",
-                                destructive: true,
-                                onConfirm: () =>
-                                  deleteLearner.mutateAsync(user.id),
-                              })
-                            }
+                        <div className="flex items-center gap-xs">
+                          <Link
+                            href={`/admin/utilisateurs/${user.id}`}
+                            className="p-sm rounded-lg text-primary hover:bg-primary/10 transition-colors"
+                            title="Progression & statistiques"
                           >
                             <span className="material-symbols-outlined text-[20px]">
-                              delete
+                              analytics
                             </span>
-                          </button>
-                        )}
+                          </Link>
+                          {(user.role === "USER" ||
+                            currentRole === "SUPER_ADMIN") && (
+                            <button
+                              type="button"
+                              className="p-sm rounded-lg text-error hover:bg-error-container/30 transition-colors"
+                              title="Supprimer"
+                              onClick={() =>
+                                confirm({
+                                  title: "Supprimer cet utilisateur ?",
+                                  description:
+                                    "Le compte sera désactivé (soft-delete).",
+                                  confirmLabel: "Supprimer",
+                                  destructive: true,
+                                  onConfirm: () =>
+                                    deleteLearner.mutateAsync(user.id),
+                                })
+                              }
+                            >
+                              <span className="material-symbols-outlined text-[20px]">
+                                delete
+                              </span>
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

@@ -5,6 +5,10 @@ import { prisma } from "@/lib/db/prisma";
 import { requireRole } from "@/lib/auth/session";
 import { decryptAdminPassword } from "@/lib/auth/admin-password";
 import { setUserCredentials } from "@/lib/admin/learner-credentials";
+import {
+  archiveUser,
+  permanentlyDeleteUser,
+} from "@/lib/admin/user-removal";
 import { inferSubscriptionPlan } from "@/lib/payments/plan-from-offer";
 import { sendOfferAccessEmail } from "@/lib/email/send-offer-access-email";
 import { EXAM_TYPE_TO_TAB, EXAM_TAB_LABELS } from "@/lib/pricing/constants";
@@ -464,38 +468,12 @@ export async function DELETE(
     });
     if (!existing) return notFoundResponse("Utilisateur");
 
-    // Seul un SUPER_ADMIN peut supprimer un admin / correcteur
     if (existing.role !== "USER" && admin.role !== "SUPER_ADMIN") {
       return forbiddenResponse();
     }
 
-    // Retirer tous les accès (abonnements + sessions)
-    await prisma.subscription.updateMany({
-      where: { userId: id },
-      data: {
-        status: "CANCELLED",
-        autoRenew: false,
-        cancelAtPeriodEnd: false,
-        currentPeriodEnd: new Date(),
-      },
-    });
-    await prisma.session.updateMany({
-      where: { userId: id },
-      data: { isRevoked: true },
-    });
-
     if (mode === "permanent") {
-      // Relations sans Cascade explicite
-      await prisma.message.deleteMany({
-        where: { OR: [{ senderId: id }, { receiverId: id }] },
-      });
-      await prisma.correction.updateMany({
-        where: { correctorId: id },
-        data: { correctorId: null },
-      });
-      await prisma.correction.deleteMany({ where: { studentId: id } });
-
-      await prisma.user.delete({ where: { id } });
+      await permanentlyDeleteUser(prisma, id);
       await prisma.auditLog.create({
         data: {
           userId: admin.userId,
@@ -511,11 +489,7 @@ export async function DELETE(
       );
     }
 
-    await prisma.user.update({
-      where: { id },
-      data: { deletedAt: new Date(), isActive: false },
-    });
-
+    await archiveUser(prisma, id);
     await prisma.auditLog.create({
       data: {
         userId: admin.userId,
@@ -531,6 +505,15 @@ export async function DELETE(
       "Utilisateur archivé"
     );
   } catch (error) {
-    return handleAuthError(error) ?? serverErrorResponse(error);
+    const auth = handleAuthError(error);
+    if (auth) return auth;
+
+    console.error("[ADMIN_USER_DELETE]", error);
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : "Une erreur interne est survenue";
+    // Message Prisma plus utile pour l'admin (contraintes FK, etc.)
+    return errorResponse(message.slice(0, 300), 500);
   }
 }

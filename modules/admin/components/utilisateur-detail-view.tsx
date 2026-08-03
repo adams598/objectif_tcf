@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { EXAM_TYPE_LABELS } from "@/lib/exams/catalog";
 import type { AdminUserAnalytics } from "@/lib/admin/user-analytics";
 import { formatPaymentAmount } from "@/lib/payments/methods";
+import type { PaymentCurrency } from "@prisma/client";
 import { CompetencyRadarChart } from "@/modules/dashboard/components/competency-radar-chart";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -447,7 +448,10 @@ export function UtilisateurDetailView({ userId }: { userId: string }) {
                 >
                   <div>
                     <p className="font-label-md text-label-md font-semibold">
-                      {formatPaymentAmount(p.amount, p.currency)}
+                      {formatPaymentAmount(
+                        p.amount,
+                        p.currency as PaymentCurrency
+                      )}
                     </p>
                     <p className="font-label-sm text-[11px] text-on-surface-variant">
                       {p.description || p.method || p.provider || "—"} ·{" "}
@@ -466,7 +470,12 @@ export function UtilisateurDetailView({ userId }: { userId: string }) {
               {data.revenueByCurrency.map((r) => (
                 <p key={r.currency} className="font-label-sm text-label-sm">
                   Total réussi :{" "}
-                  <strong>{formatPaymentAmount(r.amount, r.currency)}</strong>
+                  <strong>
+                    {formatPaymentAmount(
+                      r.amount,
+                      r.currency as PaymentCurrency
+                    )}
+                  </strong>
                 </p>
               ))}
             </div>

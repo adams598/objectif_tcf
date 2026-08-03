@@ -126,7 +126,6 @@ export async function fetchAdminUserAnalytics(userId: string) {
             title: true,
             skill: true,
             difficulty: true,
-            examType: true,
           },
         },
         result: {

@@ -69,8 +69,10 @@ export function checkoutCountriesForPayment(
   const fromProfile = resolveIso3FromProfileCountry(profileCountry);
   if (fromProfile) return [fromProfile];
 
-  if (currency === "XAF") return [...PAWAPAY_CEMAC_COUNTRIES];
-  if (currency === "XOF") return [...PAWAPAY_UEMOA_COUNTRIES];
+  // Un seul pays par défaut : la liste complète CEMAC/UEMOA fait souvent
+  // échouer le checkout si ces opérateurs ne sont pas activés sur le compte.
+  if (currency === "XAF") return ["CMR"];
+  if (currency === "XOF") return ["SEN"];
   if (currency === "USD") return ["GHA"];
   return ["CMR"];
 }

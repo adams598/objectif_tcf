@@ -10,13 +10,31 @@ import {
 
 export { isPawaPayConfigured, getPawaPayCallbackUrl } from "./pawapay-config";
 
-class PawaPayApiError extends Error {
+export class PawaPayApiError extends Error {
   constructor(
     message: string,
     readonly statusCode?: number
   ) {
     super(message);
     this.name = "PawaPayApiError";
+  }
+}
+
+/** Provider pawaPay hinté depuis le moyen choisi côté UI (Cameroun). */
+export function providerHintFromMethod(method: PaymentMethod): string | null {
+  switch (method) {
+    case "MOBILE_MONEY_MTN":
+      return "MTN_MOMO_CMR";
+    case "MOBILE_MONEY_ORANGE":
+      return "ORANGE_MONEY_CMR";
+    case "MOBILE_MONEY_AIRTEL":
+      return "AIRTEL_OAPI_COG";
+    case "MOBILE_MONEY_MOOV":
+      return "MOOV_BEN";
+    case "MOBILE_MONEY_WAVE":
+      return "WAVE_SEN";
+    default:
+      return null;
   }
 }
 
@@ -178,7 +196,10 @@ export async function createPawaPayCheckout(
 
   if (params.phoneNumber?.trim()) {
     const phoneNumber = normalizeMsisdn(params.phoneNumber);
-    const provider = await predictPawaPayProvider(phoneNumber);
+    const predicted = await predictPawaPayProvider(phoneNumber);
+    const hinted = providerHintFromMethod(params.method);
+    // Le numéro prime : le predict-provider pawaPay est plus fiable que l’UI.
+    const provider = predicted ?? hinted;
     body.payer = {
       type: "MMO",
       accountDetails: {
@@ -192,7 +213,7 @@ export async function createPawaPayCheckout(
   const payload = await pawaPayFetch<{
     status?: string;
     redirectUrl?: string;
-    failureReason?: { failureMessage?: string };
+    failureReason?: { failureMessage?: string; failureCode?: string };
   }>("/v2/checkouts", {
     method: "POST",
     body: JSON.stringify(body),
@@ -202,14 +223,15 @@ export async function createPawaPayCheckout(
     payload.status !== "ACCEPTED" &&
     payload.status !== "DUPLICATE_IGNORED"
   ) {
-    throw new Error(
+    const detail =
       payload.failureReason?.failureMessage ??
-        "Initialisation pawaPay échouée"
-    );
+      payload.failureReason?.failureCode ??
+      "Initialisation pawaPay échouée";
+    throw new PawaPayApiError(detail);
   }
 
   if (!payload.redirectUrl) {
-    throw new Error("pawaPay n'a pas renvoyé d'URL de paiement");
+    throw new PawaPayApiError("pawaPay n'a pas renvoyé d'URL de paiement");
   }
 
   return {

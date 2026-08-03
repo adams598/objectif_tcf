@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/session";
 import { initiatePayment } from "@/lib/payments/service";
+import { PawaPayApiError } from "@/lib/payments/providers/pawapay";
 import {
   successResponse,
   serverErrorResponse,
@@ -80,6 +81,15 @@ export async function POST(
         "Aucun prestataire de paiement configuré. Ajoutez vos clés Stripe ou pawaPay.",
         503
       );
+    }
+    if (error instanceof Error && error.message === "PAWAPAY_NOT_CONFIGURED") {
+      return errorResponse(
+        "pawaPay n’est pas configuré (PAWAPAY_API_TOKEN manquant sur Vercel).",
+        503
+      );
+    }
+    if (error instanceof PawaPayApiError) {
+      return errorResponse(error.message, 502);
     }
     return serverErrorResponse(error);
   }

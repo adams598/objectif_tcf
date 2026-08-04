@@ -15,12 +15,13 @@ import {
 import { getExamLabel } from "@/lib/preparation/constants";
 import type { ExamTab } from "@/lib/pricing/constants";
 import {
-  buildExamResultReport,
-  downloadExamResultReport,
-} from "@/lib/examen/download-result";
+  downloadResultPdfByAttemptId,
+  downloadResultPdfFromScore,
+} from "@/lib/examen/download-result-pdf";
 import { WritingCorrectionDetails } from "@/modules/examen/components/writing-correction-details";
 import { useWritingCorrectionPoll } from "@/modules/examen/hooks/use-writing-correction-poll";
 import { useTranslation } from "@/components/providers/locale-provider";
+import { toast } from "sonner";
 
 interface GuestResultsViewProps {
   examTab: ExamTab;
@@ -371,37 +372,44 @@ export function GuestResultsView({ examTab, skillParam }: GuestResultsViewProps)
           size="lg"
           variant="outline"
           onClick={() => {
-            const report = buildExamResultReport(
-              result,
-              {
-                title: t("guestResults.resultsLabel", { exam: examLabel }),
-                skill: t("guestResults.yourEvaluation", { skill: skillLabel }),
-                score: t("guestResults.globalScore"),
-                cecrl: t("guestResults.cecrlLevel"),
-                nclc: t("guestResults.nclcEquivalent"),
-                duration: t("guestResults.performance"),
-                completedAt: t("guestResults.completedAt"),
-                recommendations: t("guestResults.recommendations"),
-                aiFeedback: t("guestResults.aiAnalysis"),
-              },
-              recommendations,
-              aiResult ?? result.details?.aiCorrection ?? null
-            );
-            downloadExamResultReport(
-              report,
-              `objectif-tcf-${result.skill.toLowerCase()}-${new Date(result.completedAt).toISOString().slice(0, 10)}.txt`
-            );
+            void (async () => {
+              try {
+                if (result.attemptId) {
+                  await downloadResultPdfByAttemptId(
+                    result.attemptId,
+                    `resultat-${result.skill}`
+                  );
+                } else {
+                  await downloadResultPdfFromScore(result, {
+                    title: t("guestResults.yourEvaluation", {
+                      skill: skillLabel,
+                    }),
+                  });
+                }
+              } catch {
+                toast.error(t("documents.downloadError"));
+              }
+            })();
           }}
         >
           {t("guestResults.downloadResults")}
-          <span className="material-symbols-outlined">download</span>
+          <span className="material-symbols-outlined">picture_as_pdf</span>
         </Button>
-        <Button asChild size="lg">
-          <Link href="/inscription">
-            {t("guestResults.saveResults")}
-            <span className="material-symbols-outlined">person_add</span>
-          </Link>
-        </Button>
+        {result.attemptId ? (
+          <Button asChild size="lg">
+            <Link href="/documents">
+              {t("nav.documents")}
+              <span className="material-symbols-outlined">folder_open</span>
+            </Link>
+          </Button>
+        ) : (
+          <Button asChild size="lg">
+            <Link href="/inscription">
+              {t("guestResults.saveResults")}
+              <span className="material-symbols-outlined">person_add</span>
+            </Link>
+          </Button>
+        )}
         <Button asChild variant="secondary" size="lg">
           <Link href={`/preparation/${examTab}`}>{t("guestResults.anotherSeries")}</Link>
         </Button>

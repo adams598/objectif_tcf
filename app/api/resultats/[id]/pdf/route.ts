@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireAuth } from "@/lib/auth/session";
 import { nclcLevelToNumber } from "@/lib/dashboard/stats";
+import { percentageToCecr } from "@/lib/examen/scoring";
 import { generateResultPdf } from "@/lib/pdf/generate-documents";
 import {
   notFoundResponse,
@@ -60,29 +61,45 @@ export async function GET(
       .map((a) => a.correction?.feedback)
       .filter(Boolean) as string[];
 
+    const pct = Math.round(attempt.percentage ?? 0);
     const nclc = attempt.nclcLevel
       ? `NCLC ${nclcLevelToNumber(attempt.nclcLevel)}`
       : "—";
+    const studentName =
+      [attempt.user.firstName, attempt.user.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() || attempt.user.name;
 
     const pdfBytes = await generateResultPdf({
       title: attempt.series.title,
-      studentName: attempt.user.name,
+      studentName,
       completedAt: attempt.completedAt
-        ? new Date(attempt.completedAt).toLocaleDateString("fr-FR")
+        ? new Date(attempt.completedAt).toLocaleDateString("fr-FR", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })
         : "—",
       skill: SKILL_LABELS[attempt.series.skill] ?? attempt.series.skill,
-      percentage: Math.round(attempt.percentage ?? 0),
+      percentage: pct,
+      cecrLevel: percentageToCecr(pct),
       nclcLevel: nclc,
       durationMinutes: Math.max(1, Math.floor((attempt.durationSec ?? 0) / 60)),
       skillScores,
       corrections,
     });
 
+    const safeTitle = attempt.series.title
+      .replace(/[^a-zA-Z0-9-_]+/g, "-")
+      .slice(0, 40);
+    const filename = `resultat-${safeTitle || id}.pdf`;
+
     return new NextResponse(Buffer.from(pdfBytes), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="resultat-${id}.pdf"`,
+        "Content-Disposition": `attachment; filename="${filename}"`,
         "Cache-Control": "private, no-store",
       },
     });

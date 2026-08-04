@@ -202,9 +202,11 @@ export interface ResultPdfData {
   skill: string;
   percentage: number;
   nclcLevel: string;
+  cecrLevel?: string;
   durationMinutes: number;
   skillScores: Array<{ label: string; value: string }>;
   corrections: string[];
+  answerReviewLines?: string[];
 }
 
 export async function generateResultPdf(data: ResultPdfData): Promise<Uint8Array> {
@@ -243,13 +245,29 @@ export async function generateResultPdf(data: ResultPdfData): Promise<Uint8Array
   drawLine(`Compétence : ${data.skill}`);
   y -= 8;
   drawLine(`Score global : ${data.percentage}%`, true);
+  if (data.cecrLevel) {
+    drawLine(`Niveau CECRL estime : ${data.cecrLevel}`, true);
+  }
   drawLine(`Niveau NCLC : ${data.nclcLevel}`, true);
-  drawLine(`Durée : ${data.durationMinutes} min`);
+  drawLine(`Duree : ${data.durationMinutes} min`);
   y -= 8;
 
-  drawLine("Profil par compétence", true, 13);
-  for (const s of data.skillScores) {
-    drawLine(`${s.label} : ${s.value}`);
+  if (data.skillScores.length > 0) {
+    drawLine("Profil par competence", true, 13);
+    for (const s of data.skillScores) {
+      drawLine(`${s.label} : ${s.value}`);
+    }
+  }
+
+  if (data.answerReviewLines && data.answerReviewLines.length > 0) {
+    y -= 8;
+    drawLine("Corrige des erreurs", true, 13);
+    for (const line of data.answerReviewLines) {
+      for (const part of wrapText(line, 85)) {
+        drawLine(part);
+      }
+      y -= 2;
+    }
   }
 
   if (data.corrections.length > 0) {

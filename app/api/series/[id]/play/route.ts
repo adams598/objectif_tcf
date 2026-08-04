@@ -345,7 +345,7 @@ export async function POST(
         }
       }
 
-      await persistExamSubmission({
+      const attempt = await persistExamSubmission({
         userId: user.userId,
         seriesId: id,
         skill: prismaSkill,
@@ -362,6 +362,7 @@ export async function POST(
       const activityStats = await getLearnerActivityStats(user.userId);
       result = {
         ...result,
+        attemptId: attempt.id,
         details: {
           ...result.details,
           activityStats,

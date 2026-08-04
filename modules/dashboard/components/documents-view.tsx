@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useTranslation } from "@/components/providers/locale-provider";
 import { UserInvoicesSection } from "@/modules/dashboard/components/user-invoices-section";
+import { UserResultsDocumentsSection } from "@/modules/dashboard/components/user-results-documents-section";
 
 export function DocumentsView() {
   const { t } = useTranslation();
@@ -20,6 +21,7 @@ export function DocumentsView() {
         </p>
       </motion.div>
 
+      <UserResultsDocumentsSection />
       <UserInvoicesSection variant="documents" />
 
       <p className="font-body-sm text-body-sm text-on-surface-variant">

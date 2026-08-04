@@ -28,6 +28,8 @@ export interface AnswerReviewItem {
 export interface ExamScoreResult {
   skill: SkillAbbrev;
   seriesId: string;
+  /** ID de la tentative persistée (compte connecté) — pour PDF / Documents */
+  attemptId?: string;
   examTab?: string;
   guestMode: boolean;
   correctCount: number;

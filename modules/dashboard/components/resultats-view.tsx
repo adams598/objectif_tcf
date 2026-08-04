@@ -15,12 +15,9 @@ import {
 } from "recharts";
 import { useTranslation } from "@/components/providers/locale-provider";
 import { fetchJson } from "@/lib/api/fetch-json";
-import {
-  buildExamResultReport,
-  downloadExamResultReport,
-} from "@/lib/examen/download-result";
-import type { SkillAbbrev } from "@/lib/examen/scoring";
+import { downloadResultPdfByAttemptId } from "@/lib/examen/download-result-pdf";
 import { nclcLevelToNumber } from "@/lib/dashboard/stats";
+import { toast } from "sonner";
 
 interface ResultAttempt {
   id: string;
@@ -120,42 +117,12 @@ export function ResultatsView() {
   const handleDownload = async () => {
     if (!latest) return;
     try {
-      const response = await fetch(`/api/resultats/${latest.id}/pdf`);
-      if (!response.ok) throw new Error("PDF failed");
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = `resultat-${latest.id}.pdf`;
-      anchor.click();
-      URL.revokeObjectURL(url);
+      await downloadResultPdfByAttemptId(
+        latest.id,
+        `resultat-${SKILL_ABBREV[latest.series.skill] ?? "serie"}-${latest.series.title}`
+      );
     } catch {
-      const report = buildExamResultReport(
-      {
-        skill: (SKILL_ABBREV[latest.series.skill] ?? "CO") as SkillAbbrev,
-        seriesId: latest.id,
-        guestMode: false,
-        correctCount: latest.score ?? 0,
-        totalQuestions: 0,
-        percentage: latest.percentage ?? 0,
-        durationSeconds: 0,
-        completedAt: latest.completedAt ?? new Date().toISOString(),
-        cecrLevel: "—",
-        nclcLevel: nclcLevelToNumber(latest.nclcLevel as never) || 0,
-      },
-      {
-        title: latest.series.title,
-        skill: t("results.competencyProfile"),
-        score: t("results.globalScore"),
-        cecrl: "CECRL",
-        nclc: "NCLC",
-        duration: "Durée",
-        completedAt: "Date",
-        recommendations: t("results.detailedCorrections"),
-      },
-      corrections.map((c) => c.feedback)
-    );
-      downloadExamResultReport(report, `resultats-${latest.id}.txt`);
+      toast.error(t("documents.downloadError"));
     }
   };
 

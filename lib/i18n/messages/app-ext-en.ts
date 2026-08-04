@@ -632,7 +632,7 @@ export const appExtEn = {
     correctionInstant: "Instant",
     correctionHuman: "Human",
     recommendations: "Personalized recommendations",
-    downloadResults: "Download results",
+    downloadResults: "Download PDF",
     completedAt: "Completed on",
     aiAnalysis: "Detailed analysis",
     recCo1: "Listen to Quebec podcasts 15 min/day",
@@ -832,7 +832,14 @@ export const appExtEn = {
   documents: {
     title: "Documents",
     subtitle:
-      "Find your subscription invoices and payment receipts.",
+      "Find your practice results and subscription invoices.",
+    resultsSectionTitle: "Practice results",
+    resultsSectionDesc:
+      "Browse your completed series and download each report as PDF.",
+    noResultsTitle: "No results yet",
+    noResultsDesc:
+      "Complete a series to see your score and PDF report here.",
+    viewResult: "View",
     invoicesSectionTitle: "Invoices",
     invoicesSectionDesc:
       "Download invoices as PDF or view them online.",

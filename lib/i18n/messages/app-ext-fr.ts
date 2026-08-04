@@ -640,7 +640,7 @@ export const appExtFr = {
     correctionInstant: "instantanée",
     correctionHuman: "humaine",
     recommendations: "Recommandations personnalisées",
-    downloadResults: "Télécharger les résultats",
+    downloadResults: "Télécharger le PDF",
     completedAt: "Terminé le",
     aiAnalysis: "Analyse détaillée",
     recCo1: "Écoutez des podcasts québécois 15 min/jour",
@@ -840,7 +840,14 @@ export const appExtFr = {
   documents: {
     title: "Documents",
     subtitle:
-      "Retrouvez vos factures d'abonnement et vos justificatifs de paiement.",
+      "Retrouvez vos résultats d'entraînement et vos factures d'abonnement.",
+    resultsSectionTitle: "Résultats d'entraînement",
+    resultsSectionDesc:
+      "Consultez vos séries terminées et téléchargez chaque rapport en PDF.",
+    noResultsTitle: "Aucun résultat pour le moment",
+    noResultsDesc:
+      "Complétez une série pour retrouver ici votre score et le PDF associé.",
+    viewResult: "Voir",
     invoicesSectionTitle: "Factures",
     invoicesSectionDesc:
       "Téléchargez vos factures au format PDF ou consultez-les en ligne.",

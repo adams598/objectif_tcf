@@ -9,6 +9,7 @@ import {
 import { resolveExamTypeFromQuery } from "@/lib/exams/catalog";
 import { getActiveExamEntitlements } from "@/lib/subscriptions/access";
 import { buildSeriesGroups } from "@/lib/series/build-series-groups";
+import { computeSkillReadinessAverages } from "@/lib/series/skill-readiness";
 import {
   successResponse,
   serverErrorResponse,
@@ -93,10 +94,45 @@ export async function GET(req: NextRequest) {
       user.role
     );
 
+    const completedAttempts = await prisma.attempt.findMany({
+      where: {
+        userId: user.userId,
+        status: "COMPLETED",
+        series: {
+          exam: { type: examType, isActive: true, deletedAt: null },
+          deletedAt: null,
+          skill: {
+            in: [
+              "COMPREHENSION_ORALE",
+              "COMPREHENSION_ECRITE",
+              "EXPRESSION_ECRITE",
+              "EXPRESSION_ORALE",
+            ],
+          },
+        },
+      },
+      select: {
+        percentage: true,
+        score: true,
+        maxScore: true,
+        series: { select: { skill: true } },
+      },
+    });
+
+    const skillReadiness = computeSkillReadinessAverages(
+      completedAttempts.map((attempt) => ({
+        percentage: attempt.percentage,
+        score: attempt.score,
+        maxScore: attempt.maxScore,
+        skill: attempt.series.skill,
+      }))
+    );
+
     return successResponse({
       groups,
       series: mapped,
       entitlements,
+      skillReadiness,
     });
   } catch (error) {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {

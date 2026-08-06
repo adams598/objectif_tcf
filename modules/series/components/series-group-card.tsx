@@ -9,6 +9,10 @@ import type { ExamTab } from "@/lib/pricing/constants";
 import type { SeriesGroup } from "@/lib/series/build-series-groups";
 import { DISCIPLINES } from "@/lib/preparation/constants";
 import { useTranslation } from "@/components/providers/locale-provider";
+import {
+  DisciplineReadinessCell,
+  type SkillReadinessMap,
+} from "./discipline-readiness-cell";
 
 const skillAbbrev: Record<string, string> = {
   COMPREHENSION_ORALE: "CO",
@@ -22,6 +26,7 @@ interface SeriesGroupCardProps {
   examTab: ExamTab;
   index: number;
   highlightSkill?: string;
+  skillReadiness?: SkillReadinessMap;
 }
 
 export function SeriesGroupCard({
@@ -29,6 +34,7 @@ export function SeriesGroupCard({
   examTab,
   index,
   highlightSkill,
+  skillReadiness,
 }: SeriesGroupCardProps) {
   const { t } = useTranslation();
   const locked = group.isLocked;
@@ -116,29 +122,17 @@ export function SeriesGroupCard({
               const partial = entry?.partial;
 
               return (
-                <div
+                <DisciplineReadinessCell
                   key={discipline.skill}
-                  className={cn(
-                    "flex items-center gap-xs rounded-lg px-sm py-xs font-label-sm text-label-sm min-w-0",
-                    !isHighlighted && "opacity-40",
-                    done
-                      ? "bg-success-container/50 text-success"
-                      : partial
-                        ? "bg-tertiary-container/40 text-tertiary"
-                        : locked
-                          ? "bg-surface-container text-on-surface-variant"
-                          : "bg-surface-container-low text-on-surface-variant"
-                  )}
-                >
-                  <span className="material-symbols-outlined text-[16px] shrink-0">
-                    {done
-                      ? "check_circle"
-                      : partial
-                        ? "timelapse"
-                        : discipline.icon}
-                  </span>
-                  <span className="truncate">{abbrev}</span>
-                </div>
+                  skill={discipline.skill}
+                  abbrev={abbrev}
+                  icon={discipline.icon}
+                  readiness={skillReadiness?.[discipline.skill]}
+                  done={Boolean(done)}
+                  partial={Boolean(partial)}
+                  locked={locked}
+                  dimmed={!isHighlighted}
+                />
               );
             })}
           </div>

@@ -76,8 +76,11 @@ export function SeriesView() {
       fetchJson<{
         groups: SeriesGroup[];
         entitlements: Entitlement[];
+        skillReadiness?: Record<string, number>;
       }>(`/api/series?examen=${activeExamSlug}`),
   });
+
+  const skillReadiness = data?.skillReadiness;
 
   const groups = useMemo(() => {
     if (data?.groups && data.groups.length > 0) {
@@ -250,6 +253,7 @@ export function SeriesView() {
                     highlightSkill={
                       activeFilter === "Tous" ? undefined : activeFilter
                     }
+                    skillReadiness={skillReadiness}
                   />
                 ))}
               </div>
@@ -277,6 +281,7 @@ export function SeriesView() {
                     highlightSkill={
                       activeFilter === "Tous" ? undefined : activeFilter
                     }
+                    skillReadiness={skillReadiness}
                   />
                 ))}
               </div>

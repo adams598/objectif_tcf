@@ -1,4 +1,7 @@
-import { PUBLIC_CONTACT_EMAIL } from "@/lib/email/contact";
+import {
+  PUBLIC_CONTACT_EMAIL,
+  PUBLIC_CONTACT_PHONE,
+} from "@/lib/email/contact";
 
 export interface FaqItem {
   question: string;
@@ -111,7 +114,7 @@ const fr: FaqContent = {
         {
           question: "Mon paiement n'a pas activé mon accès, que faire ?",
           answer:
-            "Contactez-nous via WhatsApp (+237 686 87 68 73) ou le formulaire de contact en indiquant votre email et la référence de transaction. Notre équipe réactive votre accès sous 24 h.",
+            `Contactez-nous via WhatsApp (${PUBLIC_CONTACT_PHONE}) ou le formulaire de contact en indiquant votre email et la référence de transaction. Notre équipe réactive votre accès sous 24 h.`,
         },
       ],
     },

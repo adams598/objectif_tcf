@@ -13,7 +13,12 @@ import {
   MarketingPageShell,
 } from "@/components/marketing/marketing-page";
 import { useTranslation } from "@/components/providers/locale-provider";
-import { PUBLIC_CONTACT_EMAIL } from "@/lib/email/contact";
+import {
+  PUBLIC_CONTACT_EMAIL,
+  PUBLIC_CONTACT_PHONE,
+  PUBLIC_CONTACT_PHONE_TEL,
+  PUBLIC_WHATSAPP_URL,
+} from "@/lib/email/contact";
 
 export function ContactPage() {
   const { t } = useTranslation();
@@ -58,7 +63,12 @@ export function ContactPage() {
       title: t("marketingPages.contact.channel2Title"),
       desc: t("marketingPages.contact.channel2Desc"),
       badge: t("marketingPages.contact.channel2Badge"),
-      phone: "+237 686 87 68 73",
+      action: {
+        label: t("marketingPages.contact.channel2Action"),
+        href: PUBLIC_WHATSAPP_URL,
+        external: true,
+      },
+      phone: PUBLIC_CONTACT_PHONE,
     },
     {
       title: t("marketingPages.contact.channel3Title"),
@@ -87,19 +97,34 @@ export function ContactPage() {
               <p className="font-body-sm text-body-sm text-on-surface-variant mb-md">
                 {channel.desc}
               </p>
-              {channel.action && (
-                <Link
-                  href={channel.action.href}
-                  className="font-label-sm text-label-sm text-primary hover:underline"
-                >
-                  {channel.action.label} →
-                </Link>
-              )}
+              {channel.action &&
+                ("external" in channel.action && channel.action.external ? (
+                  <a
+                    href={channel.action.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-xs font-label-sm text-label-sm text-primary hover:underline mb-sm"
+                  >
+                    {channel.action.label} →
+                  </a>
+                ) : (
+                  <Link
+                    href={channel.action.href}
+                    className="font-label-sm text-label-sm text-primary hover:underline"
+                  >
+                    {channel.action.label} →
+                  </Link>
+                ))}
               {channel.phone && (
-                <div className="flex items-center gap-sm">
-                  <span className="font-label-md text-label-md font-semibold text-on-surface">
+                <div className="flex flex-wrap items-center gap-sm mt-sm">
+                  <a
+                    href={PUBLIC_WHATSAPP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-label-md text-label-md font-semibold text-on-surface hover:text-primary transition-colors"
+                  >
                     {channel.phone}
-                  </span>
+                  </a>
                   {channel.badge && (
                     <span className="px-sm py-xs rounded-full bg-green-100 text-green-800 font-label-sm text-label-sm">
                       {channel.badge}
@@ -126,8 +151,15 @@ export function ContactPage() {
                 {
                   icon: "call",
                   title: t("marketingPages.contact.phone"),
-                  value:
-                    "Canada : +1 (418) 554-2131\nCameroun : +237 686 87 68 73",
+                  value: PUBLIC_CONTACT_PHONE,
+                  href: `tel:${PUBLIC_CONTACT_PHONE_TEL}`,
+                },
+                {
+                  icon: "chat",
+                  title: "WhatsApp",
+                  value: PUBLIC_CONTACT_PHONE,
+                  href: PUBLIC_WHATSAPP_URL,
+                  external: true,
                 },
                 {
                   icon: "schedule",
@@ -138,6 +170,7 @@ export function ContactPage() {
                   icon: "mail",
                   title: t("marketingPages.contact.email"),
                   value: PUBLIC_CONTACT_EMAIL,
+                  href: `mailto:${PUBLIC_CONTACT_EMAIL}`,
                   hint: t("marketingPages.contact.emailHint"),
                 },
               ] as const
@@ -153,17 +186,27 @@ export function ContactPage() {
                     {item.title}
                   </p>
                   <p className="font-body-sm text-body-sm text-on-surface-variant whitespace-pre-line">
-                    {"hint" in item ? (
-                      <>
-                        <span className="text-on-surface font-medium">
-                          {item.value}
-                        </span>
-                        <span className="block mt-xs text-[12px] text-on-surface-variant/80 whitespace-normal">
-                          {item.hint}
-                        </span>
-                      </>
+                    {"href" in item && item.href ? (
+                      <a
+                        href={item.href}
+                        className="text-on-surface font-medium hover:text-primary transition-colors"
+                        {...("external" in item && item.external
+                          ? { target: "_blank", rel: "noopener noreferrer" }
+                          : {})}
+                      >
+                        {item.value}
+                      </a>
+                    ) : "hint" in item ? (
+                      <span className="text-on-surface font-medium">
+                        {item.value}
+                      </span>
                     ) : (
                       item.value
+                    )}
+                    {"hint" in item && (
+                      <span className="block mt-xs text-[12px] text-on-surface-variant/80 whitespace-normal">
+                        {item.hint}
+                      </span>
                     )}
                   </p>
                 </div>

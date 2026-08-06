@@ -387,6 +387,7 @@ export const appExtEn = {
       channel1Action: "View FAQ",
       channel2Title: "Account, subscription or payment",
       channel2Desc: "Contact us on WhatsApp for quick resolution.",
+      channel2Action: "Open WhatsApp",
       channel2Badge: "Faster response",
       channel3Title: "Any other question",
       channel3Desc: "Use the form below.",

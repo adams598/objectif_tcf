@@ -1,5 +1,10 @@
 import type { LegalContent } from "@/lib/marketing/content/legal";
-import { PUBLIC_CONTACT_EMAIL } from "@/lib/email/contact";
+import {
+  PUBLIC_CONTACT_EMAIL,
+  PUBLIC_CONTACT_PHONE,
+  PUBLIC_CONTACT_PHONE_TEL,
+  PUBLIC_WHATSAPP_URL,
+} from "@/lib/email/contact";
 
 export const privacyFr: LegalContent = {
   title: "Politique de confidentialité",
@@ -292,7 +297,10 @@ export const privacyFr: LegalContent = {
           text: `Par courriel : [${PUBLIC_CONTACT_EMAIL}](mailto:${PUBLIC_CONTACT_EMAIL})`,
         },
         {
-          text: "Par téléphone : [+237 656 99 36 08](tel:+237656993608)",
+          text: `Par téléphone : [${PUBLIC_CONTACT_PHONE}](tel:${PUBLIC_CONTACT_PHONE_TEL})`,
+        },
+        {
+          text: `Par WhatsApp : [${PUBLIC_CONTACT_PHONE}](${PUBLIC_WHATSAPP_URL})`,
         },
       ],
     },

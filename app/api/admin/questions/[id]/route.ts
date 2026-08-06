@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { markSeriesAsCustomContent } from "@/lib/admin/series-content";
+import { recalculateSeriesTotalPoints } from "@/lib/db/active-questions";
 import { requireRole } from "@/lib/auth/session";
 import {
   successResponse,
@@ -110,7 +111,7 @@ export async function DELETE(
 
     const existing = await prisma.question.findFirst({
       where: { id, deletedAt: null },
-      select: { seriesId: true },
+      select: { seriesId: true, points: true },
     });
     if (!existing) return notFoundResponse("Question introuvable");
 
@@ -119,6 +120,7 @@ export async function DELETE(
       data: { deletedAt: new Date() },
     });
 
+    await recalculateSeriesTotalPoints(existing.seriesId);
     await markSeriesAsCustomContent(existing.seriesId);
 
     return successResponse({ deleted: true });

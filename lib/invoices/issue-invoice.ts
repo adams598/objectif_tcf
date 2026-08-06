@@ -1,17 +1,16 @@
 import { prisma } from "@/lib/db/prisma";
 import {
-  getFromAddress,
   getFromAddressIssue,
   isEmailConfigured,
 } from "@/lib/email/config";
-import { formatResendError } from "@/lib/email/format-resend-error";
-import { getResendClient } from "@/lib/email/resend-client";
+import { sendMail } from "@/lib/email/send-mail";
+import type { SendEmailResult } from "@/lib/email/send-verification-email";
 import { buildInvoiceData } from "@/lib/invoices/build-invoice-data";
 import { renderInvoiceHtml } from "@/lib/invoices/invoice-html";
 import { generateInvoiceNumber } from "@/lib/invoices/invoice-number";
 import type { PaymentInvoiceMetadata } from "@/lib/invoices/types";
-import type { SendEmailResult } from "@/lib/email/send-verification-email";
 import { generateInvoicePdfFromData } from "@/lib/pdf/generate-documents";
+import { isSmtpConfigured } from "@/lib/email/smtp-client";
 
 export async function getInvoicePayloadForPayment(paymentId: string) {
   const payment = await prisma.payment.findUnique({
@@ -75,20 +74,18 @@ export async function sendInvoiceEmailForPayment(
     return {
       ok: false,
       error:
-        "RESEND_API_KEY manquant — configurez Resend pour envoyer les factures.",
+        "Email non configuré — ajoutez SMTP_USER/SMTP_PASS (Gmail) ou RESEND_API_KEY.",
     };
   }
 
-  // getFromAddress() bascule déjà sur onboarding@resend.dev si FROM invalide.
-  // On journalise seulement (ne pas bloquer l'envoi).
-  const fromIssue = getFromAddressIssue();
-  if (fromIssue) {
-    console.warn("[Invoice] RESEND_FROM_EMAIL invalide, fallback utilisé:", fromIssue);
+  if (!isSmtpConfigured()) {
+    const fromIssue = getFromAddressIssue();
+    if (fromIssue) {
+      console.warn("[Invoice] RESEND_FROM_EMAIL invalide, fallback utilisé:", fromIssue);
+    }
   }
 
   try {
-    const resend = getResendClient();
-    const from = getFromAddress();
     const to = payment.user.email;
     const subject = `Votre facture ${invoiceNumber} — Objectif TCF`;
 
@@ -100,37 +97,25 @@ export async function sendInvoiceEmailForPayment(
       console.error("[Invoice] PDF generation failed, envoi HTML seul:", pdfErr);
     }
 
-    const { error: withPdfError } = await resend.emails.send({
-      from,
+    const withPdf = await sendMail({
       to,
       subject,
       html: emailHtml,
-      ...(pdfBase64
-        ? {
-            attachments: [
-              {
-                filename: `${invoiceNumber}.pdf`,
-                content: pdfBase64,
-                contentType: "application/pdf",
-              },
-            ],
-          }
-        : {}),
+      attachments: pdfBase64
+        ? [
+            {
+              filename: `${invoiceNumber}.pdf`,
+              content: pdfBase64,
+              contentType: "application/pdf",
+            },
+          ]
+        : undefined,
     });
 
-    if (withPdfError) {
-      console.error("[Invoice] Email send failed:", withPdfError);
-      const formatted = formatResendError(withPdfError);
-
-      // Si la pièce jointe pose problème, retenter sans PDF
-      if (pdfBase64 && !/only send testing emails to your own/i.test(withPdfError.message ?? "")) {
-        const { error: htmlOnlyError } = await resend.emails.send({
-          from,
-          to,
-          subject,
-          html: emailHtml,
-        });
-        if (!htmlOnlyError) {
+    if (!withPdf.ok) {
+      if (pdfBase64) {
+        const htmlOnly = await sendMail({ to, subject, html: emailHtml });
+        if (htmlOnly.ok) {
           await prisma.payment.update({
             where: { id: payment.id },
             data: {
@@ -144,11 +129,9 @@ export async function sendInvoiceEmailForPayment(
           });
           return { ok: true };
         }
-        console.error("[Invoice] HTML-only retry failed:", htmlOnlyError);
-        return { ok: false, error: formatResendError(htmlOnlyError) };
+        return htmlOnly;
       }
-
-      return { ok: false, error: formatted };
+      return withPdf;
     }
 
     await prisma.payment.update({

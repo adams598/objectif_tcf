@@ -181,6 +181,23 @@ function SkillPanel({
     },
   });
 
+  const clearQuestions = useMutation({
+    mutationFn: () =>
+      fetchJson<{ deleted: number }>(`/api/admin/series/${seriesId}/questions`, {
+        method: "DELETE",
+      }),
+    onSuccess: (data) => {
+      invalidate();
+      toast.success(
+        data.deleted > 0
+          ? `${data.deleted} question${data.deleted > 1 ? "s" : ""} supprimée${data.deleted > 1 ? "s" : ""}`
+          : "Aucune question à supprimer"
+      );
+    },
+    onError: (e) =>
+      toast.error(e instanceof Error ? e.message : "Erreur lors de la suppression"),
+  });
+
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const closeForm = () => {
@@ -234,7 +251,29 @@ function SkillPanel({
           {SKILL_CARD_LABELS[skill]} — {questions.length} question
           {questions.length !== 1 ? "s" : ""}
         </h3>
-        <div className="flex gap-xs">
+        <div className="flex gap-xs flex-wrap justify-end">
+          {!showForm && questions.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={clearQuestions.isPending}
+              onClick={() =>
+                confirm({
+                  title: "Tout supprimer ?",
+                  description:
+                    "Toutes les questions de cette compétence seront retirées. Vous pourrez ensuite en ajouter de nouvelles.",
+                  confirmLabel: "Tout supprimer",
+                  destructive: true,
+                  onConfirm: () => clearQuestions.mutateAsync(),
+                })
+              }
+            >
+              <span className="material-symbols-outlined text-error text-[18px]">
+                delete_sweep
+              </span>
+              Tout supprimer
+            </Button>
+          )}
           {!showForm && (
             <Button size="sm" onClick={openAdd}>
               <span className="material-symbols-outlined text-[18px]">add</span>

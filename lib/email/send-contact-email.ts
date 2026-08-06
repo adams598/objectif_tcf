@@ -1,11 +1,10 @@
 import {
   getAppUrl,
-  getFromAddress,
   getFromAddressIssue,
   isEmailConfigured,
 } from "@/lib/email/config";
-import { formatResendError } from "@/lib/email/format-resend-error";
-import { getResendClient } from "@/lib/email/resend-client";
+import { sendMail } from "@/lib/email/send-mail";
+import { isSmtpConfigured } from "@/lib/email/smtp-client";
 import type { SendEmailResult } from "@/lib/email/send-verification-email";
 
 export type ContactMessageInput = {
@@ -272,34 +271,25 @@ export async function sendContactMessageEmail(
   }
 
   if (!isEmailConfigured()) {
-    return { ok: false, error: "RESEND_API_KEY n’est pas configuré" };
-  }
-
-  const fromIssue = getFromAddressIssue();
-  if (fromIssue) {
-    return { ok: false, error: fromIssue };
-  }
-
-  try {
-    const resend = getResendClient();
-    const { error } = await resend.emails.send({
-      from: getFromAddress(),
-      to,
-      replyTo: input.email,
-      subject: `[Contact] ${input.name} — message via le site`,
-      html: buildContactHtml(input),
-      text: buildContactText(input),
-    });
-
-    if (error) {
-      return { ok: false, error: formatResendError(error) };
-    }
-
-    return { ok: true };
-  } catch (error) {
     return {
       ok: false,
-      error: error instanceof Error ? error.message : "Erreur d’envoi email",
+      error:
+        "Email non configuré — ajoutez SMTP_USER/SMTP_PASS (Gmail) ou RESEND_API_KEY.",
     };
   }
+
+  if (!isSmtpConfigured()) {
+    const fromIssue = getFromAddressIssue();
+    if (fromIssue) {
+      return { ok: false, error: fromIssue };
+    }
+  }
+
+  return sendMail({
+    to,
+    replyTo: input.email,
+    subject: `[Contact] ${input.name} — message via le site`,
+    html: buildContactHtml(input),
+    text: buildContactText(input),
+  });
 }

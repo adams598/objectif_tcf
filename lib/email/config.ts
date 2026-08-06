@@ -84,18 +84,37 @@ export function getFromAddress(): string {
   return `${name} <${from}>`;
 }
 
-export function isEmailConfigured(): boolean {
+export function isResendConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY?.trim());
+}
+
+export function isEmailConfigured(): boolean {
+  const smtp =
+    Boolean(process.env.SMTP_USER?.trim()) &&
+    Boolean(process.env.SMTP_PASS?.trim());
+  return smtp || isResendConfigured();
 }
 
 export function getEmailConfigStatus(): {
   configured: boolean;
+  provider: "smtp" | "resend" | null;
   from: string;
   issue: string | null;
 } {
+  const smtpConfigured =
+    Boolean(process.env.SMTP_USER?.trim()) &&
+    Boolean(process.env.SMTP_PASS?.trim());
+
   return {
     configured: isEmailConfigured(),
-    from: getFromAddress(),
-    issue: getFromAddressIssue(),
+    provider: smtpConfigured
+      ? "smtp"
+      : isResendConfigured()
+        ? "resend"
+        : null,
+    from: smtpConfigured
+      ? `${process.env.SMTP_FROM_NAME?.trim() ?? DEFAULT_FROM_NAME} <${process.env.SMTP_USER!.trim()}>`
+      : getFromAddress(),
+    issue: smtpConfigured ? null : getFromAddressIssue(),
   };
 }

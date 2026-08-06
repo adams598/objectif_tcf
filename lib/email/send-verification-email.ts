@@ -1,5 +1,5 @@
-import { getAppUrl, getFromAddress, isEmailConfigured } from "@/lib/email/config";
-import { getResendClient } from "@/lib/email/resend-client";
+import { getAppUrl, isEmailConfigured } from "@/lib/email/config";
+import { sendMail } from "@/lib/email/send-mail";
 
 export type SendEmailResult =
   | { ok: true; devMode?: boolean }
@@ -43,25 +43,9 @@ export async function sendVerificationEmail(
     return { ok: true, devMode: true };
   }
 
-  try {
-    const resend = getResendClient();
-    const { error } = await resend.emails.send({
-      from: getFromAddress(),
-      to: email,
-      subject: "Vérifiez votre email — Objectif TCF",
-      html: buildVerificationHtml(name, verificationUrl),
-    });
-
-    if (error) {
-      console.error("[Email] Verification send failed:", error);
-      return { ok: false, error: error.message };
-    }
-
-    return { ok: true };
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Erreur d'envoi d'email inconnue";
-    console.error("[Email] Verification send error:", err);
-    return { ok: false, error: message };
-  }
+  return sendMail({
+    to: email,
+    subject: "Vérifiez votre email — Objectif TCF",
+    html: buildVerificationHtml(name, verificationUrl),
+  });
 }

@@ -9,6 +9,10 @@ import {
   serverErrorResponse,
   unauthorizedResponse,
 } from "@/lib/utils/api-response";
+import {
+  activeQuestionsCountSelect,
+  activeQuestionsWhere,
+} from "@/lib/db/active-questions";
 
 export async function GET(
   _req: NextRequest,
@@ -22,6 +26,7 @@ export async function GET(
       where: { id, deletedAt: null },
       include: {
         questions: {
+          where: activeQuestionsWhere,
           include: {
             choices: {
               select: {
@@ -36,7 +41,12 @@ export async function GET(
           orderBy: { order: "asc" },
         },
         exam: { select: { title: true, type: true } },
-        _count: { select: { questions: true, attempts: true } },
+        _count: {
+          select: {
+            questions: activeQuestionsCountSelect,
+            attempts: true,
+          },
+        },
       },
     });
 

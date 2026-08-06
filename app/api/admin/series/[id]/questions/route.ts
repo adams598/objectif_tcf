@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { markSeriesAsCustomContent } from "@/lib/admin/series-content";
+import { recalculateSeriesTotalPoints } from "@/lib/db/active-questions";
 import { requireRole } from "@/lib/auth/session";
 import {
   successResponse,
@@ -103,6 +104,35 @@ export async function POST(
     await markSeriesAsCustomContent(seriesId);
 
     return createdResponse(question);
+  } catch (error) {
+    return handleAuthError(error) ?? serverErrorResponse(error);
+  }
+}
+
+/** Soft-supprime toutes les questions actives de la série (pour repartir de zéro). */
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await requireRole("ADMIN", "SUPER_ADMIN");
+    const { id: seriesId } = await params;
+
+    const series = await prisma.examSeries.findFirst({
+      where: { id: seriesId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!series) return notFoundResponse("Série introuvable");
+
+    const result = await prisma.question.updateMany({
+      where: { seriesId, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
+
+    await recalculateSeriesTotalPoints(seriesId);
+    await markSeriesAsCustomContent(seriesId);
+
+    return successResponse({ deleted: result.count });
   } catch (error) {
     return handleAuthError(error) ?? serverErrorResponse(error);
   }

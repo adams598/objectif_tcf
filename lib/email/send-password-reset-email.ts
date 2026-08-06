@@ -1,5 +1,5 @@
-import { getAppUrl, getFromAddress, isEmailConfigured } from "@/lib/email/config";
-import { getResendClient } from "@/lib/email/resend-client";
+import { getAppUrl, isEmailConfigured } from "@/lib/email/config";
+import { sendMail } from "@/lib/email/send-mail";
 import type { SendEmailResult } from "@/lib/email/send-verification-email";
 
 function buildResetHtml(name: string, resetUrl: string): string {
@@ -40,25 +40,9 @@ export async function sendPasswordResetEmail(
     return { ok: true, devMode: true };
   }
 
-  try {
-    const resend = getResendClient();
-    const { error } = await resend.emails.send({
-      from: getFromAddress(),
-      to: email,
-      subject: "Réinitialisez votre mot de passe — Objectif TCF",
-      html: buildResetHtml(name, resetUrl),
-    });
-
-    if (error) {
-      console.error("[Email] Password reset send failed:", error);
-      return { ok: false, error: error.message };
-    }
-
-    return { ok: true };
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Erreur d'envoi d'email inconnue";
-    console.error("[Email] Password reset send error:", err);
-    return { ok: false, error: message };
-  }
+  return sendMail({
+    to: email,
+    subject: "Réinitialisez votre mot de passe — Objectif TCF",
+    html: buildResetHtml(name, resetUrl),
+  });
 }

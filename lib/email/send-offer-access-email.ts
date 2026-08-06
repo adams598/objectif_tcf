@@ -1,12 +1,6 @@
-import {
-  getAppUrl,
-  getFromAddress,
-  getFromAddressIssue,
-  isEmailConfigured,
-} from "@/lib/email/config";
-import { getResendClient } from "@/lib/email/resend-client";
+import { getAppUrl, isEmailConfigured } from "@/lib/email/config";
+import { sendMail } from "@/lib/email/send-mail";
 import type { SendEmailResult } from "@/lib/email/send-verification-email";
-
 export type OfferAccessEmailInput = {
   to: string;
   recipientName: string;
@@ -25,20 +19,6 @@ function escapeHtml(value: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-}
-
-function formatResendError(
-  error: { message?: string; name?: string } | null
-): string {
-  if (!error?.message) return "Échec d'envoi Resend";
-  const msg = error.message;
-  if (/domain|not verified|from/i.test(msg)) {
-    return (
-      `${msg} — Vérifiez RESEND_FROM_EMAIL (domaine vérifié sur Resend, ` +
-      `ou onboarding@resend.dev pour les tests).`
-    );
-  }
-  return msg;
 }
 
 function buildOfferAccessHtml(input: OfferAccessEmailInput): string {
@@ -107,48 +87,21 @@ export async function sendOfferAccessEmail(
     return {
       ok: false,
       error:
-        "RESEND_API_KEY absent — email non envoyé. Ajoutez la clé dans Vercel / .env.local.",
+        "Email non configuré — ajoutez SMTP_USER/SMTP_PASS (Gmail) ou RESEND_API_KEY dans .env.local.",
     };
   }
 
-  const fromIssue = getFromAddressIssue();
-  if (fromIssue) {
-    console.warn(
-      "[Email] FROM invalide, fallback onboarding@resend.dev:",
-      fromIssue
-    );
+  const result = await sendMail({
+    to: input.to,
+    subject,
+    html: buildOfferAccessHtml(input),
+  });
+
+  if (result.ok) {
+    console.log("[Email] Offer access sent", { to: input.to });
   }
 
-  try {
-    const resend = getResendClient();
-    const from = getFromAddress();
-    const { data, error } = await resend.emails.send({
-      from,
-      to: input.to,
-      subject,
-      html: buildOfferAccessHtml(input),
-    });
-
-    if (error) {
-      console.error("[Email] Offer access send failed:", error, {
-        from,
-        to: input.to,
-      });
-      return { ok: false, error: formatResendError(error) };
-    }
-
-    console.log("[Email] Offer access sent", {
-      to: input.to,
-      id: data?.id,
-      from,
-    });
-    return { ok: true };
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Erreur d'envoi d'email inconnue";
-    console.error("[Email] Offer access send error:", err);
-    return { ok: false, error: message };
-  }
+  return result;
 }
 
 export type LearnerCredentialsEmailInput = {
@@ -201,31 +154,13 @@ export async function sendLearnerCredentialsEmail(
     console.log(`[DEV] Learner credentials → ${input.to} | pwd=${input.password}`);
     return {
       ok: false,
-      error: "RESEND_API_KEY absent — email non envoyé.",
+      error: "Email non configuré — ajoutez SMTP_USER/SMTP_PASS ou RESEND_API_KEY.",
     };
   }
 
-  try {
-    const resend = getResendClient();
-    const from = getFromAddress();
-    const { error } = await resend.emails.send({
-      from,
-      to: input.to,
-      subject: "Votre compte Objectif TCF — identifiants de connexion",
-      html,
-    });
-    if (error) {
-      console.error("[Email] Learner credentials failed:", error, {
-        from,
-        to: input.to,
-      });
-      return { ok: false, error: formatResendError(error) };
-    }
-    return { ok: true };
-  } catch (err) {
-    return {
-      ok: false,
-      error: err instanceof Error ? err.message : "Erreur d'envoi",
-    };
-  }
+  return sendMail({
+    to: input.to,
+    subject: "Votre compte Objectif TCF — identifiants de connexion",
+    html,
+  });
 }

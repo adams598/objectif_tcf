@@ -11,6 +11,7 @@ import {
   unauthorizedResponse,
   forbiddenResponse,
 } from "@/lib/utils/api-response";
+import { activeQuestionsCountSelect } from "@/lib/db/active-questions";
 
 const updateSchema = z.object({
   title: z.string().min(2).max(200).optional(),
@@ -49,7 +50,12 @@ export async function GET(
           include: { choices: { orderBy: { order: "asc" } } },
           orderBy: { order: "asc" },
         },
-        _count: { select: { questions: true, attempts: true } },
+        _count: {
+          select: {
+            questions: activeQuestionsCountSelect,
+            attempts: true,
+          },
+        },
       },
     });
 

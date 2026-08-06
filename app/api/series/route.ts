@@ -16,6 +16,7 @@ import {
   validationErrorResponse,
   unauthorizedResponse,
 } from "@/lib/utils/api-response";
+import { activeQuestionsCountSelect } from "@/lib/db/active-questions";
 
 const querySchema = z.object({
   examen: z.string().optional(),
@@ -56,7 +57,7 @@ export async function GET(req: NextRequest) {
       orderBy: [{ order: "asc" }, { skill: "asc" }],
       include: {
         exam: { select: { type: true, title: true } },
-        _count: { select: { questions: true } },
+        _count: { select: { questions: activeQuestionsCountSelect } },
         attempts: {
           where: { userId: user.userId },
           orderBy: { updatedAt: "desc" },

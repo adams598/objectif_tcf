@@ -8,6 +8,7 @@ import {
 } from "@/lib/utils/api-response";
 import { groupSeriesByOrder } from "@/lib/preparation/series-groups";
 import { resolveExamTypeFromQuery } from "@/lib/exams/catalog";
+import { activeQuestionsCountSelect } from "@/lib/db/active-questions";
 
 const querySchema = z.object({
   examType: z.string().optional(),
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
         durationMin: true,
         isFree: true,
         order: true,
-        _count: { select: { questions: true } },
+        _count: { select: { questions: activeQuestionsCountSelect } },
       },
     });
 

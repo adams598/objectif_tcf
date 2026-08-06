@@ -10,6 +10,7 @@ import {
   unauthorizedResponse,
   forbiddenResponse,
 } from "@/lib/utils/api-response";
+import { activeQuestionsCountSelect } from "@/lib/db/active-questions";
 
 const seriesSchema = z.object({
   examId: z.string().min(1),
@@ -63,7 +64,12 @@ export async function GET(req: NextRequest) {
       include: {
         exam: { select: { type: true, title: true } },
         createdBy: { select: createdBySelect },
-        _count: { select: { questions: true, attempts: true } },
+        _count: {
+          select: {
+            questions: activeQuestionsCountSelect,
+            attempts: true,
+          },
+        },
       },
     });
 
@@ -91,7 +97,7 @@ export async function POST(req: NextRequest) {
       include: {
         exam: { select: { type: true, title: true } },
         createdBy: { select: createdBySelect },
-        _count: { select: { questions: true } },
+        _count: { select: { questions: activeQuestionsCountSelect } },
       },
     });
 

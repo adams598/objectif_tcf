@@ -210,7 +210,7 @@ export async function grantOfferAccessByEmails(input: {
         status: "granted",
         isNewUser,
         emailSent: emailResult.ok,
-        password,
+        password: password ?? undefined,
         periodEnd: subscription.currentPeriodEnd.toISOString(),
         error: emailResult.ok ? undefined : emailResult.error,
       });

@@ -653,7 +653,10 @@ export async function listPaymentsForAdmin(filters?: {
   const limit = Math.min(filters?.limit ?? 20, 100);
   const skip = (page - 1) * limit;
 
-  const where = filters?.status ? { status: filters.status } : {};
+  const where = {
+    deletedAt: null,
+    ...(filters?.status ? { status: filters.status } : {}),
+  };
 
   const [items, total] = await Promise.all([
     prisma.payment.findMany({
@@ -676,15 +679,16 @@ export async function listPaymentsForAdmin(filters?: {
 }
 
 export async function getPaymentStatsForAdmin() {
+  const notDeleted = { deletedAt: null };
   const [total, succeeded, pending, failed, revenue] = await Promise.all([
-    prisma.payment.count(),
-    prisma.payment.count({ where: { status: "SUCCEEDED" } }),
+    prisma.payment.count({ where: notDeleted }),
+    prisma.payment.count({ where: { ...notDeleted, status: "SUCCEEDED" } }),
     prisma.payment.count({
-      where: { status: { in: ["PENDING", "PROCESSING"] } },
+      where: { ...notDeleted, status: { in: ["PENDING", "PROCESSING"] } },
     }),
-    prisma.payment.count({ where: { status: "FAILED" } }),
+    prisma.payment.count({ where: { ...notDeleted, status: "FAILED" } }),
     prisma.payment.aggregate({
-      where: { status: "SUCCEEDED", currency: "XAF" },
+      where: { ...notDeleted, status: "SUCCEEDED", currency: "XAF" },
       _sum: { amount: true },
     }),
   ]);
@@ -698,13 +702,75 @@ export async function getPaymentStatsForAdmin() {
   };
 }
 
+export async function archivePaymentForAdmin(
+  paymentId: string,
+  adminUserId: string
+) {
+  const payment = await prisma.payment.findFirst({
+    where: { id: paymentId, deletedAt: null },
+  });
+  if (!payment) return null;
+
+  const updated = await prisma.payment.update({
+    where: { id: paymentId },
+    data: { deletedAt: new Date() },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      userId: adminUserId,
+      action: "ADMIN_PAYMENT_ARCHIVE",
+      entity: "Payment",
+      entityId: paymentId,
+      metadata: {
+        mode: "archive",
+        amount: payment.amount,
+        currency: payment.currency,
+        status: payment.status,
+      },
+    },
+  });
+
+  return updated;
+}
+
+export async function permanentlyDeletePaymentForAdmin(
+  paymentId: string,
+  adminUserId: string
+) {
+  const payment = await prisma.payment.findFirst({
+    where: { id: paymentId, deletedAt: null },
+  });
+  if (!payment) return null;
+
+  await prisma.payment.delete({ where: { id: paymentId } });
+
+  await prisma.auditLog.create({
+    data: {
+      userId: adminUserId,
+      action: "ADMIN_PAYMENT_HARD_DELETE",
+      entity: "Payment",
+      entityId: paymentId,
+      metadata: {
+        mode: "permanent",
+        amount: payment.amount,
+        currency: payment.currency,
+        status: payment.status,
+        userId: payment.userId,
+      },
+    },
+  });
+
+  return { deleted: true as const };
+}
+
 export async function refundPaymentForAdmin(
   paymentId: string,
   adminUserId: string,
   reason?: string
 ) {
-  const payment = await prisma.payment.findUnique({
-    where: { id: paymentId },
+  const payment = await prisma.payment.findFirst({
+    where: { id: paymentId, deletedAt: null },
     include: { subscription: true },
   });
 

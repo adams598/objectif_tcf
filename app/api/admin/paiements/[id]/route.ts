@@ -1,6 +1,10 @@
 import { NextRequest } from "next/server";
 import { requireRole } from "@/lib/auth/session";
-import { refundPaymentForAdmin } from "@/lib/payments/service";
+import {
+  archivePaymentForAdmin,
+  permanentlyDeletePaymentForAdmin,
+  refundPaymentForAdmin,
+} from "@/lib/payments/service";
 import {
   successResponse,
   serverErrorResponse,
@@ -65,6 +69,37 @@ export async function PATCH(
         });
       }
     }
+    return handleAuthError(error) ?? serverErrorResponse(error);
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const admin = await requireRole("ADMIN", "SUPER_ADMIN");
+    const { id } = await params;
+    const modeParam = new URL(req.url).searchParams.get("mode");
+    const mode = modeParam === "permanent" ? "permanent" : "archive";
+
+    if (mode === "permanent") {
+      const result = await permanentlyDeletePaymentForAdmin(id, admin.userId);
+      if (!result) return notFoundResponse("Paiement");
+      return successResponse(
+        { deleted: true, mode: "permanent" },
+        "Paiement définitivement supprimé"
+      );
+    }
+
+    const archived = await archivePaymentForAdmin(id, admin.userId);
+    if (!archived) return notFoundResponse("Paiement");
+
+    return successResponse(
+      { deleted: true, mode: "archive" },
+      "Paiement archivé"
+    );
+  } catch (error) {
     return handleAuthError(error) ?? serverErrorResponse(error);
   }
 }

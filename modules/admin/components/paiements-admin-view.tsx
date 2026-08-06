@@ -8,6 +8,14 @@ import { fetchJson } from "@/lib/api/fetch-json";
 import { formatPaymentAmount } from "@/lib/payments/methods";
 import { Button } from "@/components/ui/button";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { PaymentCurrency, PaymentMethod, PaymentProvider, PaymentStatus } from "@prisma/client";
 
 interface AdminPaymentRow {
@@ -77,6 +85,7 @@ export function PaiementsAdminView() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | "ALL">("ALL");
   const [page, setPage] = useState(1);
+  const [deleteTargets, setDeleteTargets] = useState<AdminPaymentRow[]>([]);
 
   const query = useQuery({
     queryKey: ["admin-payments", statusFilter, page],
@@ -102,6 +111,58 @@ export function PaiementsAdminView() {
         error instanceof Error ? error.message : "Impossible de rembourser ce paiement";
       toast.error(message);
     },
+  });
+
+  const removePayments = useMutation({
+    mutationFn: async ({
+      ids,
+      mode,
+    }: {
+      ids: string[];
+      mode: "archive" | "permanent";
+    }) => {
+      let ok = 0;
+      let fail = 0;
+      const errors: string[] = [];
+      for (const id of ids) {
+        try {
+          await fetchJson(`/api/admin/paiements/${id}?mode=${mode}`, {
+            method: "DELETE",
+          });
+          ok += 1;
+        } catch (error) {
+          fail += 1;
+          errors.push(
+            error instanceof Error ? error.message : `Échec pour ${id}`
+          );
+        }
+      }
+      if (fail > 0 && ok === 0) {
+        throw new Error(errors[0] ?? "Suppression impossible");
+      }
+      return { ok, fail, errors, mode };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-payments"] });
+      setDeleteTargets([]);
+      if (result.fail > 0) {
+        toast.warning(
+          `${result.ok} traité(s), ${result.fail} échec(s)${
+            result.errors[0] ? ` — ${result.errors[0]}` : ""
+          }`
+        );
+      } else {
+        toast.success(
+          result.mode === "permanent"
+            ? `${result.ok} paiement(s) définitivement supprimé(s)`
+            : `${result.ok} paiement(s) archivé(s)`
+        );
+      }
+    },
+    onError: (error) =>
+      toast.error(
+        error instanceof Error ? error.message : "Suppression impossible"
+      ),
   });
 
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
@@ -240,26 +301,38 @@ export function PaiementsAdminView() {
                       </span>
                     </td>
                     <td className="px-md py-sm">
-                      {payment.status === "SUCCEEDED" && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          disabled={refundMutation.isPending}
-                          onClick={() =>
-                            confirm({
-                              title: "Rembourser ce paiement ?",
-                              description:
-                                "L'abonnement associé sera révoqué. Cette action est définitive.",
-                              confirmLabel: "Rembourser",
-                              destructive: true,
-                              onConfirm: () =>
-                                refundMutation.mutateAsync(payment.id),
-                            })
-                          }
+                      <div className="flex items-center gap-xs">
+                        {payment.status === "SUCCEEDED" && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            disabled={refundMutation.isPending}
+                            onClick={() =>
+                              confirm({
+                                title: "Rembourser ce paiement ?",
+                                description:
+                                  "L'abonnement associé sera révoqué. Cette action est définitive.",
+                                confirmLabel: "Rembourser",
+                                destructive: true,
+                                onConfirm: () =>
+                                  refundMutation.mutateAsync(payment.id),
+                              })
+                            }
+                          >
+                            Rembourser
+                          </Button>
+                        )}
+                        <button
+                          type="button"
+                          className="p-1.5 rounded-lg text-error hover:bg-error-container/30 transition-colors"
+                          title="Archiver ou supprimer"
+                          onClick={() => setDeleteTargets([payment])}
                         >
-                          Rembourser
-                        </Button>
-                      )}
+                          <span className="material-symbols-outlined text-[18px]">
+                            delete
+                          </span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -292,6 +365,83 @@ export function PaiementsAdminView() {
           </button>
         </div>
       )}
+
+      <Dialog
+        open={deleteTargets.length > 0}
+        onOpenChange={(open) => {
+          if (!open && !removePayments.isPending) setDeleteTargets([]);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {deleteTargets.length > 1
+                ? `Que faire de ces ${deleteTargets.length} paiements ?`
+                : "Que faire de ce paiement ?"}
+            </DialogTitle>
+            <DialogDescription>
+              {deleteTargets.length === 1
+                ? `${deleteTargets[0].userName} (${deleteTargets[0].userEmail}) — ${formatPaymentAmount(deleteTargets[0].amount, deleteTargets[0].currency)}. `
+                : `${deleteTargets.length} paiements sélectionnés. `}
+              L&apos;archivage masque le paiement des listes admin.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-sm">
+            <button
+              type="button"
+              disabled={removePayments.isPending || deleteTargets.length === 0}
+              onClick={() =>
+                removePayments.mutate({
+                  ids: deleteTargets.map((p) => p.id),
+                  mode: "archive",
+                })
+              }
+              className="w-full text-left rounded-xl border border-outline-variant bg-surface-container-low p-md hover:border-primary transition-colors disabled:opacity-50"
+            >
+              <p className="font-label-md text-sm font-semibold text-on-surface flex items-center gap-sm">
+                <span className="material-symbols-outlined text-[20px] text-primary">
+                  inventory_2
+                </span>
+                Archiver
+              </p>
+              <p className="font-label-sm text-[12px] text-on-surface-variant mt-xs">
+                Masque le paiement des listes admin. Il reste en base.
+              </p>
+            </button>
+            <button
+              type="button"
+              disabled={removePayments.isPending || deleteTargets.length === 0}
+              onClick={() =>
+                removePayments.mutate({
+                  ids: deleteTargets.map((p) => p.id),
+                  mode: "permanent",
+                })
+              }
+              className="w-full text-left rounded-xl border border-error/30 bg-error/5 p-md hover:border-error transition-colors disabled:opacity-50"
+            >
+              <p className="font-label-md text-sm font-semibold text-error flex items-center gap-sm">
+                <span className="material-symbols-outlined text-[20px]">
+                  delete_forever
+                </span>
+                Supprimer définitivement
+              </p>
+              <p className="font-label-sm text-[12px] text-on-surface-variant mt-xs">
+                Efface entièrement le paiement. Cette action est irréversible.
+              </p>
+            </button>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              disabled={removePayments.isPending}
+              onClick={() => setDeleteTargets([])}
+            >
+              Annuler
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {confirmDialog}
     </div>
   );

@@ -373,6 +373,7 @@ model Payment {
   metadata         Json?
   failureReason    String?
   paidAt           DateTime?
+  deletedAt        DateTime?
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   subscription Subscription? @relation(fields: [subscriptionId], references: [id])
@@ -385,6 +386,7 @@ model Payment {
   @@index([status])
   @@index([provider])
   @@index([createdAt])
+  @@index([deletedAt])
 }
 
 // ===========================

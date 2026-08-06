@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { buildScoreResult, scoreQcm } from "@/lib/examen/scoring";
 import { submitExamScore } from "@/lib/examen/submit-exam";
 import { navigateToResults } from "@/lib/examen/guest-results";
 import { useExamSeries, type PlayQuestion } from "@/modules/examen/hooks/use-exam-series";
+import { useAttemptAutosave } from "@/modules/examen/hooks/use-attempt-autosave";
 import {
   getExamLabelFromTab,
   getSeriesLabel,
@@ -47,6 +48,7 @@ export function ReadingExamView({
   const { t } = useTranslation();
   const router = useRouter();
   const startedAt = useRef(Date.now());
+  const previousElapsed = useRef(0);
   const { data: seriesData, isLoading } = useExamSeries(seriesId);
 
   const QUESTIONS = seriesData?.questions?.length
@@ -56,9 +58,46 @@ export function ReadingExamView({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showMobileMap, setShowMobileMap] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  const attemptId = seriesData?.activeAttempt?.id ?? null;
+
+  useEffect(() => {
+    if (hydrated || !seriesData) return;
+    const active = seriesData.activeAttempt;
+    if (active) {
+      if (Object.keys(active.answers).length > 0) {
+        setAnswers(active.answers);
+      }
+      if (active.currentOrder && active.currentOrder > 0) {
+        const idx = QUESTIONS.findIndex((q) => q.order === active.currentOrder);
+        if (idx >= 0) setCurrentIndex(idx);
+      }
+      previousElapsed.current = active.elapsedSec ?? 0;
+    }
+    setHydrated(true);
+  }, [seriesData, hydrated, QUESTIONS]);
+
+  const elapsedNow = () =>
+    previousElapsed.current +
+    Math.floor((Date.now() - startedAt.current) / 1000);
+
+  const { flush: flushAutosave } = useAttemptAutosave({
+    attemptId,
+    enabled: !guestMode && hydrated,
+    payload: useMemo(
+      () => ({
+        answers,
+        currentOrder: QUESTIONS[currentIndex]?.order,
+        elapsedSec: elapsedNow(),
+      }),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [answers, currentIndex, QUESTIONS]
+    ),
+  });
 
   const submitExam = useCallback(async () => {
-    const durationSeconds = Math.floor((Date.now() - startedAt.current) / 1000);
+    await flushAutosave();
+    const durationSeconds = elapsedNow();
     try {
       const result = await submitExamScore(seriesId, {
         guestMode,
@@ -87,11 +126,28 @@ export function ReadingExamView({
       });
       navigateToResults(result, router, guestMode);
     }
-  }, [answers, seriesId, examTab, guestMode, router, QUESTIONS.length]);
+  }, [
+    answers,
+    seriesId,
+    examTab,
+    guestMode,
+    router,
+    QUESTIONS.length,
+    flushAutosave,
+  ]);
 
-  const { timeLeft } = useExamTimer(TOTAL_DURATION, () => {
+  const initialTimeLeft = Math.max(
+    0,
+    TOTAL_DURATION - (seriesData?.activeAttempt?.elapsedSec ?? 0)
+  );
+  const { timeLeft, resetTo } = useExamTimer(TOTAL_DURATION, () => {
     void submitExam();
   });
+
+  useEffect(() => {
+    if (hydrated) resetTo(initialTimeLeft);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
 
   const answeredSet = useMemo(() => {
     const set = new Set<number>();

@@ -501,6 +501,9 @@ model Attempt {
   maxScore    Float?        // score maximum possible
   percentage  Float?        // pourcentage
   nclcLevel   NCLCLevel?
+  // Progression persistée pour reprise après déconnexion
+  currentOrder Int?         // ordre (1-based) de la question / tâche en cours
+  elapsedSec   Int?         // temps déjà écoulé en secondes
 
   user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   series  ExamSeries @relation(fields: [seriesId], references: [id])
@@ -537,6 +540,7 @@ model Answer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([attemptId, questionId])
   @@index([attemptId])
   @@index([questionId])
   @@index([userId])

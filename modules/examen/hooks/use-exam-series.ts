@@ -17,6 +17,16 @@ export interface PlayQuestion {
   choices: Array<{ id: string; content: string; order: number }>;
 }
 
+export interface PlayActiveAttempt {
+  id: string;
+  currentOrder: number | null;
+  elapsedSec: number | null;
+  startedAt: string;
+  updatedAt: string;
+  answers: Record<string, string>;
+  textResponses: Record<string, string>;
+}
+
 export interface PlaySeries {
   id: string;
   title: string;
@@ -28,6 +38,7 @@ export interface PlaySeries {
   examTitle: string;
   questionCount: number;
   questions: PlayQuestion[];
+  activeAttempt: PlayActiveAttempt | null;
 }
 
 export function useExamSeries(seriesId: string) {
@@ -35,6 +46,9 @@ export function useExamSeries(seriesId: string) {
     queryKey: ["exam-series", seriesId],
     queryFn: () => fetchJson<PlaySeries>(`/api/series/${seriesId}/play`),
     retry: false,
-    staleTime: 5 * 60 * 1000,
+    // Ne pas conserver les réponses en cache après avoir quitté l'écran :
+    // on veut toujours ré-hydrater depuis le serveur (dernière session sauvegardée).
+    staleTime: 0,
+    refetchOnWindowFocus: false,
   });
 }

@@ -125,5 +125,10 @@ export function useExamTimer(totalSeconds: number, onTimeUp?: () => void) {
     return () => clearInterval(id);
   }, [timeLeft]);
 
-  return { timeLeft, setTimeLeft };
+  /** Ajuste immédiatement le temps restant (ex. pour reprise après déconnexion). */
+  const resetTo = React.useCallback((seconds: number) => {
+    setTimeLeft(Math.max(0, seconds));
+  }, []);
+
+  return { timeLeft, setTimeLeft, resetTo };
 }

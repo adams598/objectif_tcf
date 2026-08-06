@@ -268,11 +268,20 @@ export async function PATCH(
         data: { targetExamDate: finalEnd },
       });
 
-      // Réutilise le mdp admin visible, sinon en génère un
-      if (!plainPassword) {
-        plainPassword =
-          decryptAdminPassword(existing.adminPasswordEnc) ??
-          (await setUserCredentials(id));
+      // Ne jamais écraser le mdp d'un compte existant à l'octroi d'offre.
+      // Envoie le mdp en clair seulement s'il a été fourni / déjà visible admin.
+      // Exception : compte sans credentials (ex. OAuth seul) → en crée un.
+      let passwordForEmail =
+        plainPassword ?? decryptAdminPassword(existing.adminPasswordEnc);
+      if (!passwordForEmail) {
+        const hasCredentials = await prisma.account.findFirst({
+          where: { userId: id, provider: "credentials" },
+          select: { id: true },
+        });
+        if (!hasCredentials) {
+          passwordForEmail = await setUserCredentials(id);
+          plainPassword = passwordForEmail;
+        }
       }
 
       const examLabel =
@@ -296,7 +305,7 @@ export async function PATCH(
         examLabel,
         days,
         periodEndLabel,
-        password: plainPassword,
+        password: passwordForEmail,
       });
       accessEmailSent = emailResult.ok;
       grantedOfferName = offer.name;

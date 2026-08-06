@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -304,6 +305,18 @@ export function ExamsAdminView() {
                   Cet examen est désactivé — invisible pour les apprenants, visible pour les admins.
                 </div>
               )}
+
+              <div className="flex items-center justify-between gap-md flex-wrap rounded-xl border border-outline-variant bg-surface-container-low/50 p-md">
+                <p className="font-label-md text-on-surface">
+                  <span className="font-bold">{selected._count.series}</span>
+                  {selected._count.series !== 1 ? " séries" : " série"}
+                </p>
+                <Button asChild variant="secondary" size="sm">
+                  <Link href={`/admin/series?examId=${encodeURIComponent(selected.id)}`}>
+                    Séries
+                  </Link>
+                </Button>
+              </div>
 
               <SubscriptionStatsPanel exam={selected} />
 

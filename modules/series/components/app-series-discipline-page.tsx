@@ -73,6 +73,11 @@ export function AppSeriesDisciplinePage({
     ? SKILL_TO_DISCIPLINE[pending.skill]
     : null;
 
+  const pendingEntry = pending
+    ? disciplineBySkill[pending.skill]
+    : null;
+  const pendingIsPartial = pendingEntry?.partial && !pendingEntry.completed;
+
   const handleConfirm = () => {
     if (!pending) return;
     router.push(`/examen/serie/${pending.seriesId}`);
@@ -198,6 +203,14 @@ export function AppSeriesDisciplinePage({
                     </span>
                     {unit}
                   </span>
+                  {entry?.partial && !entry.completed && (
+                    <span className="inline-flex items-center gap-xs text-tertiary font-bold">
+                      <span className="material-symbols-outlined text-[16px]">
+                        timelapse
+                      </span>
+                      {t("discipline.resumeInProgress")}
+                    </span>
+                  )}
                   {entry?.score !== undefined && (
                     <span className="text-primary font-bold">
                       {t("discipline.bestScore", { score: entry.score })}
@@ -213,24 +226,38 @@ export function AppSeriesDisciplinePage({
       <Dialog open={!!pending} onOpenChange={(open) => !open && setPending(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("preparation.startTestTitle")}</DialogTitle>
+            <DialogTitle>
+              {pendingIsPartial
+                ? t("discipline.resumeTitle")
+                : t("preparation.startTestTitle")}
+            </DialogTitle>
             <DialogDescription asChild>
               <div className="space-y-md pt-sm">
                 {pendingDiscipline && (
                   <>
-                    <p>
-                      {t("preparation.startTestDesc", {
-                        discipline: pendingDiscipline.label,
-                        exam: getExamLabel(examTab),
-                        min: pendingDiscipline.durationMin,
-                      })}
-                    </p>
+                    {pendingIsPartial ? (
+                      <p>
+                        {t("discipline.resumeDescription", {
+                          discipline: pendingDiscipline.label,
+                        })}
+                      </p>
+                    ) : (
+                      <p>
+                        {t("preparation.startTestDesc", {
+                          discipline: pendingDiscipline.label,
+                          exam: getExamLabel(examTab),
+                          min: pendingDiscipline.durationMin,
+                        })}
+                      </p>
+                    )}
                     <p className="font-label-sm text-label-sm">
                       {pendingDiscipline.description}
                     </p>
-                    <p className="font-label-md text-label-md font-bold text-on-surface uppercase tracking-wide">
-                      {t("preparation.startTestConfirm")}
-                    </p>
+                    {!pendingIsPartial && (
+                      <p className="font-label-md text-label-md font-bold text-on-surface uppercase tracking-wide">
+                        {t("preparation.startTestConfirm")}
+                      </p>
+                    )}
                   </>
                 )}
               </div>
@@ -241,9 +268,11 @@ export function AppSeriesDisciplinePage({
               {t("discipline.cancel")}
             </Button>
             <Button onClick={handleConfirm}>
-              {t("discipline.startExam")}
+              {pendingIsPartial
+                ? t("discipline.resumeExam")
+                : t("discipline.startExam")}
               <span className="material-symbols-outlined text-[18px]">
-                play_arrow
+                {pendingIsPartial ? "resume" : "play_arrow"}
               </span>
             </Button>
           </DialogFooter>

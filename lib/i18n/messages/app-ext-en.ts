@@ -575,6 +575,11 @@ export const appExtEn = {
     backSeries: "Back to series",
     bestScore: "Best score: {{score}}%",
     startExam: "Start",
+    resumeExam: "Resume",
+    resumeTitle: "Resume this session?",
+    resumeInProgress: "In progress — resume",
+    resumeDescription:
+      "You have an ongoing {{discipline}} session. Your answers were saved: you will pick up exactly where you left off.",
     cancel: "Cancel",
     minutes: "{{n}} minutes",
     tasksCount: "{{n}} tasks",

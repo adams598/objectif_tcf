@@ -4,12 +4,12 @@ import type { LearnerActivityStats } from "@/lib/examen/scoring";
 
 /**
  * Enregistre l’ouverture d’une série (tentative IN_PROGRESS).
- * Met à jour updatedAt si une tentative en cours existe déjà.
+ * Retourne l’attempt courant (créé ou repris) pour permettre la reprise après déconnexion.
  */
 export async function trackSeriesOpened(
   userId: string,
   seriesId: string
-): Promise<void> {
+): Promise<{ id: string }> {
   const existing = await prisma.attempt.findFirst({
     where: { userId, seriesId, status: "IN_PROGRESS" },
     orderBy: { updatedAt: "desc" },
@@ -17,20 +17,20 @@ export async function trackSeriesOpened(
   });
 
   if (existing) {
-    // Touch updatedAt (dernière ouverture) en réaffirmant le statut
     await prisma.attempt.update({
       where: { id: existing.id },
       data: { status: "IN_PROGRESS" },
     });
-    return;
+    return existing;
   }
 
-  await prisma.attempt.create({
+  return prisma.attempt.create({
     data: {
       userId,
       seriesId,
       status: "IN_PROGRESS",
     },
+    select: { id: true },
   });
 }
 

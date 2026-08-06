@@ -80,10 +80,62 @@ export async function GET(
       return forbiddenResponse();
     }
 
+    let activeAttempt: {
+      id: string;
+      currentOrder: number | null;
+      elapsedSec: number | null;
+      startedAt: string;
+      updatedAt: string;
+      answers: Record<string, string>;
+      textResponses: Record<string, string>;
+    } | null = null;
+
     if (user?.userId) {
-      await trackSeriesOpened(user.userId, id).catch((err) =>
-        console.error("[play] trackSeriesOpened", err)
-      );
+      const attempt = await trackSeriesOpened(user.userId, id).catch((err) => {
+        console.error("[play] trackSeriesOpened", err);
+        return null;
+      });
+
+      if (attempt) {
+        const detail = await prisma.attempt.findUnique({
+          where: { id: attempt.id },
+          select: {
+            id: true,
+            currentOrder: true,
+            elapsedSec: true,
+            startedAt: true,
+            updatedAt: true,
+            answers: {
+              select: {
+                questionId: true,
+                choiceId: true,
+                textResponse: true,
+                audioUrl: true,
+              },
+            },
+          },
+        });
+
+        if (detail) {
+          const answers: Record<string, string> = {};
+          const textResponses: Record<string, string> = {};
+          for (const a of detail.answers) {
+            if (a.choiceId) answers[a.questionId] = a.choiceId;
+            if (a.textResponse && !a.audioUrl) {
+              textResponses[a.questionId] = a.textResponse;
+            }
+          }
+          activeAttempt = {
+            id: detail.id,
+            currentOrder: detail.currentOrder,
+            elapsedSec: detail.elapsedSec,
+            startedAt: detail.startedAt.toISOString(),
+            updatedAt: detail.updatedAt.toISOString(),
+            answers,
+            textResponses,
+          };
+        }
+      }
     }
 
     return successResponse({
@@ -111,6 +163,7 @@ export async function GET(
         imageUrl: q.imageUrl,
         choices: q.choices,
       })),
+      activeAttempt,
     });
   } catch (error) {
     return serverErrorResponse(error);

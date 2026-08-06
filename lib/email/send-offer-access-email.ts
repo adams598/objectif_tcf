@@ -9,8 +9,11 @@ export type OfferAccessEmailInput = {
   examLabel: string;
   days: number;
   periodEndLabel: string;
-  /** Mot de passe en clair à communiquer (généré côté serveur). */
-  password: string;
+  /**
+   * Mot de passe en clair à communiquer (nouveaux comptes ou reset explicite).
+   * Absent pour un utilisateur existant qui conserve son mot de passe.
+   */
+  password?: string | null;
 };
 
 function escapeHtml(value: string): string {
@@ -28,8 +31,33 @@ function buildOfferAccessHtml(input: OfferAccessEmailInput): string {
   const name = escapeHtml(input.recipientName);
   const end = escapeHtml(input.periodEndLabel);
   const email = escapeHtml(input.to);
-  const password = escapeHtml(input.password);
+  const password = input.password ? escapeHtml(input.password) : null;
   const ctaUrl = `${getAppUrl()}/connexion?redirect=${encodeURIComponent("/series")}`;
+  const forgotUrl = `${getAppUrl()}/mot-de-passe-oublie`;
+
+  const credentialsBlock = password
+    ? `
+        <div style="background: #ede7f6; border-radius: 12px; padding: 16px; margin: 0 0 20px;">
+          <p style="margin: 0 0 8px; font-size: 14px; color: #4f378a; font-weight: 600;">Vos identifiants de connexion</p>
+          <p style="margin: 0 0 4px;"><strong>Email :</strong> ${email}</p>
+          <p style="margin: 0;"><strong>Mot de passe :</strong> <code style="background:#fff;padding:2px 8px;border-radius:6px;font-size:15px;">${password}</code></p>
+        </div>
+        <p style="line-height: 1.6; margin: 0 0 24px;">
+          Utilisez ces identifiants pour vous connecter. Vous pourrez modifier votre mot de passe ensuite dans Paramètres.
+        </p>`
+    : `
+        <div style="background: #ede7f6; border-radius: 12px; padding: 16px; margin: 0 0 20px;">
+          <p style="margin: 0 0 8px; font-size: 14px; color: #4f378a; font-weight: 600;">Connexion</p>
+          <p style="margin: 0 0 4px;"><strong>Email :</strong> ${email}</p>
+          <p style="margin: 0; line-height: 1.5;">
+            Connectez-vous avec votre mot de passe habituel.
+            Si vous l'avez oublié, utilisez
+            <a href="${forgotUrl}" style="color: #6750a4;">Mot de passe oublié</a>.
+          </p>
+        </div>
+        <p style="line-height: 1.6; margin: 0 0 24px;">
+          Votre accès est déjà actif — aucune création de compte ni nouveau mot de passe n'est nécessaire.
+        </p>`;
 
   return `
     <div style="font-family: Inter, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1c1b1f;">
@@ -52,14 +80,7 @@ function buildOfferAccessHtml(input: OfferAccessEmailInput): string {
           <p style="margin: 0 0 4px;"><strong>Durée :</strong> ${input.days} jour${input.days > 1 ? "s" : ""}</p>
           <p style="margin: 0;"><strong>Valide jusqu'au :</strong> ${end}</p>
         </div>
-        <div style="background: #ede7f6; border-radius: 12px; padding: 16px; margin: 0 0 20px;">
-          <p style="margin: 0 0 8px; font-size: 14px; color: #4f378a; font-weight: 600;">Vos identifiants de connexion</p>
-          <p style="margin: 0 0 4px;"><strong>Email :</strong> ${email}</p>
-          <p style="margin: 0;"><strong>Mot de passe :</strong> <code style="background:#fff;padding:2px 8px;border-radius:6px;font-size:15px;">${password}</code></p>
-        </div>
-        <p style="line-height: 1.6; margin: 0 0 24px;">
-          Utilisez ces identifiants pour vous connecter. Vous pourrez modifier votre mot de passe ensuite dans Paramètres.
-        </p>
+        ${credentialsBlock}
         <a href="${ctaUrl}" style="display: inline-block; background: linear-gradient(135deg, #4f378a, #6750a4); color: #ffffff; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: 600;">
           Accéder à la plateforme
         </a>
@@ -82,7 +103,7 @@ export async function sendOfferAccessEmail(
 
   if (!isEmailConfigured()) {
     console.log(
-      `[DEV] Offer access → ${input.to} | pwd=${input.password} | offer=${input.offerName} | by=${input.adminName}`
+      `[DEV] Offer access → ${input.to} | pwd=${input.password ?? "(inchangé)"} | offer=${input.offerName} | by=${input.adminName}`
     );
     return {
       ok: false,

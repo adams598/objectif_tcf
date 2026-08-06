@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { WRITING_TASKS } from "@/lib/examen/mock/tasks";
 import { submitExamScore } from "@/lib/examen/submit-exam";
 import { navigateToResults } from "@/lib/examen/guest-results";
 import { useExamSeries } from "@/modules/examen/hooks/use-exam-series";
+import { useAttemptAutosave } from "@/modules/examen/hooks/use-attempt-autosave";
 import {
   getExamLabelFromTab,
   getSeriesLabel,
@@ -43,6 +44,7 @@ export function WritingExamView({
   const { t } = useTranslation();
   const router = useRouter();
   const startedAt = useRef(Date.now());
+  const previousElapsed = useRef(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { data: seriesData, isLoading } = useExamSeries(seriesId);
 
@@ -71,6 +73,24 @@ export function WritingExamView({
 
   const [activeTask, setActiveTask] = useState(tasks[0]?.id ?? 1);
   const [contents, setContents] = useState<Record<string, string>>({});
+  const [hydrated, setHydrated] = useState(false);
+  const attemptId = seriesData?.activeAttempt?.id ?? null;
+
+  useEffect(() => {
+    if (hydrated || !seriesData) return;
+    const active = seriesData.activeAttempt;
+    if (active) {
+      if (Object.keys(active.textResponses).length > 0) {
+        setContents(active.textResponses);
+      }
+      if (active.currentOrder && active.currentOrder > 0) {
+        const t = tasks.find((tk) => tk.id === active.currentOrder);
+        if (t) setActiveTask(t.id);
+      }
+      previousElapsed.current = active.elapsedSec ?? 0;
+    }
+    setHydrated(true);
+  }, [seriesData, hydrated, tasks]);
 
   const task = tasks.find((t) => t.id === activeTask) ?? tasks[0];
   const content = contents[task?.questionId ?? ""] ?? "";
@@ -79,8 +99,31 @@ export function WritingExamView({
   const isTooLong = wordCount > (task?.maxWords ?? 120);
   const totalDuration = (seriesData?.durationMin ?? 60) * 60;
 
+  const elapsedNow = () =>
+    previousElapsed.current +
+    Math.floor((Date.now() - startedAt.current) / 1000);
+
+  const { flush: flushAutosave } = useAttemptAutosave({
+    attemptId,
+    enabled: !guestMode && hydrated,
+    payload: useMemo(() => {
+      const textResponses: Record<string, string> = {};
+      tasks.forEach((t) => {
+        const v = contents[t.questionId];
+        if (v !== undefined) textResponses[t.questionId] = v;
+      });
+      return {
+        textResponses,
+        currentOrder: activeTask,
+        elapsedSec: elapsedNow(),
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [contents, activeTask, tasks]),
+  });
+
   const submitExam = useCallback(async () => {
-    const durationSeconds = Math.floor((Date.now() - startedAt.current) / 1000);
+    await flushAutosave();
+    const durationSeconds = elapsedNow();
     const textResponses: Record<string, string> = {};
     tasks.forEach((t) => {
       textResponses[t.questionId] = contents[t.questionId] ?? "";
@@ -120,11 +163,19 @@ export function WritingExamView({
         guestMode
       );
     }
-  }, [contents, tasks, seriesId, examTab, guestMode, router]);
+  }, [contents, tasks, seriesId, examTab, guestMode, router, flushAutosave]);
 
-  const { timeLeft } = useExamTimer(totalDuration, () => {
+  const initialTimeLeft = Math.max(
+    0,
+    totalDuration - (seriesData?.activeAttempt?.elapsedSec ?? 0)
+  );
+  const { timeLeft, resetTo } = useExamTimer(totalDuration, () => {
     void submitExam();
   });
+  useEffect(() => {
+    if (hydrated) resetTo(initialTimeLeft);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
   const exitHref = getExamExitHref({ guestMode, examTab });
 
   const insertChar = (char: string) => {

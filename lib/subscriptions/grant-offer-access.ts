@@ -105,14 +105,27 @@ export async function grantOfferAccessByEmails(input: {
         userId = created.id;
       }
 
-      // Mot de passe : réutilise celui visible admin si présent, sinon génère
-      const withEnc = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { adminPasswordEnc: true },
-      });
-      let password = decryptAdminPassword(withEnc?.adminPasswordEnc ?? null);
-      if (!password) {
+      // Nouveau compte → génère un mdp.
+      // Compte existant → conserve le mdp ; n'en crée un que s'il n'a aucun
+      // compte credentials (ex. OAuth seul).
+      let password: string | null = null;
+      if (isNewUser) {
         password = await setUserCredentials(userId);
+      } else {
+        const withEnc = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { adminPasswordEnc: true },
+        });
+        password = decryptAdminPassword(withEnc?.adminPasswordEnc ?? null);
+        if (!password) {
+          const hasCredentials = await prisma.account.findFirst({
+            where: { userId, provider: "credentials" },
+            select: { id: true },
+          });
+          if (!hasCredentials) {
+            password = await setUserCredentials(userId);
+          }
+        }
       }
 
       const now = new Date();

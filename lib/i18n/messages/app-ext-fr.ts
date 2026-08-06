@@ -583,6 +583,11 @@ export const appExtFr = {
     backSeries: "Retour aux séries",
     bestScore: "Meilleur score : {{score}}%",
     startExam: "Commencer",
+    resumeExam: "Reprendre",
+    resumeTitle: "Reprendre l'épreuve ?",
+    resumeInProgress: "En cours — reprendre",
+    resumeDescription:
+      "Vous avez une épreuve {{discipline}} en cours. Vos réponses ont été sauvegardées : vous reprendrez exactement où vous en étiez.",
     cancel: "Annuler",
     minutes: "{{n}} minutes",
     tasksCount: "{{n}} tâches",

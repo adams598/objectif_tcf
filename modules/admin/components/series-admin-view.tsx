@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -374,7 +375,11 @@ function formatShortDate(iso: string) {
 
 export function SeriesAdminView() {
   const queryClient = useQueryClient();
-  const [examFilter, setExamFilter] = useState("ALL");
+  const searchParams = useSearchParams();
+  const examIdFromUrl = searchParams.get("examId");
+  const [examFilter, setExamFilter] = useState(
+    examIdFromUrl && examIdFromUrl.trim() ? examIdFromUrl : "ALL"
+  );
   const [authorFilter, setAuthorFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [createdFrom, setCreatedFrom] = useState("");

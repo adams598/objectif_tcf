@@ -1,3 +1,5 @@
+import { PUBLIC_CONTACT_EMAIL } from "@/lib/email/contact";
+
 export interface InvoiceCompanyConfig {
   legalName: string;
   tradeName: string;
@@ -26,8 +28,8 @@ export function getInvoiceCompanyConfig(): InvoiceCompanyConfig {
       .filter(Boolean),
     email:
       process.env.INVOICE_COMPANY_EMAIL?.trim() ||
-      process.env.RESEND_FROM_EMAIL?.trim() ||
-      "contact@objectifcanada-tcf.com",
+      process.env.SMTP_USER?.trim() ||
+      PUBLIC_CONTACT_EMAIL,
     website:
       process.env.NEXT_PUBLIC_APP_URL?.trim() ||
       "https://objectifcanada-tcf.com",

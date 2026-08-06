@@ -1,4 +1,5 @@
 import type { LegalContent } from "@/lib/marketing/content/legal";
+import { PUBLIC_CONTACT_EMAIL } from "@/lib/email/contact";
 
 export const refundFr: LegalContent = {
   title: "Conditions de remboursement et de retour",
@@ -67,7 +68,7 @@ export const refundFr: LegalContent = {
       ],
       list: [
         {
-          text: "Par courriel à l'adresse : [contact@objectifcanada-tcf.com](mailto:contact@objectifcanada-tcf.com)",
+          text: `Par courriel à l'adresse : [${PUBLIC_CONTACT_EMAIL}](mailto:${PUBLIC_CONTACT_EMAIL})`,
         },
         {
           text: "En visitant la page dédiée sur notre Site Web : [objectifcanada-tcf.com](https://objectifcanada-tcf.com).",
@@ -94,7 +95,7 @@ export const refundFr: LegalContent = {
       ],
       list: [
         {
-          text: "Par courriel : [contact@objectifcanada-tcf.com](mailto:contact@objectifcanada-tcf.com)",
+          text: `Par courriel : [${PUBLIC_CONTACT_EMAIL}](mailto:${PUBLIC_CONTACT_EMAIL})`,
         },
         {
           text: "Par téléphone : [+237 686 87 68 73](tel:+237686876873)",

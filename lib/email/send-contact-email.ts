@@ -3,6 +3,10 @@ import {
   getFromAddressIssue,
   isEmailConfigured,
 } from "@/lib/email/config";
+import {
+  getContactInboxEmail,
+  PUBLIC_CONTACT_EMAIL,
+} from "@/lib/email/contact";
 import { sendMail } from "@/lib/email/send-mail";
 import { isSmtpConfigured } from "@/lib/email/smtp-client";
 import type { SendEmailResult } from "@/lib/email/send-verification-email";
@@ -27,13 +31,6 @@ function initialsFromName(name: string): string {
   if (parts.length === 0) return "?";
   if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
   return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase();
-}
-
-/** Boîte réelle où arrivent les messages du formulaire (pas l’adresse publique affichée). */
-export function getContactInboxEmail(): string | null {
-  const inbox = process.env.CONTACT_EMAIL?.trim();
-  if (!inbox) return null;
-  return inbox;
 }
 
 function buildContactHtml(input: ContactMessageInput): string {
@@ -222,7 +219,7 @@ function buildContactHtml(input: ContactMessageInput): string {
                     <p style="margin:0;font-size:13px;color:#ffffff;font-weight:700;">Objectif Canada TCF</p>
                     <p style="margin:8px 0 0;font-size:12px;color:#b0a8c0;line-height:1.5;">
                       Message transmis depuis le formulaire Contact<br />
-                      Adresse publique : contact@objectifcanada-tcf.com
+                      Adresse publique : ${PUBLIC_CONTACT_EMAIL}
                     </p>
                     <p style="margin:12px 0 0;">
                       <a href="${baseUrl}/contact" style="color:#cfbcff;font-size:12px;text-decoration:none;">Voir la page Contact →</a>
@@ -262,13 +259,6 @@ export async function sendContactMessageEmail(
   input: ContactMessageInput
 ): Promise<SendEmailResult> {
   const to = getContactInboxEmail();
-  if (!to) {
-    return {
-      ok: false,
-      error:
-        "CONTACT_EMAIL n’est pas configuré. Indiquez la boîte mail réelle qui doit recevoir les messages.",
-    };
-  }
 
   if (!isEmailConfigured()) {
     return {

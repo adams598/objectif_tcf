@@ -1,3 +1,5 @@
+import { PUBLIC_CONTACT_EMAIL } from "@/lib/email/contact";
+
 export interface FaqItem {
   question: string;
   answer: string;
@@ -136,7 +138,7 @@ const fr: FaqContent = {
         {
           question: "Puis-je devenir partenaire d'Objectif TCF ?",
           answer:
-            "Oui, nous collaborons avec des centres de formation, des professeurs et des influenceurs. Contactez-nous via le formulaire de contact ou par email à contact@objectifcanada-tcf.com.",
+            `Oui, nous collaborons avec des centres de formation, des professeurs et des influenceurs. Contactez-nous via le formulaire de contact ou par email à ${PUBLIC_CONTACT_EMAIL}.`,
         },
       ],
     },

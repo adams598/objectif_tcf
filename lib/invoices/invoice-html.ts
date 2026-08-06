@@ -1,5 +1,7 @@
 import { getAppUrl } from "@/lib/email/config";
+import { PUBLIC_CONTACT_EMAIL } from "@/lib/email/contact";
 import type { InvoiceData } from "@/lib/invoices/types";
+import { getInvoiceCompanyConfig } from "@/lib/invoices/company-config";
 
 function escapeHtml(value: string): string {
   return value
@@ -15,6 +17,8 @@ export function renderInvoiceHtml(
 ): string {
   const appUrl = getAppUrl();
   const forEmail = options?.forEmail ?? false;
+  const company = getInvoiceCompanyConfig();
+  const companyEmail = company.email || PUBLIC_CONTACT_EMAIL;
 
   const row = (label: string, value: string) => `
     <tr>
@@ -52,7 +56,7 @@ export function renderInvoiceHtml(
             <p style="margin:0;font-size:15px;font-weight:700;">Objectif Canada TCF</p>
             <p style="margin:6px 0 0;font-size:14px;color:#49454f;line-height:1.6;">
               Plateforme e-learning de préparation TCF, TEF et IELTS<br />
-              contact@objectifcanada-tcf.com<br />
+              ${escapeHtml(companyEmail)}<br />
               objectifcanada-tcf.com
             </p>
           </td>

@@ -13,6 +13,7 @@ import {
   MarketingPageShell,
 } from "@/components/marketing/marketing-page";
 import { useTranslation } from "@/components/providers/locale-provider";
+import { PUBLIC_CONTACT_EMAIL } from "@/lib/email/contact";
 
 export function ContactPage() {
   const { t } = useTranslation();
@@ -136,7 +137,7 @@ export function ContactPage() {
                 {
                   icon: "mail",
                   title: t("marketingPages.contact.email"),
-                  value: "contact@objectifcanada-tcf.com",
+                  value: PUBLIC_CONTACT_EMAIL,
                   hint: t("marketingPages.contact.emailHint"),
                 },
               ] as const

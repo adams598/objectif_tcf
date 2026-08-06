@@ -1,4 +1,5 @@
 import type { LegalContent } from "@/lib/marketing/content/legal";
+import { PUBLIC_CONTACT_EMAIL } from "@/lib/email/contact";
 
 export const privacyFr: LegalContent = {
   title: "Politique de confidentialité",
@@ -288,7 +289,7 @@ export const privacyFr: LegalContent = {
       ],
       list: [
         {
-          text: "Par courriel : [contact@objectifcanada-tcf.com](mailto:contact@objectifcanada-tcf.com)",
+          text: `Par courriel : [${PUBLIC_CONTACT_EMAIL}](mailto:${PUBLIC_CONTACT_EMAIL})`,
         },
         {
           text: "Par téléphone : [+237 656 99 36 08](tel:+237656993608)",

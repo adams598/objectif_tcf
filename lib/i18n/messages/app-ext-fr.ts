@@ -532,7 +532,7 @@ export const appExtFr = {
       "Votre abonnement est actif avec renouvellement automatique. Vous pouvez l'arrêter à tout moment dans Paramètres.",
     subscriptionActiveShort: "Votre abonnement est actif. Bonne préparation !",
     invoiceSent:
-      "Votre facture a été envoyée par email et est disponible dans votre espace Documents.",
+      "Votre facture est disponible dans votre espace Documents. Vous pouvez la consulter, la télécharger ou la recevoir par email.",
     viewInvoices: "Mes documents",
     viewInvoice: "Voir la facture",
     downloadInvoicePdf: "Télécharger le PDF",

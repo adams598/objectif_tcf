@@ -4,6 +4,7 @@ import {
   getFromAddressIssue,
   isEmailConfigured,
 } from "@/lib/email/config";
+import { formatResendError } from "@/lib/email/format-resend-error";
 import { getResendClient } from "@/lib/email/resend-client";
 import { buildInvoiceData } from "@/lib/invoices/build-invoice-data";
 import { renderInvoiceHtml } from "@/lib/invoices/invoice-html";
@@ -78,39 +79,76 @@ export async function sendInvoiceEmailForPayment(
     };
   }
 
+  // getFromAddress() bascule déjà sur onboarding@resend.dev si FROM invalide.
+  // On journalise seulement (ne pas bloquer l'envoi).
   const fromIssue = getFromAddressIssue();
   if (fromIssue) {
-    return { ok: false, error: fromIssue };
+    console.warn("[Invoice] RESEND_FROM_EMAIL invalide, fallback utilisé:", fromIssue);
   }
 
   try {
-    const pdfBytes = await generateInvoicePdfFromData(invoice);
     const resend = getResendClient();
-    const { error } = await resend.emails.send({
-      from: getFromAddress(),
-      to: payment.user.email,
-      subject: `Votre facture ${invoiceNumber} — Objectif TCF`,
+    const from = getFromAddress();
+    const to = payment.user.email;
+    const subject = `Votre facture ${invoiceNumber} — Objectif TCF`;
+
+    let pdfBase64: string | null = null;
+    try {
+      const pdfBytes = await generateInvoicePdfFromData(invoice);
+      pdfBase64 = Buffer.from(pdfBytes).toString("base64");
+    } catch (pdfErr) {
+      console.error("[Invoice] PDF generation failed, envoi HTML seul:", pdfErr);
+    }
+
+    const { error: withPdfError } = await resend.emails.send({
+      from,
+      to,
+      subject,
       html: emailHtml,
-      attachments: [
-        {
-          filename: `${invoiceNumber}.pdf`,
-          content: Buffer.from(pdfBytes),
-        },
-      ],
+      ...(pdfBase64
+        ? {
+            attachments: [
+              {
+                filename: `${invoiceNumber}.pdf`,
+                content: pdfBase64,
+                contentType: "application/pdf",
+              },
+            ],
+          }
+        : {}),
     });
 
-    if (error) {
-      console.error("[Invoice] Email send failed:", error);
-      const msg = error.message ?? "Échec d'envoi Resend";
-      if (/only send testing emails to your own/i.test(msg)) {
-        return {
-          ok: false,
-          error:
-            `${msg} — Avec onboarding@resend.dev, la facture ne peut être envoyée ` +
-            `qu’à l’email du compte Resend. Vérifiez un domaine ou utilisez cet email.`,
-        };
+    if (withPdfError) {
+      console.error("[Invoice] Email send failed:", withPdfError);
+      const formatted = formatResendError(withPdfError);
+
+      // Si la pièce jointe pose problème, retenter sans PDF
+      if (pdfBase64 && !/only send testing emails to your own/i.test(withPdfError.message ?? "")) {
+        const { error: htmlOnlyError } = await resend.emails.send({
+          from,
+          to,
+          subject,
+          html: emailHtml,
+        });
+        if (!htmlOnlyError) {
+          await prisma.payment.update({
+            where: { id: payment.id },
+            data: {
+              metadata: {
+                ...metadata,
+                invoiceNumber,
+                invoiceSentAt: new Date().toISOString(),
+                invoiceEmailPdfAttached: false,
+              },
+            },
+          });
+          return { ok: true };
+        }
+        console.error("[Invoice] HTML-only retry failed:", htmlOnlyError);
+        return { ok: false, error: formatResendError(htmlOnlyError) };
       }
-      return { ok: false, error: msg };
+
+      return { ok: false, error: formatted };
     }
 
     await prisma.payment.update({
@@ -120,6 +158,7 @@ export async function sendInvoiceEmailForPayment(
           ...metadata,
           invoiceNumber,
           invoiceSentAt: new Date().toISOString(),
+          invoiceEmailPdfAttached: Boolean(pdfBase64),
         },
       },
     });

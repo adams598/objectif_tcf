@@ -42,13 +42,13 @@ export function SeriesGroupCard({
       : 0;
 
   return (
-    <Link href={href} className="block group">
+    <Link href={href} className="block group min-w-0 w-full max-w-full">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.04 }}
         className={cn(
-          "relative rounded-2xl border overflow-hidden transition-all duration-200",
+          "relative rounded-2xl border overflow-hidden transition-all duration-200 w-full max-w-full",
           locked
             ? "bg-surface border-outline-variant hover:border-primary/40 hover:shadow-violet-sm"
             : "bg-surface border-outline-variant shadow-violet-sm hover:shadow-violet-md hover:-translate-y-0.5 hover:border-primary/30"
@@ -61,11 +61,11 @@ export function SeriesGroupCard({
           )}
         />
 
-        <div className="p-lg">
-          <div className="flex items-start justify-between mb-md">
+        <div className="p-md sm:p-lg min-w-0">
+          <div className="flex items-start justify-between gap-sm mb-md min-w-0">
             <div
               className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center",
+                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
                 locked
                   ? "bg-surface-container text-on-surface-variant"
                   : "bg-primary/10 text-primary"
@@ -73,7 +73,7 @@ export function SeriesGroupCard({
             >
               <span className="material-symbols-outlined text-[22px]">school</span>
             </div>
-            <div className="flex flex-wrap gap-xs justify-end">
+            <div className="flex flex-wrap gap-xs justify-end min-w-0">
               {group.isFree && !locked && (
                 <Badge variant="outline">{t("common.free")}</Badge>
               )}
@@ -92,10 +92,10 @@ export function SeriesGroupCard({
             </div>
           </div>
 
-          <h3 className="font-label-md text-label-md font-bold text-on-surface mb-xs">
+          <h3 className="font-label-md text-label-md font-bold text-on-surface mb-xs break-words">
             {group.title}
           </h3>
-          <p className="font-label-sm text-label-sm text-on-surface-variant mb-md">
+          <p className="font-label-sm text-label-sm text-on-surface-variant mb-md break-words">
             {t("series.disciplines")} ·{" "}
             {locked
               ? t("series.subscriptionRequired")
@@ -104,7 +104,7 @@ export function SeriesGroupCard({
                 : t("series.premiumAccess")}
           </p>
 
-          <div className="grid grid-cols-2 gap-xs mb-md">
+          <div className="grid grid-cols-2 gap-xs mb-md min-w-0">
             {DISCIPLINES.map((discipline) => {
               const entry = group.disciplines.find(
                 (d) => d.skill === discipline.skill
@@ -119,7 +119,7 @@ export function SeriesGroupCard({
                 <div
                   key={discipline.skill}
                   className={cn(
-                    "flex items-center gap-xs rounded-lg px-sm py-xs font-label-sm text-label-sm",
+                    "flex items-center gap-xs rounded-lg px-sm py-xs font-label-sm text-label-sm min-w-0",
                     !isHighlighted && "opacity-40",
                     done
                       ? "bg-success-container/50 text-success"
@@ -130,7 +130,7 @@ export function SeriesGroupCard({
                           : "bg-surface-container-low text-on-surface-variant"
                   )}
                 >
-                  <span className="material-symbols-outlined text-[16px]">
+                  <span className="material-symbols-outlined text-[16px] shrink-0">
                     {done
                       ? "check_circle"
                       : partial
@@ -144,7 +144,7 @@ export function SeriesGroupCard({
           </div>
 
           {!locked && (progress > 0 || group.partialDisciplines > 0) && (
-            <p className="font-label-sm text-label-sm text-on-surface-variant mb-xs">
+            <p className="font-label-sm text-label-sm text-on-surface-variant mb-xs break-words">
               {t("series.disciplinesProgress", {
                 done: group.completedDisciplines,
                 total: group.disciplines.length,
@@ -158,7 +158,7 @@ export function SeriesGroupCard({
           )}
 
           {!locked && group.lastOpenedAt && (
-            <p className="font-label-sm text-[11px] text-on-surface-variant/80 mb-md">
+            <p className="font-label-sm text-[11px] text-on-surface-variant/80 mb-md break-words">
               {t("series.lastOpened", {
                 date: new Date(group.lastOpenedAt).toLocaleDateString("fr-FR", {
                   day: "numeric",
@@ -171,19 +171,19 @@ export function SeriesGroupCard({
 
           <div
             className={cn(
-              "flex items-center gap-xs font-label-sm text-label-sm font-medium",
+              "flex items-center gap-xs font-label-sm text-label-sm font-medium min-w-0",
               locked ? "text-primary" : "text-primary group-hover:underline"
             )}
           >
             {locked ? (
               <>
-                <span className="material-symbols-outlined text-[18px]">lock</span>
-                {t("series.subscribeToAccess")}
+                <span className="material-symbols-outlined text-[18px] shrink-0">lock</span>
+                <span className="break-words">{t("series.subscribeToAccess")}</span>
               </>
             ) : (
               <>
-                {t("series.chooseDiscipline")}
-                <span className="material-symbols-outlined text-[18px]">
+                <span className="break-words">{t("series.chooseDiscipline")}</span>
+                <span className="material-symbols-outlined text-[18px] shrink-0">
                   arrow_forward
                 </span>
               </>

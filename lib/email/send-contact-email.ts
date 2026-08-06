@@ -4,6 +4,7 @@ import {
   getFromAddressIssue,
   isEmailConfigured,
 } from "@/lib/email/config";
+import { formatResendError } from "@/lib/email/format-resend-error";
 import { getResendClient } from "@/lib/email/resend-client";
 import type { SendEmailResult } from "@/lib/email/send-verification-email";
 
@@ -34,26 +35,6 @@ export function getContactInboxEmail(): string | null {
   const inbox = process.env.CONTACT_EMAIL?.trim();
   if (!inbox) return null;
   return inbox;
-}
-
-function formatResendError(
-  error: { message?: string; name?: string } | null
-): string {
-  if (!error?.message) return "Échec d'envoi Resend";
-  const msg = error.message;
-  if (/domain|not verified|from/i.test(msg)) {
-    return (
-      `${msg} — Vérifiez RESEND_FROM_EMAIL (domaine vérifié sur Resend, ` +
-      `ou onboarding@resend.dev pour les tests).`
-    );
-  }
-  if (/only send testing emails to your own/i.test(msg)) {
-    return (
-      `${msg} — Avec onboarding@resend.dev, CONTACT_EMAIL doit être l’email ` +
-      `du compte Resend.`
-    );
-  }
-  return msg;
 }
 
 function buildContactHtml(input: ContactMessageInput): string {

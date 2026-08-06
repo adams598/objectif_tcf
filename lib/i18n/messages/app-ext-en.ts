@@ -523,7 +523,7 @@ export const appExtEn = {
       "Your subscription is active with auto-renewal. You can cancel anytime in Settings.",
     subscriptionActiveShort: "Your subscription is active. Happy studying!",
     invoiceSent:
-      "Your invoice has been emailed and is available in your Documents area.",
+      "Your invoice is available in your Documents area. You can view it, download it, or have it emailed to you.",
     viewInvoices: "My documents",
     viewInvoice: "View invoice",
     downloadInvoicePdf: "Download PDF",

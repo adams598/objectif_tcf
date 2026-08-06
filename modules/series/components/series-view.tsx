@@ -126,17 +126,17 @@ export function SeriesView() {
   };
 
   return (
-    <div className="flex flex-col gap-xl">
+    <div className="flex flex-col gap-xl min-w-0 w-full max-w-full">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row md:items-end justify-between gap-md"
+        className="flex flex-col md:flex-row md:items-end justify-between gap-md min-w-0"
       >
-        <div>
+        <div className="min-w-0">
           <h1 className="font-display-md text-display-md text-on-surface font-bold mb-xs">
             {t("series.title")}
           </h1>
-          <p className="font-body-md text-body-md text-on-surface-variant">
+          <p className="font-body-md text-body-md text-on-surface-variant break-words">
             {t("series.completed", { done: completedGroups, total: totalGroups })} ·{" "}
             {t("series.freeCount", { count: freeGroups.length })} ·{" "}
             {t("series.premiumCount", { count: premiumGroups.length })}
@@ -144,7 +144,7 @@ export function SeriesView() {
         </div>
       </motion.div>
 
-      <div className="flex flex-wrap gap-sm">
+      <div className="flex flex-wrap gap-sm min-w-0">
         {(examTabs.length > 0
           ? examTabs
           : [
@@ -158,7 +158,7 @@ export function SeriesView() {
             type="button"
             onClick={() => setActiveExamSlug(tab.slug)}
             className={cn(
-              "px-lg py-sm rounded-full font-label-md text-label-md border transition-all",
+              "px-md sm:px-lg py-sm rounded-full font-label-md text-label-md border transition-all max-w-full",
               activeExamSlug === tab.slug
                 ? "bg-primary text-on-primary border-primary"
                 : "border-outline-variant text-on-surface-variant hover:border-primary"
@@ -170,45 +170,46 @@ export function SeriesView() {
       </div>
 
       {!hasEntitlementForTab && premiumGroups.length > 0 && (
-        <div className="rounded-xl border border-primary/30 bg-primary/5 px-md py-sm flex flex-col sm:flex-row sm:items-center justify-between gap-sm">
-          <p className="font-body-md text-body-md text-on-surface">
+        <div className="rounded-xl border border-primary/30 bg-primary/5 px-md py-sm flex flex-col sm:flex-row sm:items-center justify-between gap-sm min-w-0">
+          <p className="font-body-md text-body-md text-on-surface break-words min-w-0">
             {t("series.subscribeBanner", {
               free: freeGroups.length,
               exam: activeExamLabel,
             })}
           </p>
-          <Button asChild size="sm" className="shrink-0">
+          <Button asChild size="sm" className="shrink-0 w-full sm:w-auto">
             <Link href={`/offres?examen=${activeExamSlug}`}>{t("series.viewOffers")}</Link>
           </Button>
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row gap-md">
-        <div className="flex items-center gap-sm bg-surface border border-outline-variant rounded-xl px-md py-sm flex-1">
-          <span className="material-symbols-outlined text-[20px] text-on-surface-variant">
+      <div className="flex flex-col gap-md min-w-0">
+        <div className="flex items-center gap-sm bg-surface border border-outline-variant rounded-xl px-md py-sm w-full min-w-0">
+          <span className="material-symbols-outlined text-[20px] text-on-surface-variant shrink-0">
             search
           </span>
           <input
-            className="flex-1 outline-none bg-transparent font-body-md text-body-md placeholder:text-on-surface-variant/50"
+            className="flex-1 min-w-0 outline-none bg-transparent font-body-md text-body-md placeholder:text-on-surface-variant/50"
             placeholder={t("series.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-sm overflow-x-auto pb-xs">
+        <div className="flex flex-wrap gap-sm min-w-0">
           {filters.map((f) => (
             <button
               key={f}
               type="button"
               onClick={() => setActiveFilter(f)}
               className={cn(
-                "px-md py-xs rounded-full font-label-sm text-label-sm whitespace-nowrap transition-all",
+                "px-md py-xs rounded-full font-label-sm text-label-sm transition-all max-w-full",
                 activeFilter === f
                   ? "bg-primary text-on-primary shadow-violet-sm"
                   : "bg-surface border border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary"
               )}
             >
-              {skillLabels[f]}
+              <span className="sm:hidden">{f === "Tous" ? skillLabels.Tous : f}</span>
+              <span className="hidden sm:inline">{skillLabels[f]}</span>
             </button>
           ))}
         </div>
@@ -232,14 +233,14 @@ export function SeriesView() {
       ) : (
         <div className="flex flex-col gap-2xl">
           {filteredFree.length > 0 && (
-            <section>
-              <h2 className="font-headline-lg text-headline-lg text-on-surface font-bold mb-md flex items-center gap-sm">
-                <span className="material-symbols-outlined text-primary">
+            <section className="min-w-0">
+              <h2 className="font-headline-lg text-headline-lg text-on-surface font-bold mb-md flex items-center gap-sm min-w-0">
+                <span className="material-symbols-outlined text-primary shrink-0">
                   lock_open
                 </span>
                 {t("series.freeSection")}
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-md">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-md min-w-0">
                 {filteredFree.map((group, i) => (
                   <SeriesGroupCard
                     key={group.order}
@@ -256,17 +257,17 @@ export function SeriesView() {
           )}
 
           {filteredPremium.length > 0 && (
-            <section>
+            <section className="min-w-0">
               <h2 className="font-headline-lg text-headline-lg text-on-surface font-bold mb-md flex items-center gap-sm">
-                <span className="material-symbols-outlined text-on-surface-variant">
+                <span className="material-symbols-outlined text-on-surface-variant shrink-0">
                   workspace_premium
                 </span>
                 {t("series.premiumSection")}
               </h2>
-              <p className="font-body-md text-body-md text-on-surface-variant mb-lg">
+              <p className="font-body-md text-body-md text-on-surface-variant mb-lg break-words">
                 {t("series.premiumHint")}
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-md">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-md min-w-0">
                 {filteredPremium.map((group, i) => (
                   <SeriesGroupCard
                     key={group.order}

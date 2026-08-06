@@ -98,7 +98,13 @@ export function PaymentSuccessView() {
         method: "POST",
       }),
     onSuccess: () => toast.success(t("pricing.invoiceEmailSent")),
-    onError: () => toast.error(t("pricing.invoiceEmailError")),
+    onError: (err) =>
+      toast.error(
+        err instanceof Error && err.message
+          ? err.message
+          : t("pricing.invoiceEmailError"),
+        { duration: 8000 }
+      ),
   });
 
   useEffect(() => {

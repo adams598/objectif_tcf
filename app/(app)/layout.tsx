@@ -32,11 +32,11 @@ export default async function AppLayout({
       initialAuthSession={bootstrap.authSession}
     >
       <LocaleSync />
-      <div className="min-h-screen bg-surface-container-low flex">
+      <div className="min-h-screen bg-surface-container-low flex overflow-x-hidden">
         <Sidebar role={role} />
 
-        <main className="flex-1 md:ml-[280px] pb-24 md:pb-0 min-h-screen">
-          <div className="p-md md:p-xl max-w-7xl mx-auto w-full">
+        <main className="flex-1 md:ml-[280px] pb-24 md:pb-0 min-h-screen min-w-0 overflow-x-hidden">
+          <div className="p-md md:p-xl max-w-7xl mx-auto w-full min-w-0">
             {children}
           </div>
         </main>

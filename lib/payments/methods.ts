@@ -1,17 +1,11 @@
 import type { PaymentCurrency, PaymentMethod, PaymentProvider } from "@prisma/client";
-
 import { isPawaPayConfigured } from "./providers/pawapay";
-
+import { isPaycardConfigured } from "./providers/paycard";
 import { isStripeConfigured } from "./providers/stripe";
-
 import {
-
   CHECKOUT_METHOD_IDS,
-
   sortMethodsForLocale,
-
   type PaymentLocaleContext,
-
 } from "./country-currency";
 
 
@@ -279,31 +273,29 @@ export const CURRENCY_OPTIONS: {
 
 
 export function filterMethodsByProviders(
-
   methods: PaymentMethodOption[]
-
 ): PaymentMethodOption[] {
-
   const stripe = isStripeConfigured();
-
   const pawapay = isPawaPayConfigured();
+  const paycard = isPaycardConfigured();
 
-  if (!stripe && !pawapay) return methods;
+  if (!stripe && !pawapay && !paycard) return methods;
 
   return methods.filter((m) => {
-
-    if (m.id === "GOOGLE_PAY") return stripe;
-
-    if (m.id === "CARD" || m.id === "PAYPAL") return stripe || pawapay;
-
+    if (m.id === "GOOGLE_PAY" || m.id === "SEPA") return stripe;
+    if (m.id === "CARD") return stripe || pawapay || paycard;
+    if (m.id === "PAYPAL") return stripe || pawapay;
+    if (
+      m.id === "MOBILE_MONEY_ORANGE" ||
+      m.id === "MOBILE_MONEY_MTN" ||
+      m.id === "MOBILE_MONEY"
+    ) {
+      return pawapay || paycard;
+    }
     if (m.provider === "STRIPE") return stripe;
-
     if (m.provider === "PAWAPAY") return pawapay;
-
     return false;
-
   });
-
 }
 
 
@@ -361,89 +353,75 @@ export function getCheckoutMethodsForCurrency(
 
 
 export function getProviderForMethod(
-
   method: PaymentMethod,
-
   currency?: PaymentCurrency
-
 ): PaymentProvider {
-
   if (method === "GOOGLE_PAY" || method === "SEPA") {
-
     return "STRIPE";
-
   }
 
-  if (
-
-    method === "CARD" &&
-
-    currency === "EUR" &&
-
-    isStripeConfigured()
-
-  ) {
-
+  // Carte EUR → Stripe en priorité
+  if (method === "CARD" && currency === "EUR" && isStripeConfigured()) {
     return "STRIPE";
+  }
 
+  const isAfricanMobileMethod =
+    method === "MOBILE_MONEY_ORANGE" ||
+    method === "MOBILE_MONEY_MTN" ||
+    method === "MOBILE_MONEY" ||
+    method === "MOBILE_MONEY_AIRTEL" ||
+    method === "MOBILE_MONEY_WAVE" ||
+    method === "MOBILE_MONEY_MOOV" ||
+    method === "BANK_TRANSFER";
+
+  // pawaPay = prestataire principal Afrique (Mobile Money + carte locale)
+  if (isPawaPayConfigured()) {
+    if (isAfricanMobileMethod) return "PAWAPAY";
+    if (
+      method === "CARD" &&
+      currency &&
+      (currency === "XAF" || currency === "XOF" || currency === "USD")
+    ) {
+      return "PAWAPAY";
+    }
+  }
+
+  const isPaycardMethod =
+    method === "MOBILE_MONEY_ORANGE" ||
+    method === "MOBILE_MONEY_MTN" ||
+    method === "MOBILE_MONEY" ||
+    method === "CARD";
+
+  // Paycard — repli uniquement si pawaPay n'est pas configuré
+  if (isPaycardConfigured() && isPaycardMethod && !isPawaPayConfigured()) {
+    if (method === "CARD" && isStripeConfigured()) return "STRIPE";
+    return "PAYCARD";
   }
 
   if (
-
-    method === "CARD" &&
-
-    currency &&
-
-    (currency === "XAF" || currency === "XOF" || currency === "USD") &&
-
-    isPawaPayConfigured()
-
-  ) {
-
-    return "PAWAPAY";
-
-  }
-
-  if (
-
     method === "PAYPAL" &&
-
     currency &&
-
     (currency === "EUR" || currency === "USD") &&
-
-    isStripeConfigured() &&
-
-    !isPawaPayConfigured()
-
+    isStripeConfigured()
   ) {
-
     return "STRIPE";
-
   }
 
   const found = PAYMENT_METHODS.find((m) => m.id === method);
 
-  if (found?.provider === "STRIPE" && !isStripeConfigured() && isPawaPayConfigured()) {
-
-    return "PAWAPAY";
-
+  if (found?.provider === "STRIPE" && isStripeConfigured()) {
+    return "STRIPE";
   }
 
   if (found?.provider === "PAWAPAY" && isPawaPayConfigured()) {
-
     return "PAWAPAY";
-
   }
 
-  if (found?.provider === "STRIPE" && isStripeConfigured()) {
-
-    return "STRIPE";
-
+  if (found?.provider === "STRIPE" && !isStripeConfigured() && isPawaPayConfigured()) {
+    return "PAWAPAY";
   }
 
-  return found?.provider ?? "PAWAPAY";
-
+  return found?.provider ?? (isPawaPayConfigured() ? "PAWAPAY" : "STRIPE");
 }
 
 

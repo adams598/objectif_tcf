@@ -79,6 +79,14 @@ export async function refundViaProvider(
     };
   }
 
+  if (payment.provider === "PAYCARD") {
+    return {
+      provider: "PAYCARD",
+      refundReference: `paycard_manual_${payment.externalId ?? payment.id}`,
+      mode: "manual",
+    };
+  }
+
   if (payment.provider === "FLUTTERWAVE") {
     if (!isFlutterwaveConfigured()) {
       throw new Error("FLUTTERWAVE_NOT_CONFIGURED");

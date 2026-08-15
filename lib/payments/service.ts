@@ -32,6 +32,10 @@ import {
   isPawaPayConfigured,
 } from "./providers/pawapay";
 import {
+  createPaycardCheckout,
+  isPaycardConfigured,
+} from "./providers/paycard";
+import {
   createStripeCheckout,
   isStripeConfigured,
 } from "./providers/stripe";
@@ -205,11 +209,11 @@ function resolveProvider(
   const preferred = getProviderForMethod(method, currency);
 
   if (preferred === "STRIPE" && isStripeConfigured()) return "STRIPE";
-  if (preferred === "PAWAPAY" && isPawaPayConfigured()) {
-    return "PAWAPAY";
-  }
+  if (preferred === "PAWAPAY" && isPawaPayConfigured()) return "PAWAPAY";
+  if (preferred === "PAYCARD" && isPaycardConfigured()) return "PAYCARD";
   if (isStripeConfigured()) return "STRIPE";
   if (isPawaPayConfigured()) return "PAWAPAY";
+  if (isPaycardConfigured()) return "PAYCARD";
   if (isMockPaymentsEnabled()) return "MOCK";
 
   throw new Error("NO_PAYMENT_PROVIDER_CONFIGURED");
@@ -291,6 +295,11 @@ export async function initiatePayment(
     checkoutUrl = stripe.checkoutUrl;
     externalId = stripe.externalId;
     stripeCustomerId = stripe.stripeCustomerId;
+  } else if (provider === "PAYCARD") {
+    const paycard = await createPaycardCheckout(chargeParams);
+    checkoutUrl = paycard.checkoutUrl;
+    providerReference = paycard.providerReference;
+    externalId = paycard.externalId;
   } else if (provider === "PAWAPAY") {
     const pp = await createPawaPayCheckout({
       ...chargeParams,

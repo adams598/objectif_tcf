@@ -8,6 +8,7 @@ import {
   toPaymentSessionDetails,
 } from "@/lib/payments/service";
 import { verifyPawaPayCheckout } from "@/lib/payments/providers/pawapay";
+import { verifyPaycardPayment } from "@/lib/payments/providers/paycard";
 import { verifyFlutterwaveTransaction } from "@/lib/payments/providers/flutterwave";
 import { retrieveStripeSession } from "@/lib/payments/providers/stripe";
 import {
@@ -49,6 +50,21 @@ export async function GET(
             await markPaymentFailed(
               payment.providerReference,
               "Paiement pawaPay non confirmé"
+            );
+            payment = (await getPaymentForUser(id, user.userId))!;
+          }
+        } else if (payment.provider === "PAYCARD" && payment.providerReference) {
+          const verified = await verifyPaycardPayment(payment.providerReference);
+          if (verified.status === "SUCCEEDED") {
+            payment =
+              (await finalizeSuccessfulPayment(
+                verified.txRef,
+                verified.externalId
+              )) ?? payment;
+          } else if (verified.status === "FAILED") {
+            await markPaymentFailed(
+              payment.providerReference,
+              "Paiement Paycard non confirmé"
             );
             payment = (await getPaymentForUser(id, user.userId))!;
           }

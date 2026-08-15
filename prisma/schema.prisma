@@ -126,6 +126,7 @@ enum PaymentStatus {
 
 enum PaymentProvider {
   PAWAPAY
+  PAYCARD
   CINETPAY
   FLUTTERWAVE
   STRIPE

@@ -78,7 +78,13 @@ export async function POST(
     }
     if (error instanceof Error && error.message === "NO_PAYMENT_PROVIDER_CONFIGURED") {
       return errorResponse(
-        "Aucun prestataire de paiement configuré. Ajoutez vos clés Stripe ou pawaPay.",
+        "Aucun prestataire de paiement configuré. Ajoutez vos clés Stripe et/ou pawaPay.",
+        503
+      );
+    }
+    if (error instanceof Error && error.message === "PAYCARD_NOT_CONFIGURED") {
+      return errorResponse(
+        "Paycard n’est pas configuré (PAYCARD_API_KEY manquant).",
         503
       );
     }

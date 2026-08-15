@@ -96,10 +96,26 @@ const PHONE_PREFIX: Record<string, string> = {
   bj: "+229",
   tg: "+228",
   ne: "+227",
+  gn: "+224",
+  guinee: "+224",
+  guinée: "+224",
+  "guinee-conakry": "+224",
+  "guinée-conakry": "+224",
+  guinea: "+224",
   fr: "+33",
   be: "+32",
   ca: "+1",
 };
+
+const GUINEA = new Set([
+  "gn",
+  "guinee",
+  "guinée",
+  "guinee-conakry",
+  "guinée-conakry",
+  "guinea",
+  "guinea-conakry",
+]);
 
 function normalizeCountry(value: string | null | undefined): string {
   return (value ?? "").trim().toLowerCase();
@@ -160,6 +176,21 @@ export function resolvePaymentLocaleFromCountry(
         "CARD",
         "GOOGLE_PAY",
         "PAYPAL",
+        "BANK_TRANSFER",
+      ],
+    };
+  }
+
+  if (GUINEA.has(key)) {
+    return {
+      currency: "XOF",
+      countryLabel: country ?? null,
+      phonePrefix: "+224",
+      preferredMethods: [
+        "MOBILE_MONEY_ORANGE",
+        "MOBILE_MONEY_MTN",
+        "MOBILE_MONEY",
+        "CARD",
         "BANK_TRANSFER",
       ],
     };

@@ -1,6 +1,7 @@
 import type { ProviderChargeParams } from "../types";
 import { resolveAppUrl } from "@/lib/env/app-url";
 import { isPawaPayConfigured } from "./pawapay";
+import { isPaycardConfigured } from "./paycard";
 import { isStripeConfigured } from "./stripe";
 
 export function isMockPaymentsEnabled(): boolean {
@@ -9,7 +10,9 @@ export function isMockPaymentsEnabled(): boolean {
 }
 
 export function isAnyPaymentProviderConfigured(): boolean {
-  return isStripeConfigured() || isPawaPayConfigured();
+  return (
+    isStripeConfigured() || isPawaPayConfigured() || isPaycardConfigured()
+  );
 }
 
 export function createMockCheckout(params: ProviderChargeParams): {

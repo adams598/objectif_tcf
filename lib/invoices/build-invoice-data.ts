@@ -20,6 +20,7 @@ import { PLAN_LABELS } from "@/lib/admin/analytics";
 const PROVIDER_LABELS: Record<PaymentProvider, string> = {
   STRIPE: "Stripe",
   PAWAPAY: "pawaPay",
+  PAYCARD: "Paycard",
   PAYPAL: "PayPal",
   CINETPAY: "CinetPay (legacy)",
   FLUTTERWAVE: "Flutterwave (legacy)",

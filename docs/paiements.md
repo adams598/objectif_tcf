@@ -9,7 +9,7 @@
 | Afrique (XAF, XOF) | MTN MoMo, Orange Money, Wave, Moov… | **pawaPay** (page hébergée + API Checkouts) |
 | Europe / diaspora | Carte, Google Pay, SEPA, PayPal (EUR/USD) | **Stripe** |
 
-Documentation pawaPay : https://docs.pawapay.io
+Documentation pawaPay : https://docs.pawapay.io · guide projet : [`docs/pawapay-setup.md`](./pawapay-setup.md)
 
 ## Parcours Mobile Money (pawaPay)
 

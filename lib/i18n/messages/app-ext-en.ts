@@ -743,7 +743,7 @@ export const appExtEn = {
     pricingLabel: "Our plans",
     pricingTitle: "Plans adapted to your pace",
     pricingSubtitle:
-      "Choose a TCF, TEF or IELTS plan. Prices are listed on the Pricing page.",
+      "Choose a TCF plan. Prices are listed on the Pricing page.",
     pricingFrom: "from {{price}}",
     pricingDays: "Plans starting from {{days}}",
     tryFree: "Try for free",

@@ -22,9 +22,9 @@ export function PricingTeaser() {
   const { t } = useTranslation();
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["offers", "featured-home"],
+    queryKey: ["offers", "featured-home", "tcf"],
     queryFn: () =>
-      fetchJson<FeaturedOffersResponse>("/api/offres?all=1"),
+      fetchJson<FeaturedOffersResponse>("/api/offres?examen=tcf"),
   });
 
   const offers = data?.offers ?? [];

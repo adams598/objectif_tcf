@@ -753,7 +753,7 @@ export const appExtFr = {
     pricingLabel: "Nos formules",
     pricingTitle: "Des formules adaptées à votre rythme",
     pricingSubtitle:
-      "Choisissez un forfait TCF, TEF ou IELTS. Les tarifs sont indiqués sur la page Tarifs.",
+      "Choisissez un forfait TCF. Les tarifs sont indiqués sur la page Tarifs.",
     pricingFrom: "dès {{price}}",
     pricingDays: "Forfaits à partir de {{days}}",
     tryFree: "Essayer gratuitement",

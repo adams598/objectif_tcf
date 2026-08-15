@@ -49,7 +49,8 @@ const adminNavItems: NavItem[] = [
   { href: "/admin/series", labelKey: "nav.adminSeries", icon: "library_books" },
   { href: "/admin/communaute", labelKey: "nav.adminCommunity", icon: "forum" },
   { href: "/admin/correcteurs", labelKey: "nav.adminCorrectors", icon: "edit_note" },
-  { href: "/admin/documents", labelKey: "nav.adminDocuments", icon: "folder_open" },
+  // Masqué temporairement — ne pas supprimer
+  // { href: "/admin/documents", labelKey: "nav.adminDocuments", icon: "folder_open" },
 ];
 
 interface SidebarProps {

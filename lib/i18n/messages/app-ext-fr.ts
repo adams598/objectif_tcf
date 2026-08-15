@@ -583,7 +583,7 @@ export const appExtFr = {
       "L'entraînement immersif conçu pour maximiser votre score NCLC. Des simulations réelles, un feedback instantané, et votre passeport pour le Canada.",
     createAccount: "Créer un compte",
     statCandidates: "Candidats accompagnés",
-    statSuccessRate: "Taux de réussite (B2+)",
+    statSuccessRate: "Taux de réussite (C2)",
     statCountries: "Pays d'origine",
     mobileCertified: "Préparation certifiée IRCC",
     mobileDesc:

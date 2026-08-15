@@ -432,7 +432,7 @@ export function ParametresView() {
                     const endLabel = formatExamDateDisplay(sub.currentPeriodEnd);
                     const examLabel =
                       EXAM_TAB_LABELS[EXAM_TYPE_TO_TAB[sub.examType] ?? "tcf"];
-                    const cancelled = sub.cancelAtPeriodEnd || !sub.autoRenew;
+                    const cancelled = sub.cancelAtPeriodEnd;
 
                     return (
                       <div
@@ -448,10 +448,10 @@ export function ParametresView() {
                               ? t("settings.subscriptionCancelledNotice", {
                                   date: endLabel,
                                 })
-                              : `${t("settings.subscriptionUntil")} ${endLabel} · ${t("settings.autoRenewOn")}`}
+                              : `${t("settings.subscriptionUntil")} ${endLabel}`}
                           </p>
                         </div>
-                        {!cancelled && (
+                        {!cancelled && sub.autoRenew && (
                           <Button
                             type="button"
                             variant="secondary"

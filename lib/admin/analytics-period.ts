@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { excludeAnalyticsDemoUsers } from "@/lib/admin/real-users";
 
 export type AnalyticsPeriodType = "rolling" | "year" | "custom";
 
@@ -142,7 +143,10 @@ export function birthDateRangeForAge(
 export function buildUserDemographicWhere(
   filters: AnalyticsFilters
 ): Prisma.UserWhereInput {
-  const where: Prisma.UserWhereInput = { deletedAt: null };
+  const where: Prisma.UserWhereInput = {
+    deletedAt: null,
+    ...excludeAnalyticsDemoUsers(),
+  };
 
   if (filters.country) {
     where.country = filters.country;

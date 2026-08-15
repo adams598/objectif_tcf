@@ -38,7 +38,7 @@ export const refundFr: LegalContent = {
               text: "Le Service : désigne l'application web autonome de e-learning objectif-canada-tcf et l'ensemble de son contenu.",
             },
             {
-              text: "Le Site Web : désigne le site internet objectif-canada-tcf, accessible [en cliquant ici](https://objectifcanada-tcf.com).",
+              text: "Le Site Web : désigne le site internet Objectif TCF, accessible [en cliquant ici](https://objectif-tcf.org).",
             },
             {
               text: "Vous : désigne la personne physique qui accède au Service ou l'utilise, ou la personne morale (société ou autre entité juridique) au nom de laquelle cette personne accède ou utilise le Service, selon le cas.",
@@ -76,7 +76,7 @@ export const refundFr: LegalContent = {
           text: `Par courriel à l'adresse : [${PUBLIC_CONTACT_EMAIL}](mailto:${PUBLIC_CONTACT_EMAIL})`,
         },
         {
-          text: "En visitant la page dédiée sur notre Site Web : [objectifcanada-tcf.com](https://objectifcanada-tcf.com).",
+          text: "En visitant la page dédiée sur notre Site Web : [objectif-tcf.org](https://objectif-tcf.org).",
         },
         {
           text: `Par téléphone au : [${PUBLIC_CONTACT_PHONE}](tel:${PUBLIC_CONTACT_PHONE_TEL})`,

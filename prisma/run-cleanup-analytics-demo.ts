@@ -1,9 +1,9 @@
 import { PrismaClient } from "@prisma/client";
-import { seedAnalyticsDemo } from "./seed-analytics-demo";
+import { cleanupAnalyticsDemoUsers } from "./cleanup-analytics-demo";
 
 const prisma = new PrismaClient();
 
-seedAnalyticsDemo(prisma)
+cleanupAnalyticsDemoUsers(prisma)
   .catch((error) => {
     console.error(error);
     process.exit(1);

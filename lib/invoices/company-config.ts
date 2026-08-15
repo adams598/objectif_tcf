@@ -32,7 +32,7 @@ export function getInvoiceCompanyConfig(): InvoiceCompanyConfig {
       PUBLIC_CONTACT_EMAIL,
     website:
       process.env.NEXT_PUBLIC_APP_URL?.trim() ||
-      "https://objectifcanada-tcf.com",
+      "https://objectif-tcf.org",
     siret: process.env.INVOICE_SIRET?.trim() || null,
     vatNumber: process.env.INVOICE_VAT_NUMBER?.trim() || null,
     rcs: process.env.INVOICE_RCS?.trim() || null,

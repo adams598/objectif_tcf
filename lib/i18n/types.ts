@@ -43,6 +43,7 @@ export interface CoreMessages {
     adminSeries: string;
     adminCorrectors: string;
     adminCommunity: string;
+    adminDocuments: string;
     correctorSpace: string;
     expandSidebar: string;
     collapseSidebar: string;

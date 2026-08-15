@@ -8,7 +8,6 @@ import {
   testPawaPayConnection,
 } from "@/lib/payments/providers/pawapay";
 import { getBlobStorageBackend } from "@/lib/media/blob-storage";
-import { isStripeConfigured } from "@/lib/payments/providers/stripe";
 import {
   successResponse,
   serverErrorResponse,
@@ -36,11 +35,6 @@ export async function GET() {
           "Ajoutez cette URL exacte dans Google Cloud Console → Credentials → OAuth 2.0 → Authorized redirect URIs",
       },
       payments: {
-        stripe: {
-          configured: isStripeConfigured(),
-          webhookConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET?.trim()),
-          webhookUrl: `${resolveAppUrl()}/api/paiement/webhook/stripe`,
-        },
         pawapay: {
           configured: isPawaPayConfigured(),
           environment: getPawaPayEnvironment(),
@@ -50,7 +44,6 @@ export async function GET() {
         mockMode: process.env.PAYMENTS_MOCK_MODE === "true",
       },
       webhooks: {
-        stripe: `${resolveAppUrl()}/api/paiement/webhook/stripe`,
         pawapay: `${resolveAppUrl()}/api/paiement/webhook/pawapay`,
       },
       storage: {

@@ -15,7 +15,6 @@ import {
   isMockPaymentsEnabled,
   isAnyPaymentProviderConfigured,
 } from "@/lib/payments/providers/mock";
-import { isStripeConfigured } from "@/lib/payments/providers/stripe";
 import { isPawaPayConfigured } from "@/lib/payments/providers/pawapay";
 import {
   successResponse,
@@ -59,7 +58,6 @@ export async function GET(
       userPhone: dbUser?.phone ?? null,
       mockMode: isMockPaymentsEnabled(),
       providersConfigured: isAnyPaymentProviderConfigured(),
-      stripeConfigured: isStripeConfigured(),
       pawapayConfigured: isPawaPayConfigured(),
     });
   } catch (error) {

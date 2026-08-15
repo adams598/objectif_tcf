@@ -85,20 +85,20 @@ if (mode === "local") {
   }
 
   const pawapayToken = get("PAWAPAY_API_TOKEN");
-  const stripeKey = get("STRIPE_SECRET_KEY");
   if (pawapayToken && pawapayToken.length >= 16) {
     ok.push(`PAWAPAY_API_TOKEN (${get("PAWAPAY_ENV") || "sandbox"})`);
     const appUrl = get("APP_URL") || get("NEXT_PUBLIC_APP_URL") || "http://localhost:3000";
     console.log(`\npawaPay callback à enregistrer dans le dashboard :`);
     console.log(`  ${appUrl.replace(/\/$/, "")}/api/paiement/webhook/pawapay\n`);
-  } else if (!stripeKey) {
+  } else {
     warnings.push(
-      "PAWAPAY_API_TOKEN absent — Mobile Money Afrique indisponible (voir docs/pawapay-setup.md)"
+      "PAWAPAY_API_TOKEN absent — paiements indisponibles (voir docs/pawapay-setup.md)"
     );
   }
 
   console.log("Google OAuth — ajoutez une fois dans Google Cloud Console :");
   console.log("  http://localhost:3000/api/auth/google/callback");
+  console.log("  https://objectif-tcf.org/api/auth/google/callback");
   console.log("  https://objectif-tcf-blue.vercel.app/api/auth/google/callback\n");
 } else {
   console.log("\n☁️  Checklist PRODUCTION (variables Vercel, pas les fichiers locaux)\n");
@@ -119,7 +119,7 @@ if (mode === "local") {
     "PAWAPAY_ENV=production",
   ];
   for (const k of prodKeys) console.log(`  • ${k}`);
-  console.log("\nAPP_URL / NEXT_PUBLIC_APP_URL = https://objectif-tcf-blue.vercel.app");
+  console.log("\nAPP_URL / NEXT_PUBLIC_APP_URL = https://objectif-tcf.org");
   console.log("(sans slash final)\n");
   process.exit(0);
 }

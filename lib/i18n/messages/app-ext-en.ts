@@ -448,7 +448,7 @@ export const appExtEn = {
     createSubscription: "Create my subscription",
     payNow: "Pay now",
     autoRenewNotice:
-      "Auto-renewal is enabled when you subscribe. You can cancel anytime in Settings — no refund; access remains until the end of the paid period.",
+      "Access lasts for the paid period. There is no auto-renewal: you can subscribe again from Offers. No refund after payment.",
     validity: "Validity: {{days}} days",
     bonusDays: "+ {{days}} bonus days",
     from: "from",
@@ -458,7 +458,6 @@ export const appExtEn = {
     summary: "Summary",
     currency: "Currency",
     paymentMethod: "Payment method",
-    payStripe: "Pay with Stripe",
     paymentSuccess: "Payment confirmed!",
     paymentCancelled: "Payment cancelled",
     backDashboard: "Back to dashboard",
@@ -493,10 +492,10 @@ export const appExtEn = {
     alreadyPaid: "Payment already completed",
     accessDashboard: "Go to dashboard",
     paymentNotConfigured: "Payment not configured",
-    addEnvKeys: "Add your Stripe and/or pawaPay keys in .env.local.",
+    addEnvKeys: "Add your pawaPay key (PAWAPAY_API_TOKEN) in .env.local.",
     demoModeActive: "Demo mode active — no real provider configured.",
-    stripeSecureDesc:
-      "Secure payment by Stripe — credit card (Visa, Mastercard…)",
+    pawapaySecureDesc:
+      "Secure payment via pawaPay — Mobile Money and Visa/Mastercard depending on your country",
     daysCount: "{{n}} days",
     mobileMoneyNumber: "Mobile Money number",
     phonePlaceholder: "E.g. +237 6 70 00 00 00",
@@ -504,7 +503,7 @@ export const appExtEn = {
     modifyChoice: "Change my selection",
     payAmount: "Pay {{amount}}",
     paymentProvidersDesc:
-      "Secure payments via pawaPay (African Mobile Money) and Stripe (Europe). Card, Google Pay and PayPal depending on your region.",
+      "Secure payments via pawaPay: Mobile Money (MTN, Orange, Wave…) and cards depending on your country. Currencies: XAF, XOF, USD.",
     redirecting: "Redirecting…",
     simulateSuccess: "Payment simulated successfully.",
     simulateError: "Simulation failed.",
@@ -521,7 +520,7 @@ export const appExtEn = {
     retry: "Try again",
     paymentSuccessTitle: "Payment successful!",
     subscriptionActive:
-      "Your subscription is active with auto-renewal. You can cancel anytime in Settings.",
+      "Your subscription is active for the paid period. You can renew it from Offers when it expires.",
     subscriptionActiveShort: "Your subscription is active. Happy studying!",
     invoiceSent:
       "Your invoice is available in your Documents area. You can view it, download it, or have it emailed to you.",

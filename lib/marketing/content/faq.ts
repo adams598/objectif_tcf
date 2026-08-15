@@ -104,7 +104,7 @@ const fr: FaqContent = {
         {
           question: "Quels moyens de paiement sont acceptés ?",
           answer:
-            "Nous acceptons les cartes bancaires via Stripe et le Mobile Money via pawaPay selon votre région.",
+            "Nous acceptons le Mobile Money (MTN, Orange, Wave, etc.) et les cartes bancaires via pawaPay, selon votre pays. Devises : franc CFA (XAF/XOF) et dollar US (USD).",
         },
         {
           question: "Quelle différence entre un abonnement et une recharge ?",

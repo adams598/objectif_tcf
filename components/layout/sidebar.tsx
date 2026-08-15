@@ -49,6 +49,7 @@ const adminNavItems: NavItem[] = [
   { href: "/admin/series", labelKey: "nav.adminSeries", icon: "library_books" },
   { href: "/admin/communaute", labelKey: "nav.adminCommunity", icon: "forum" },
   { href: "/admin/correcteurs", labelKey: "nav.adminCorrectors", icon: "edit_note" },
+  { href: "/admin/documents", labelKey: "nav.adminDocuments", icon: "folder_open" },
 ];
 
 interface SidebarProps {
@@ -101,9 +102,12 @@ export function Sidebar({ role = "USER" }: SidebarProps) {
       <nav className="flex-1 py-md overflow-y-auto">
         <ul className="flex flex-col gap-xs px-sm">
           {navItems.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/tableau-de-bord" && pathname.startsWith(item.href));
+            const isExact = pathname === item.href;
+            const isNested =
+              item.href !== "/admin" &&
+              item.href !== "/tableau-de-bord" &&
+              pathname.startsWith(`${item.href}/`);
+            const isActive = isExact || isNested;
 
             return (
               <li key={item.href}>

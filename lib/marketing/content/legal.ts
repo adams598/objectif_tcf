@@ -20,13 +20,18 @@ export interface LegalContent {
 
 import { privacyFr } from "@/lib/marketing/content/privacy-fr";
 import { refundFr } from "@/lib/marketing/content/refund-fr";
+import { termsFr } from "@/lib/marketing/content/terms-fr";
 
-export { privacyFr, refundFr };
+export { privacyFr, refundFr, termsFr };
 
-export function getPrivacyContent(locale: string): LegalContent {
+export function getPrivacyContent(_locale: string): LegalContent {
   return privacyFr;
 }
 
-export function getRefundContent(locale: string): LegalContent {
+export function getRefundContent(_locale: string): LegalContent {
   return refundFr;
+}
+
+export function getTermsContent(_locale: string): LegalContent {
+  return termsFr;
 }

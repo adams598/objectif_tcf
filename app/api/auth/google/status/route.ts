@@ -29,6 +29,7 @@ export async function GET() {
       "http://localhost:3000/api/auth/google/callback (connexion depuis localhost)",
     googleConsoleRedirectUris: [
       "http://localhost:3000/api/auth/google/callback",
+      "https://objectif-tcf.org/api/auth/google/callback",
       "https://objectif-tcf-blue.vercel.app/api/auth/google/callback",
     ],
     clientIdPreview: clientId

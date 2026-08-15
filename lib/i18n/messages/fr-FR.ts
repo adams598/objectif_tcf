@@ -37,6 +37,7 @@ export const frFR: CoreMessages = {
     adminSeries: "Séries",
     adminCorrectors: "Correcteurs",
     adminCommunity: "Communauté",
+    adminDocuments: "Documents",
     correctorSpace: "Espace correcteur",
     expandSidebar: "Étendre la barre latérale",
     collapseSidebar: "Réduire la barre latérale",

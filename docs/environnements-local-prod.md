@@ -9,9 +9,9 @@ Deux environnements **séparés** : fichiers locaux pour le dev, dashboard Verce
 | | **Local** (`npm run dev`) | **Production** (Vercel) |
 |---|---------------------------|-------------------------|
 | Config | `.env.local` (gitignored) | Dashboard Vercel → Environment Variables |
-| URL app | `http://localhost:3000` | `https://objectif-tcf-blue.vercel.app` |
+| URL app | `http://localhost:3000` | `https://objectif-tcf.org` |
 | Base Neon | même `DATABASE_URL` possible | même ou base dédiée |
-| Google OAuth | callback `localhost:3000/...` | callback `objectif-tcf-blue/...` |
+| Google OAuth | callback `localhost:3000/...` | callback `objectif-tcf.org/...` |
 | Reconfig au push | **Non** | **Non** (vars persistées sur Vercel) |
 
 Ne mélangez pas : **ne mettez pas l’URL Vercel dans `.env.local`**.
@@ -50,6 +50,7 @@ Dans [Google Cloud Console → Credentials](https://console.cloud.google.com/api
 
 ```
 http://localhost:3000
+https://objectif-tcf.org
 https://objectif-tcf-blue.vercel.app
 ```
 
@@ -57,6 +58,7 @@ https://objectif-tcf-blue.vercel.app
 
 ```
 http://localhost:3000/api/auth/google/callback
+https://objectif-tcf.org/api/auth/google/callback
 https://objectif-tcf-blue.vercel.app/api/auth/google/callback
 ```
 
@@ -80,7 +82,7 @@ npm run vercel:env-pull  # télécharge les vars Vercel (optionnel, debug)
 | Environnement | URL webhook |
 |---------------|-------------|
 | **Local** | Stripe CLI : `stripe listen --forward-to localhost:3000/api/paiement/webhook/stripe` |
-| **Prod** | `https://objectif-tcf-blue.vercel.app/api/paiement/webhook/stripe` |
+| **Prod** | `https://objectif-tcf.org/api/paiement/webhook/stripe` |
 
 pawaPay sandbox : callback `{APP_URL}/api/paiement/webhook/pawapay` (local ou prod selon où vous testez).
 

@@ -57,7 +57,7 @@ export function renderInvoiceHtml(
             <p style="margin:6px 0 0;font-size:14px;color:#49454f;line-height:1.6;">
               Plateforme e-learning de préparation TCF, TEF et IELTS<br />
               ${escapeHtml(companyEmail)}<br />
-              objectifcanada-tcf.com
+              ${escapeHtml(company.website.replace(/^https?:\/\//, "").replace(/\/$/, ""))}
             </p>
           </td>
           <td style="width:50%;vertical-align:top;padding-left:16px;">

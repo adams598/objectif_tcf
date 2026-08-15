@@ -11,7 +11,6 @@ interface SystemStatus {
   appUrl: string;
   production: { ok: boolean; errors: string[]; warnings: string[] };
   payments: {
-    stripe: { configured: boolean; webhookConfigured: boolean; webhookUrl: string };
     pawapay: {
       configured: boolean;
       environment: string;
@@ -39,8 +38,7 @@ export function AdminSystemStatusPanel() {
 
   const prodOk = data.production.ok;
   const paymentsReady =
-    !data.payments.mockMode &&
-    (data.payments.stripe.configured || data.payments.pawapay.configured);
+    !data.payments.mockMode && data.payments.pawapay.configured;
 
   return (
     <div
@@ -80,18 +78,7 @@ export function AdminSystemStatusPanel() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-sm text-sm">
-        <StatusChip
-          label="Stripe"
-          ok={data.payments.stripe.configured && data.payments.stripe.webhookConfigured}
-          detail={
-            data.payments.stripe.configured
-              ? data.payments.stripe.webhookConfigured
-                ? "Carte / EUR"
-                : "Webhook manquant"
-              : "Non configuré"
-          }
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm text-sm">
         <StatusChip
           label="pawaPay"
           ok={Boolean(

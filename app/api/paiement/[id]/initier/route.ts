@@ -23,9 +23,7 @@ const initiateSchema = z.object({
     "MOBILE_MONEY_WAVE",
     "MOBILE_MONEY_MOOV",
     "PAYPAL",
-    "GOOGLE_PAY",
     "BANK_TRANSFER",
-    "SEPA",
   ]),
   phoneNumber: z.string().min(8).max(20).optional(),
 });
@@ -78,7 +76,7 @@ export async function POST(
     }
     if (error instanceof Error && error.message === "NO_PAYMENT_PROVIDER_CONFIGURED") {
       return errorResponse(
-        "Aucun prestataire de paiement configuré. Ajoutez vos clés Stripe et/ou pawaPay.",
+        "Aucun prestataire de paiement configuré. Ajoutez votre clé pawaPay (PAWAPAY_API_TOKEN).",
         503
       );
     }

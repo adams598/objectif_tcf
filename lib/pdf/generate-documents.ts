@@ -282,7 +282,7 @@ export async function generateResultPdf(data: ResultPdfData): Promise<Uint8Array
   }
 
   y -= 16;
-  drawLine("objectifcanada-tcf.com — Document généré automatiquement", false, 9);
+  drawLine("objectif-tcf.org — Document généré automatiquement", false, 9);
 
   return doc.save();
 }

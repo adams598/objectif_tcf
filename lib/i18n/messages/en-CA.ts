@@ -37,6 +37,7 @@ export const enCA: CoreMessages = {
     adminSeries: "Series",
     adminCorrectors: "Graders",
     adminCommunity: "Community",
+    adminDocuments: "Documents",
     correctorSpace: "Grader space",
     expandSidebar: "Expand sidebar",
     collapseSidebar: "Collapse sidebar",

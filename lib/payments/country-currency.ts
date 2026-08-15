@@ -137,8 +137,6 @@ export function resolvePaymentLocaleFromCountry(
         "MOBILE_MONEY",
         "MOBILE_MONEY_WAVE",
         "CARD",
-        "GOOGLE_PAY",
-        "PAYPAL",
         "BANK_TRANSFER",
       ],
     };
@@ -155,8 +153,6 @@ export function resolvePaymentLocaleFromCountry(
         "MOBILE_MONEY",
         "MOBILE_MONEY_WAVE",
         "CARD",
-        "GOOGLE_PAY",
-        "PAYPAL",
         "BANK_TRANSFER",
       ],
     };
@@ -174,8 +170,6 @@ export function resolvePaymentLocaleFromCountry(
         "MOBILE_MONEY_MOOV",
         "MOBILE_MONEY_MTN",
         "CARD",
-        "GOOGLE_PAY",
-        "PAYPAL",
         "BANK_TRANSFER",
       ],
     };
@@ -198,10 +192,10 @@ export function resolvePaymentLocaleFromCountry(
 
   if (EUROPE.has(key)) {
     return {
-      currency: "EUR",
+      currency: "USD",
       countryLabel: country ?? null,
       phonePrefix: PHONE_PREFIX[key] ?? "+33",
-      preferredMethods: ["CARD", "GOOGLE_PAY", "PAYPAL", "SEPA"],
+      preferredMethods: ["CARD", "BANK_TRANSFER"],
     };
   }
 
@@ -209,7 +203,7 @@ export function resolvePaymentLocaleFromCountry(
     currency: "USD",
     countryLabel: country ?? null,
     phonePrefix: PHONE_PREFIX[key] ?? null,
-    preferredMethods: ["CARD", "GOOGLE_PAY", "PAYPAL", "MOBILE_MONEY", "MOBILE_MONEY_MTN"],
+    preferredMethods: ["CARD", "MOBILE_MONEY", "MOBILE_MONEY_MTN"],
   };
 }
 
@@ -222,9 +216,6 @@ export const CHECKOUT_METHOD_IDS: PaymentMethod[] = [
   "MOBILE_MONEY_MOOV",
   "MOBILE_MONEY_AIRTEL",
   "CARD",
-  "GOOGLE_PAY",
-  "PAYPAL",
-  "SEPA",
   "BANK_TRANSFER",
 ];
 

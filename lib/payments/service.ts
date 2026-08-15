@@ -9,6 +9,7 @@ import type {
   PaymentStatus,
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { realUsersWhere } from "@/lib/admin/real-users";
 import {
   EXAM_TAB_TO_TYPE,
   EXAM_TYPE_TO_TAB,
@@ -35,10 +36,6 @@ import {
   createPaycardCheckout,
   isPaycardConfigured,
 } from "./providers/paycard";
-import {
-  createStripeCheckout,
-  isStripeConfigured,
-} from "./providers/stripe";
 import {
   createMockCheckout,
   isMockPaymentsEnabled,
@@ -208,10 +205,8 @@ function resolveProvider(
 ): PaymentProvider {
   const preferred = getProviderForMethod(method, currency);
 
-  if (preferred === "STRIPE" && isStripeConfigured()) return "STRIPE";
   if (preferred === "PAWAPAY" && isPawaPayConfigured()) return "PAWAPAY";
   if (preferred === "PAYCARD" && isPaycardConfigured()) return "PAYCARD";
-  if (isStripeConfigured()) return "STRIPE";
   if (isPawaPayConfigured()) return "PAWAPAY";
   if (isPaycardConfigured()) return "PAYCARD";
   if (isMockPaymentsEnabled()) return "MOCK";
@@ -244,8 +239,9 @@ export async function initiatePayment(
     eur: payment.amountEur ?? 0,
   };
 
-  const amount = getAmountForCurrency(amounts, input.currency);
-  const provider = resolveProvider(input.method, input.currency);
+  const currency = input.currency === "EUR" ? "USD" : input.currency;
+  const amount = getAmountForCurrency(amounts, currency);
+  const provider = resolveProvider(input.method, currency);
   let providerReference = payment.providerReference ?? buildProviderReference();
   const baseUrl = getAppUrl();
   const redirectUrl = `${baseUrl}/offres/paiement/succes?paymentId=${payment.id}`;
@@ -255,23 +251,11 @@ export async function initiatePayment(
     select: { country: true },
   });
 
-  const existingSub = payment.examType
-    ? await prisma.subscription.findUnique({
-        where: {
-          userId_examType: {
-            userId: user.userId,
-            examType: payment.examType,
-          },
-        },
-        select: { stripeCustomerId: true },
-      })
-    : null;
-
   const chargeParams = {
     paymentId: payment.id,
     providerReference,
     amount,
-    currency: input.currency,
+    currency,
     method: input.method,
     customerEmail: user.email,
     customerName: user.name,
@@ -279,22 +263,15 @@ export async function initiatePayment(
     phoneNumber: input.phoneNumber,
     redirectUrl,
     subscriptionDays: payment.subscriptionDays ?? undefined,
-    stripeCustomerId: existingSub?.stripeCustomerId,
   };
 
   let checkoutUrl: string;
   let externalId: string | undefined;
-  let stripeCustomerId: string | undefined;
 
   if (provider === "MOCK") {
     const mock = createMockCheckout(chargeParams);
     checkoutUrl = mock.checkoutUrl;
     externalId = mock.externalId;
-  } else if (provider === "STRIPE") {
-    const stripe = await createStripeCheckout(chargeParams);
-    checkoutUrl = stripe.checkoutUrl;
-    externalId = stripe.externalId;
-    stripeCustomerId = stripe.stripeCustomerId;
   } else if (provider === "PAYCARD") {
     const paycard = await createPaycardCheckout(chargeParams);
     checkoutUrl = paycard.checkoutUrl;
@@ -323,16 +300,13 @@ export async function initiatePayment(
       status: "PROCESSING",
       provider,
       method: input.method,
-      currency: input.currency,
+      currency,
       amount,
       providerReference,
       externalId,
       checkoutUrl,
       failureReason: null,
-      metadata: {
-        ...existingMeta,
-        ...(stripeCustomerId ? { stripeCustomerId } : {}),
-      },
+      metadata: existingMeta,
     },
   });
 
@@ -434,7 +408,7 @@ export async function finalizeSuccessfulPayment(
         currentPeriodStart:
           existing.currentPeriodEnd > now ? existing.currentPeriodStart : now,
         currentPeriodEnd: periodEnd,
-        autoRenew: true,
+        autoRenew: false,
         cancelAtPeriodEnd: false,
         renewalDays: days,
         offerId: payment.offerId,
@@ -453,7 +427,7 @@ export async function finalizeSuccessfulPayment(
         status: "ACTIVE",
         currentPeriodStart: now,
         currentPeriodEnd: periodEnd,
-        autoRenew: true,
+        autoRenew: false,
         cancelAtPeriodEnd: false,
         renewalDays: days,
         offerId: payment.offerId,
@@ -479,7 +453,7 @@ export async function finalizeSuccessfulPayment(
       metadata: {
         ...metadata,
         subscriptionPlan: paidPlan,
-        autoRenew: true,
+        autoRenew: false,
         ...(stripeCustomerId ? { stripeCustomerId } : {}),
         ...(stripeSubscriptionId
           ? { stripeSubscriptionId }
@@ -688,7 +662,7 @@ export async function listPaymentsForAdmin(filters?: {
 }
 
 export async function getPaymentStatsForAdmin() {
-  const notDeleted = { deletedAt: null };
+  const notDeleted = { deletedAt: null, user: realUsersWhere() };
   const [total, succeeded, pending, failed, revenue] = await Promise.all([
     prisma.payment.count({ where: notDeleted }),
     prisma.payment.count({ where: { ...notDeleted, status: "SUCCEEDED" } }),

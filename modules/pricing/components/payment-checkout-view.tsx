@@ -29,7 +29,6 @@ interface PaymentPageData {
   userPhone: string | null;
   mockMode: boolean;
   providersConfigured: boolean;
-  stripeConfigured?: boolean;
   pawapayConfigured?: boolean;
 }
 
@@ -52,13 +51,15 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
 
   React.useEffect(() => {
     if (!data || localeApplied) return;
-    setCurrency(data.suggestedCurrency);
+    const suggested =
+      data.suggestedCurrency === "EUR" ? "USD" : data.suggestedCurrency;
+    setCurrency(suggested);
     if (data.userPhone) {
       setPhoneNumber(data.userPhone);
     } else if (data.paymentLocale.phonePrefix) {
       setPhoneNumber(data.paymentLocale.phonePrefix);
     }
-    const methods = data.methodsByCurrency[data.suggestedCurrency] ?? [];
+    const methods = data.methodsByCurrency[suggested] ?? [];
     if (methods.length > 0) {
       setMethod(methods[0].id);
     }
@@ -172,13 +173,13 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
         </div>
       )}
 
-      {data.stripeConfigured && (
+      {data.pawapayConfigured && (
         <div className="rounded-xl border border-primary/30 bg-primary/5 px-md py-sm text-center flex items-center justify-center gap-sm">
           <span className="material-symbols-outlined text-primary text-[20px]">
             lock
           </span>
           <p className="font-label-sm text-label-sm text-on-surface-variant">
-            {t("pricing.stripeSecureDesc")}
+            {t("pricing.pawapaySecureDesc")}
           </p>
         </div>
       )}
@@ -312,13 +313,9 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
           loading={initiateMutation.isPending}
           onClick={() => initiateMutation.mutate()}
         >
-          {method === "GOOGLE_PAY"
-            ? "Payer avec Google Pay"
-            : data.stripeConfigured && method === "CARD" && currency === "EUR"
-              ? t("pricing.payStripe")
-              : t("pricing.payAmount", {
-                  amount: formatPaymentAmount(amount, currency),
-                })}
+          {t("pricing.payAmount", {
+            amount: formatPaymentAmount(amount, currency),
+          })}
         </Button>
       </div>
 

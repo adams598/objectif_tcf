@@ -1,7 +1,6 @@
 import type { PaymentCurrency, PaymentMethod, PaymentProvider } from "@prisma/client";
 import { isPawaPayConfigured } from "./providers/pawapay";
 import { isPaycardConfigured } from "./providers/paycard";
-import { isStripeConfigured } from "./providers/stripe";
 import {
   CHECKOUT_METHOD_IDS,
   sortMethodsForLocale,
@@ -80,51 +79,15 @@ export const PAYMENT_METHODS: PaymentMethodOption[] = [
 
     label: "Carte bancaire",
 
-    description: "Visa, Mastercard, 3D Secure",
+    description: "Visa, Mastercard via pawaPay",
 
     icon: "credit_card",
 
-    provider: "STRIPE",
-
-    currencies: ["EUR", "USD", "XAF", "XOF"],
-
-    regions: ["Europe", "Afrique", "International"],
-
-  },
-
-  {
-
-    id: "GOOGLE_PAY",
-
-    label: "Google Pay",
-
-    description: "Paiement sécurisé en un clic (Stripe)",
-
-    icon: "account_balance_wallet",
-
-    provider: "STRIPE",
-
-    currencies: ["EUR", "USD"],
-
-    regions: ["International", "Europe"],
-
-  },
-
-  {
-
-    id: "PAYPAL",
-
-    label: "PayPal",
-
-    description: "Compte PayPal ou carte via PayPal",
-
-    icon: "account_balance",
-
     provider: "PAWAPAY",
 
-    currencies: ["USD", "EUR", "XAF", "XOF"],
+    currencies: ["XAF", "XOF", "USD"],
 
-    regions: ["Europe", "International", "Diaspora"],
+    regions: ["Afrique", "International"],
 
   },
 
@@ -226,24 +189,6 @@ export const PAYMENT_METHODS: PaymentMethodOption[] = [
 
   },
 
-  {
-
-    id: "SEPA",
-
-    label: "Prélèvement SEPA",
-
-    description: "Zone euro — virement instantané",
-
-    icon: "euro",
-
-    provider: "STRIPE",
-
-    currencies: ["EUR"],
-
-    regions: ["Europe"],
-
-  },
-
 ];
 
 
@@ -264,8 +209,6 @@ export const CURRENCY_OPTIONS: {
 
   { id: "XOF", label: "Franc CFA (UEMOA)", symbol: "XOF", hint: "Sénégal, Côte d'Ivoire, Mali…" },
 
-  { id: "EUR", label: "Euro", symbol: "€", hint: "France, Belgique, Europe…" },
-
   { id: "USD", label: "Dollar US", symbol: "$", hint: "International, diaspora" },
 
 ];
@@ -275,24 +218,21 @@ export const CURRENCY_OPTIONS: {
 export function filterMethodsByProviders(
   methods: PaymentMethodOption[]
 ): PaymentMethodOption[] {
-  const stripe = isStripeConfigured();
   const pawapay = isPawaPayConfigured();
   const paycard = isPaycardConfigured();
 
-  if (!stripe && !pawapay && !paycard) return methods;
+  if (!pawapay && !paycard) return methods.filter((m) => m.provider === "PAWAPAY");
 
   return methods.filter((m) => {
-    if (m.id === "GOOGLE_PAY" || m.id === "SEPA") return stripe;
-    if (m.id === "CARD") return stripe || pawapay || paycard;
-    if (m.id === "PAYPAL") return stripe || pawapay;
+    if (m.provider === "STRIPE") return false;
     if (
       m.id === "MOBILE_MONEY_ORANGE" ||
       m.id === "MOBILE_MONEY_MTN" ||
-      m.id === "MOBILE_MONEY"
+      m.id === "MOBILE_MONEY" ||
+      m.id === "CARD"
     ) {
       return pawapay || paycard;
     }
-    if (m.provider === "STRIPE") return stripe;
     if (m.provider === "PAWAPAY") return pawapay;
     return false;
   });
@@ -354,74 +294,17 @@ export function getCheckoutMethodsForCurrency(
 
 export function getProviderForMethod(
   method: PaymentMethod,
-  currency?: PaymentCurrency
+  _currency?: PaymentCurrency
 ): PaymentProvider {
-  if (method === "GOOGLE_PAY" || method === "SEPA") {
-    return "STRIPE";
-  }
-
-  // Carte EUR → Stripe en priorité
-  if (method === "CARD" && currency === "EUR" && isStripeConfigured()) {
-    return "STRIPE";
-  }
-
-  const isAfricanMobileMethod =
-    method === "MOBILE_MONEY_ORANGE" ||
-    method === "MOBILE_MONEY_MTN" ||
-    method === "MOBILE_MONEY" ||
-    method === "MOBILE_MONEY_AIRTEL" ||
-    method === "MOBILE_MONEY_WAVE" ||
-    method === "MOBILE_MONEY_MOOV" ||
-    method === "BANK_TRANSFER";
-
-  // pawaPay = prestataire principal Afrique (Mobile Money + carte locale)
-  if (isPawaPayConfigured()) {
-    if (isAfricanMobileMethod) return "PAWAPAY";
-    if (
-      method === "CARD" &&
-      currency &&
-      (currency === "XAF" || currency === "XOF" || currency === "USD")
-    ) {
-      return "PAWAPAY";
-    }
-  }
-
   const isPaycardMethod =
     method === "MOBILE_MONEY_ORANGE" ||
     method === "MOBILE_MONEY_MTN" ||
     method === "MOBILE_MONEY" ||
     method === "CARD";
 
-  // Paycard — repli uniquement si pawaPay n'est pas configuré
-  if (isPaycardConfigured() && isPaycardMethod && !isPawaPayConfigured()) {
-    if (method === "CARD" && isStripeConfigured()) return "STRIPE";
-    return "PAYCARD";
-  }
-
-  if (
-    method === "PAYPAL" &&
-    currency &&
-    (currency === "EUR" || currency === "USD") &&
-    isStripeConfigured()
-  ) {
-    return "STRIPE";
-  }
-
-  const found = PAYMENT_METHODS.find((m) => m.id === method);
-
-  if (found?.provider === "STRIPE" && isStripeConfigured()) {
-    return "STRIPE";
-  }
-
-  if (found?.provider === "PAWAPAY" && isPawaPayConfigured()) {
-    return "PAWAPAY";
-  }
-
-  if (found?.provider === "STRIPE" && !isStripeConfigured() && isPawaPayConfigured()) {
-    return "PAWAPAY";
-  }
-
-  return found?.provider ?? (isPawaPayConfigured() ? "PAWAPAY" : "STRIPE");
+  if (isPawaPayConfigured()) return "PAWAPAY";
+  if (isPaycardConfigured() && isPaycardMethod) return "PAYCARD";
+  return "PAWAPAY";
 }
 
 

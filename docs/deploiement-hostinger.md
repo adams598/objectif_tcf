@@ -30,7 +30,7 @@ Internet → Nginx (HTTPS) → Next.js :3000 (PM2)
 
 ### Comptes & clés
 
-- [ ] Domaine pointant vers le VPS (ex. `objectiftcf.com`)
+- [ ] Domaine pointant vers le VPS (ex. `objectif-tcf.org`)
 - [ ] Base PostgreSQL (`DATABASE_URL` + `DIRECT_URL`)
 - [ ] **pawaPay production** : [dashboard.pawapay.io](https://dashboard.pawapay.io) + token live
 - [ ] **Stripe live** : `sk_live_...` + webhook secret

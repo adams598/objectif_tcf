@@ -10,6 +10,8 @@ import {
 
 interface LegalPageProps {
   content: LegalContent;
+  downloadHref?: string;
+  downloadLabel?: string;
 }
 
 const LINK_PATTERN = /\[([^\]]+)\]\(([^)]+)\)/g;
@@ -155,10 +157,26 @@ function LegalSectionBlock({
   );
 }
 
-export function LegalPageView({ content }: LegalPageProps) {
+export function LegalPageView({
+  content,
+  downloadHref,
+  downloadLabel,
+}: LegalPageProps) {
   return (
     <MarketingPageShell narrow>
       <MarketingPageHero title={content.title} subtitle={content.lastUpdated} />
+
+      {downloadHref ? (
+        <div className="mb-xl">
+          <a
+            href={downloadHref}
+            className="inline-flex items-center gap-sm rounded-xl border border-outline-variant bg-surface px-md py-sm font-label-md text-label-md text-on-surface hover:border-primary hover:text-primary transition-colors"
+          >
+            <span className="material-symbols-outlined text-[20px]">download</span>
+            {downloadLabel ?? "Télécharger en PDF"}
+          </a>
+        </div>
+      ) : null}
 
       <div className="space-y-xl">
         {content.sections.map((section, index) => (

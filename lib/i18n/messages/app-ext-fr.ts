@@ -456,7 +456,7 @@ export const appExtFr = {
     createSubscription: "Créer mon abonnement",
     payNow: "Payez maintenant",
     autoRenewNotice:
-      "Le renouvellement automatique est activé à la souscription. Vous pouvez l'arrêter quand vous le souhaitez depuis Paramètres — aucun remboursement, l'accès reste valide jusqu'à la fin de la période payée.",
+      "L'accès est valable pour la durée payée. Il n'y a pas de renouvellement automatique : vous pourrez souscrire à nouveau depuis Offres. Aucun remboursement après paiement.",
     validity: "Validité : {{days}} jours",
     bonusDays: "+ {{days}} jours offerts",
     from: "dès",
@@ -466,7 +466,6 @@ export const appExtFr = {
     summary: "Récapitulatif",
     currency: "Devise",
     paymentMethod: "Moyen de paiement",
-    payStripe: "Payer avec Stripe",
     paymentSuccess: "Paiement confirmé !",
     paymentCancelled: "Paiement annulé",
     backDashboard: "Retour au tableau de bord",
@@ -502,10 +501,10 @@ export const appExtFr = {
     accessDashboard: "Accéder au tableau de bord",
     paymentNotConfigured: "Paiement non configuré",
     addEnvKeys:
-      "Ajoutez vos clés Stripe et/ou pawaPay dans le fichier .env.local.",
+      "Ajoutez votre clé pawaPay (PAWAPAY_API_TOKEN) dans le fichier .env.local.",
     demoModeActive: "Mode démo actif — aucun prestataire réel configuré.",
-    stripeSecureDesc:
-      "Paiement sécurisé par Stripe — carte bancaire (Visa, Mastercard…)",
+    pawapaySecureDesc:
+      "Paiement sécurisé par pawaPay — Mobile Money, carte Visa/Mastercard selon votre pays",
     daysCount: "{{n}} jours",
     mobileMoneyNumber: "Numéro Mobile Money",
     phonePlaceholder: "Ex : +237 6 70 00 00 00",
@@ -513,7 +512,7 @@ export const appExtFr = {
     modifyChoice: "Modifier mon choix",
     payAmount: "Payer {{amount}}",
     paymentProvidersDesc:
-      "Paiements sécurisés via pawaPay (Mobile Money Afrique) et Stripe (Europe). Carte, Google Pay et PayPal selon votre région.",
+      "Paiements sécurisés via pawaPay : Mobile Money (MTN, Orange, Wave…) et carte bancaire selon votre pays. Devises : XAF, XOF, USD.",
     redirecting: "Redirection…",
     simulateSuccess: "Paiement simulé avec succès.",
     simulateError: "Simulation impossible.",
@@ -530,7 +529,7 @@ export const appExtFr = {
     retry: "Réessayer",
     paymentSuccessTitle: "Paiement réussi !",
     subscriptionActive:
-      "Votre abonnement est actif avec renouvellement automatique. Vous pouvez l'arrêter à tout moment dans Paramètres.",
+      "Votre abonnement est actif pour la durée payée. Vous pourrez le renouveler depuis Offres à l'expiration.",
     subscriptionActiveShort: "Votre abonnement est actif. Bonne préparation !",
     invoiceSent:
       "Votre facture est disponible dans votre espace Documents. Vous pouvez la consulter, la télécharger ou la recevoir par email.",

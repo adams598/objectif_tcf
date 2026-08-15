@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireRole } from "@/lib/auth/session";
 import { decryptAdminPassword } from "@/lib/auth/admin-password";
 import { setUserCredentials } from "@/lib/admin/learner-credentials";
+import { excludeAnalyticsDemoUsers } from "@/lib/admin/real-users";
 import {
   successResponse,
   createdResponse,
@@ -45,6 +46,7 @@ export async function GET(req: NextRequest) {
 
     const where: Prisma.UserWhereInput = {
       deletedAt: null,
+      ...excludeAnalyticsDemoUsers(),
       ...(role ? { role } : {}),
       ...(search
         ? {

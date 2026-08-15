@@ -53,7 +53,7 @@ export const privacyFr: LegalContent = {
           text: "Les données d'utilisation font référence aux données collectées automatiquement, soit générées par l'utilisation du Service ou de l'infrastructure du Service elle-même (par exemple, la durée d'une visite de page).",
         },
         {
-          text: "Le site Web fait référence à Objectif Canada, accessible [à partir de ce lien](https://www.objectifcanada-tcf.com).",
+          text: "Le site Web fait référence à Objectif TCF, accessible [à partir de ce lien](https://objectif-tcf.org).",
         },
         {
           text: "Vous désigne la personne accédant ou utilisant le Service, ou la société, ou toute autre entité juridique au nom de laquelle cette personne accède ou utilise le Service, le cas échéant.",

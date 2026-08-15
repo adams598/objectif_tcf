@@ -60,8 +60,8 @@ Le fichier **`.env.vercel`** est déjà rempli (gitignored). Sinon utilisez **`.
 Mettez à jour (ou prévoyez votre domaine custom) :
 
 ```env
-NEXT_PUBLIC_APP_URL=https://objectif-tcf.vercel.app
-APP_URL=https://objectif-tcf.vercel.app
+NEXT_PUBLIC_APP_URL=https://objectif-tcf.org
+APP_URL=https://objectif-tcf.org
 ```
 
 Puis **Redeploy** (Deployments → ⋮ → Redeploy).
@@ -101,7 +101,7 @@ Cela crée les tables et votre compte **SUPER_ADMIN**.
 
 ## 6. Webhooks (paiements automatiques)
 
-Remplacez `VOTRE-URL` par `https://objectif-tcf.vercel.app` ou votre domaine.
+Remplacez `VOTRE-URL` par `https://objectif-tcf.org`.
 
 | Prestataire | URL |
 |-------------|-----|
@@ -122,8 +122,8 @@ Copiez le **Signing secret** Stripe → `STRIPE_WEBHOOK_SECRET` sur Vercel → R
 4. Mettez à jour sur Vercel :
 
 ```env
-NEXT_PUBLIC_APP_URL=https://votre-domaine.com
-APP_URL=https://votre-domaine.com
+NEXT_PUBLIC_APP_URL=https://objectif-tcf.org
+APP_URL=https://objectif-tcf.org
 ```
 
 5. Mettez à jour les webhooks pawaPay / Stripe avec le nouveau domaine

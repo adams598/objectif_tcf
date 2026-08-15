@@ -13,6 +13,7 @@ import {
   resolveAnalyticsPeriod,
 } from "@/lib/admin/analytics-period";
 import { sumNativeAndXaf } from "@/lib/admin/payment-currency";
+import { realUsersWhere } from "@/lib/admin/real-users";
 
 export {
   type AnalyticsFilters,
@@ -73,7 +74,11 @@ export async function fetchActiveSubscriptionStatsByExamType(): Promise<
   const now = new Date();
   const grouped = await prisma.subscription.groupBy({
     by: ["examType", "plan"],
-    where: { status: "ACTIVE", currentPeriodEnd: { gt: now } },
+    where: {
+      status: "ACTIVE",
+      currentPeriodEnd: { gt: now },
+      user: realUsersWhere(),
+    },
     _count: { _all: true },
   });
 
@@ -118,7 +123,7 @@ async function fetchFilterOptions() {
     oldestAttempt,
   ] = await Promise.all([
     prisma.user.findMany({
-      where: { deletedAt: null, country: { not: null } },
+      where: realUsersWhere({ country: { not: null } }),
       distinct: ["country"],
       select: { country: true },
       orderBy: { country: "asc" },
@@ -131,14 +136,14 @@ async function fetchFilterOptions() {
     }),
     prisma.user.groupBy({
       by: ["gender"],
-      where: { deletedAt: null, gender: { not: null } },
+      where: realUsersWhere({ gender: { not: null } }),
       _count: { _all: true },
     }),
     prisma.user.count({
-      where: { deletedAt: null, birthDate: { not: null } },
+      where: realUsersWhere({ birthDate: { not: null } }),
     }),
     prisma.user.findFirst({
-      where: { deletedAt: null },
+      where: realUsersWhere(),
       orderBy: { createdAt: "asc" },
       select: { createdAt: true },
     }),

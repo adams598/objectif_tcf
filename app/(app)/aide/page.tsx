@@ -25,7 +25,7 @@ export default function AidePage() {
             },
             {
               q: "Puis-je annuler mon abonnement ?",
-              a: "Oui, depuis Paramètres > Profil. Le renouvellement automatique s'arrête et l'accès reste actif jusqu'à la fin de la période déjà payée. Aucun remboursement n'est possible après paiement.",
+              a: "Oui. Votre accès reste actif jusqu'à la fin de la période déjà payée. Il n'y a pas de renouvellement automatique. Aucun remboursement n'est possible après paiement.",
             },
             {
               q: "Où télécharger mes factures ?",

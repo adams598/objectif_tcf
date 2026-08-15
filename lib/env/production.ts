@@ -1,11 +1,5 @@
 import { resolveAppUrl } from "@/lib/env/app-url";
 
-function envStripeConfigured(): boolean {
-  const key = process.env.STRIPE_SECRET_KEY?.trim();
-  if (!key || key === "..." || key.length < 12) return false;
-  return true;
-}
-
 function envPawaPayConfigured(): boolean {
   const token = process.env.PAWAPAY_API_TOKEN?.trim();
   if (!token || token === "..." || token.length < 16) return false;
@@ -40,7 +34,7 @@ export function validateProductionEnv(): ProductionValidationResult {
     appUrl.startsWith("http://")
   ) {
     errors.push(
-      "NEXT_PUBLIC_APP_URL doit être une URL HTTPS publique (ex. https://objectiftcf.com)"
+      "NEXT_PUBLIC_APP_URL doit être une URL HTTPS publique (ex. https://objectif-tcf.org)"
     );
   }
 
@@ -74,18 +68,11 @@ export function validateProductionEnv(): ProductionValidationResult {
     errors.push("PAYMENTS_MOCK_MODE=true interdit en production");
   }
 
-  const stripe = envStripeConfigured();
   const pawapay = envPawaPayConfigured();
 
-  if (!stripe && !pawapay) {
+  if (!pawapay) {
     errors.push(
-      "Configurer au moins Stripe (Europe) ou pawaPay (Afrique) pour les paiements automatiques"
-    );
-  }
-
-  if (stripe && !process.env.STRIPE_WEBHOOK_SECRET?.trim()) {
-    errors.push(
-      "STRIPE_WEBHOOK_SECRET manquant — webhooks Stripe requis pour activer les abonnements"
+      "Configurer pawaPay (PAWAPAY_API_TOKEN) pour les paiements automatiques"
     );
   }
 

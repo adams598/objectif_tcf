@@ -8,7 +8,7 @@ export function formatResendError(
   if (/only send testing emails to your own/i.test(msg)) {
     return (
       "Resend est en mode test (onboarding@resend.dev) : l'envoi n'est possible " +
-      "qu'à l'email du compte Resend. Vérifiez un domaine (ex. objectifcanada-tcf.com) " +
+      "qu'à l'email du compte Resend. Vérifiez un domaine (ex. objectif-tcf.org) " +
       "et définissez RESEND_FROM_EMAIL=noreply@votre-domaine.com sur Vercel."
     );
   }

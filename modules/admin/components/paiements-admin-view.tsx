@@ -180,7 +180,7 @@ export function PaiementsAdminView() {
           Paiements
         </h1>
         <p className="font-body-md text-body-md text-on-surface-variant">
-          Suivi des transactions — pawaPay (Mobile Money), Stripe (Europe).
+          Suivi des transactions — pawaPay (Mobile Money et cartes).
         </p>
       </div>
 

@@ -117,7 +117,7 @@ export function normalizeUserProfile(user: {
       status: sub.status,
       examType: sub.examType,
       currentPeriodEnd: sub.currentPeriodEnd.toISOString(),
-      autoRenew: sub.autoRenew ?? true,
+      autoRenew: sub.autoRenew ?? false,
       cancelAtPeriodEnd: sub.cancelAtPeriodEnd ?? false,
     })),
     settings: user.settings ?? null,

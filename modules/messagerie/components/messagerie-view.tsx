@@ -133,7 +133,7 @@ export function MessagerieView() {
             className="w-full flex items-center justify-center gap-sm px-md py-sm rounded-xl bg-primary text-on-primary font-label-md hover:bg-primary/90 transition-colors"
           >
             <span className="material-symbols-outlined text-[18px]">edit_square</span>
-            Nouveau message
+            {t("messaging.newMessage")}
           </button>
           <div className="flex items-center gap-sm bg-surface-container rounded-xl px-md py-sm">
             <span className="material-symbols-outlined text-[20px] text-on-surface-variant">
@@ -320,7 +320,7 @@ export function MessagerieView() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-md">
           <div className="bg-surface rounded-2xl border border-outline-variant w-full max-w-md p-lg shadow-violet-md">
             <div className="flex items-center justify-between mb-md">
-              <h2 className="font-headline-lg text-[18px] font-bold">Nouveau message</h2>
+              <h2 className="font-headline-lg text-[18px] font-bold">{t("messaging.newMessage")}</h2>
               <button
                 type="button"
                 onClick={() => setShowNewMessage(false)}
@@ -331,18 +331,18 @@ export function MessagerieView() {
             </div>
             <input
               className="w-full mb-md px-md py-sm rounded-xl border border-outline-variant bg-surface-container font-body-md"
-              placeholder="Rechercher un contact…"
+              placeholder={t("messaging.searchContact")}
               value={contactSearch}
               onChange={(e) => setContactSearch(e.target.value)}
             />
             <div className="max-h-64 overflow-y-auto space-y-xs">
               {contactsQuery.isLoading ? (
                 <p className="text-center text-on-surface-variant py-md animate-pulse">
-                  Chargement…
+                  {t("common.loading")}
                 </p>
               ) : (contactsQuery.data?.contacts.length ?? 0) === 0 ? (
                 <p className="text-center text-on-surface-variant py-md">
-                  Aucun contact trouvé.
+                  {t("messaging.noContacts")}
                 </p>
               ) : (
                 contactsQuery.data?.contacts.map((contact) => (

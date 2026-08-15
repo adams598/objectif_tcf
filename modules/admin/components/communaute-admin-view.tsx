@@ -3,9 +3,11 @@
 import React, { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslation } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { fetchJson } from "@/lib/api/fetch-json";
+import { dateLocaleTag } from "@/lib/i18n/locales";
 
 interface AdminPost {
   id: string;
@@ -22,6 +24,7 @@ interface PostsResponse {
 }
 
 export function CommunauteAdminView() {
+  const { t, locale } = useTranslation();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
 
@@ -36,9 +39,9 @@ export function CommunauteAdminView() {
       fetchJson(`/api/admin/communaute/posts/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-community-posts"] });
-      toast.success("Publication supprimée");
+      toast.success(t("admin.communityDeleted"));
     },
-    onError: () => toast.error("Erreur lors de la suppression"),
+    onError: () => toast.error(t("admin.communityDeleteError")),
   });
 
   const { posts = [], meta = { total: 0, page: 1, totalPages: 1 } } = query.data ?? {};
@@ -46,20 +49,22 @@ export function CommunauteAdminView() {
   return (
     <div className="flex flex-col gap-xl">
       <div>
-        <h1 className="font-display-md text-display-md font-bold mb-xs">Communauté</h1>
+        <h1 className="font-display-md text-display-md font-bold mb-xs">
+          {t("admin.communityTitle")}
+        </h1>
         <p className="font-body-md text-on-surface-variant">
-          Modération des publications ({meta.total} actives).
+          {t("admin.communitySubtitle", { n: meta.total })}
         </p>
       </div>
 
       <div className="space-y-md">
         {query.isLoading ? (
           <div className="p-xl text-center animate-pulse text-on-surface-variant">
-            Chargement…
+            {t("admin.loading")}
           </div>
         ) : posts.length === 0 ? (
           <div className="p-xl text-center text-on-surface-variant">
-            Aucune publication.
+            {t("admin.communityNone")}
           </div>
         ) : (
           posts.map((post) => (
@@ -76,13 +81,18 @@ export function CommunauteAdminView() {
                   </div>
                 </div>
                 <span className="font-label-sm text-on-surface-variant">
-                  {new Date(post.createdAt).toLocaleDateString("fr-FR")}
+                  {new Date(post.createdAt).toLocaleDateString(
+                    dateLocaleTag(locale)
+                  )}
                 </span>
               </div>
               <p className="font-body-md mb-md whitespace-pre-wrap">{post.content}</p>
               <div className="flex items-center justify-between">
                 <span className="font-label-sm text-on-surface-variant">
-                  {post._count.likes} j&apos;aime · {post._count.comments} commentaires
+                  {t("admin.communityStats", {
+                    likes: post._count.likes,
+                    comments: post._count.comments,
+                  })}
                 </span>
                 <Button
                   variant="secondary"
@@ -90,7 +100,7 @@ export function CommunauteAdminView() {
                   onClick={() => deletePost.mutate(post.id)}
                   disabled={deletePost.isPending}
                 >
-                  Supprimer
+                  {t("admin.delete")}
                 </Button>
               </div>
             </div>
@@ -101,10 +111,10 @@ export function CommunauteAdminView() {
       {meta.totalPages > 1 && (
         <div className="flex justify-center gap-sm">
           <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-            Précédent
+            {t("exam.previous")}
           </Button>
           <span className="px-md py-xs font-label-sm text-on-surface-variant">
-            Page {page} / {meta.totalPages}
+            {t("admin.pageOf", { page, total: meta.totalPages })}
           </span>
           <Button
             variant="secondary"
@@ -112,7 +122,7 @@ export function CommunauteAdminView() {
             disabled={page >= meta.totalPages}
             onClick={() => setPage((p) => p + 1)}
           >
-            Suivant
+            {t("exam.next")}
           </Button>
         </div>
       )}

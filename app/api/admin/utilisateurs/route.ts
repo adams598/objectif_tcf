@@ -40,14 +40,30 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search")?.trim();
     const role = searchParams.get("role") as Role | null;
+    const activeParam = searchParams.get("active");
+    const subscriptionParam = searchParams.get("subscription");
     const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
     const limit = Math.min(50, parseInt(searchParams.get("limit") ?? "20", 10));
     const skip = (page - 1) * limit;
+
+    const now = new Date();
+    const activeSubscription = {
+      status: "ACTIVE" as const,
+      currentPeriodEnd: { gt: now },
+    };
 
     const where: Prisma.UserWhereInput = {
       deletedAt: null,
       ...excludeAnalyticsDemoUsers(),
       ...(role ? { role } : {}),
+      ...(activeParam === "true" ? { isActive: true } : {}),
+      ...(activeParam === "false" ? { isActive: false } : {}),
+      ...(subscriptionParam === "with"
+        ? { subscriptions: { some: activeSubscription } }
+        : {}),
+      ...(subscriptionParam === "without"
+        ? { subscriptions: { none: activeSubscription } }
+        : {}),
       ...(search
         ? {
             OR: [

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Gender, PaymentMethod } from "@prisma/client";
+import { useTranslation } from "@/components/providers/locale-provider";
 import {
   Dialog,
   DialogContent,
@@ -9,9 +10,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { GENDER_LABELS } from "@/lib/admin/analytics";
 import type { AnalyticsPeriodType } from "@/lib/admin/analytics-period";
 import { ALL_EXAM_TYPES, EXAM_TYPE_LABELS } from "@/lib/exams/catalog";
+import { dateLocaleTag, type AppLocale } from "@/lib/i18n/locales";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,43 +45,55 @@ export type AnalyticsFilterOptions = {
   currentYear: number;
 };
 
-const MONTHS_SHORT = [
-  "Jan",
-  "Fév",
-  "Mar",
-  "Avr",
-  "Mai",
-  "Juin",
-  "Juil",
-  "Août",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Déc",
-];
+function monthsShortLabels(locale: AppLocale): string[] {
+  return Array.from({ length: 12 }, (_, i) =>
+    new Date(2000, i, 1).toLocaleDateString(dateLocaleTag(locale), {
+      month: "short",
+    })
+  );
+}
 
-const METHOD_LABELS: Record<string, string> = {
-  CARD: "Carte",
-  MOBILE_MONEY: "Mobile money",
-  MOBILE_MONEY_MTN: "MTN",
-  MOBILE_MONEY_ORANGE: "Orange",
-  MOBILE_MONEY_AIRTEL: "Airtel",
-  MOBILE_MONEY_WAVE: "Wave",
-  MOBILE_MONEY_MOOV: "Moov",
-  PAYPAL: "PayPal",
-  GOOGLE_PAY: "Google Pay",
-  BANK_TRANSFER: "Virement",
-  SEPA: "SEPA",
-  UNKNOWN: "Inconnu",
-};
+function paymentMethodLabel(
+  method: string,
+  t: (key: string) => string
+): string {
+  switch (method) {
+    case "CARD":
+      return t("admin.methodCard");
+    case "MOBILE_MONEY":
+      return t("admin.analyticsMobileMoney");
+    case "MOBILE_MONEY_MTN":
+      return "MTN";
+    case "MOBILE_MONEY_ORANGE":
+      return "Orange";
+    case "MOBILE_MONEY_AIRTEL":
+      return "Airtel";
+    case "MOBILE_MONEY_WAVE":
+      return "Wave";
+    case "MOBILE_MONEY_MOOV":
+      return "Moov";
+    case "PAYPAL":
+      return "PayPal";
+    case "GOOGLE_PAY":
+      return "Google Pay";
+    case "BANK_TRANSFER":
+      return t("admin.methodTransfer");
+    case "SEPA":
+      return "SEPA";
+    case "UNKNOWN":
+      return t("admin.analyticsUnknown");
+    default:
+      return method;
+  }
+}
 
 const AGE_RANGES = [
-  { label: "18-24 ans", min: 18, max: 24 },
-  { label: "25-34 ans", min: 25, max: 34 },
-  { label: "35-44 ans", min: 35, max: 44 },
-  { label: "45-54 ans", min: 45, max: 54 },
-  { label: "55+ ans", min: 55, max: 120 },
-];
+  { key: "admin.analyticsAge18_24", min: 18, max: 24 },
+  { key: "admin.analyticsAge25_34", min: 25, max: 34 },
+  { key: "admin.analyticsAge35_44", min: 35, max: 44 },
+  { key: "admin.analyticsAge45_54", min: 45, max: 54 },
+  { key: "admin.analyticsAge55plus", min: 55, max: 120 },
+] as const;
 
 export function defaultAnalyticsFilters(currentYear: number): AnalyticsFilterState {
   const currentMonth = new Date().getMonth() + 1;
@@ -99,19 +112,24 @@ export function defaultAnalyticsFilters(currentYear: number): AnalyticsFilterSta
   };
 }
 
-function formatSelectedMonthsLabel(year: number, months: number[]): string {
+function formatSelectedMonthsLabel(
+  year: number,
+  months: number[],
+  monthsShort: string[],
+  t: (key: string, params?: Record<string, string | number>) => string
+): string {
   const sorted = normalizeSelectedMonths(months);
-  if (sorted.length === 0) return "Choisir les mois";
+  if (sorted.length === 0) return t("admin.analyticsChooseMonths");
   if (sorted.length === 1) {
-    return `${MONTHS_SHORT[sorted[0] - 1]} ${year}`;
+    return `${monthsShort[sorted[0] - 1]} ${year}`;
   }
   const consecutive = sorted.every(
     (m, i) => i === 0 || m === sorted[i - 1] + 1
   );
   if (consecutive) {
-    return `${MONTHS_SHORT[sorted[0] - 1]}–${MONTHS_SHORT[sorted[sorted.length - 1] - 1]} ${year}`;
+    return `${monthsShort[sorted[0] - 1]}–${monthsShort[sorted[sorted.length - 1] - 1]} ${year}`;
   }
-  return `${sorted.length} mois · ${year}`;
+  return t("admin.analyticsNMonthsYear", { n: sorted.length, year });
 }
 
 function toggleMonth(months: number[], month: number): number[] {
@@ -161,9 +179,13 @@ function countActiveFilters(filters: AnalyticsFilterState): number {
   return n;
 }
 
-function countryLabel(code: string) {
+function countryLabel(code: string, locale: AppLocale) {
   try {
-    return new Intl.DisplayNames("fr", { type: "region" }).of(code) ?? code;
+    return (
+      new Intl.DisplayNames(dateLocaleTag(locale), { type: "region" }).of(
+        code
+      ) ?? code
+    );
   } catch {
     return code;
   }
@@ -229,16 +251,24 @@ function MonthSelector({
   layout,
   disabled,
 }: MonthSelectorProps) {
+  const { t, locale } = useTranslation();
+  const monthsShort = monthsShortLabels(locale);
   const sorted = normalizeSelectedMonths(selectedMonths);
+  const selectedLabel = formatSelectedMonthsLabel(
+    year,
+    sorted,
+    monthsShort,
+    t
+  );
 
   const grid = (
     <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
-      {MONTHS_SHORT.map((name, index) => {
+      {monthsShort.map((name, index) => {
         const month = index + 1;
         const active = sorted.includes(month);
         return (
           <button
-            key={name}
+            key={month}
             type="button"
             disabled={disabled}
             onClick={() => onChange(toggleMonth(sorted, month))}
@@ -264,7 +294,7 @@ function MonthSelector({
         className="h-7 px-2 rounded-md text-[10px] text-on-surface-variant hover:bg-surface-container-low"
         onClick={() => onChange(Array.from({ length: 12 }, (_, i) => i + 1))}
       >
-        Toute l&apos;année
+        {t("admin.analyticsWholeYear")}
       </button>
       <button
         type="button"
@@ -272,7 +302,7 @@ function MonthSelector({
         className="h-7 px-2 rounded-md text-[10px] text-on-surface-variant hover:bg-surface-container-low"
         onClick={() => onChange([])}
       >
-        Effacer
+        {t("admin.analyticsClear")}
       </button>
     </div>
   );
@@ -281,13 +311,13 @@ function MonthSelector({
     return (
       <div className="sm:col-span-2 space-y-2">
         <p className="text-[11px] font-label-sm text-on-surface-variant">
-          Mois à inclure ({formatSelectedMonthsLabel(year, sorted)})
+          {t("admin.analyticsMonthsInclude", { label: selectedLabel })}
         </p>
         {grid}
         {actions}
         {sorted.length === 0 && (
           <p className="text-[10px] text-error">
-            Sélectionnez au moins un mois pour la plage personnalisée.
+            {t("admin.analyticsNeedMonth")}
           </p>
         )}
       </div>
@@ -303,7 +333,7 @@ function MonthSelector({
       data-filter-item
     >
       <span className="text-[10px] text-on-surface-variant/80 whitespace-nowrap hidden xl:inline">
-        Mois
+        {t("admin.analyticsFilterMonths")}
       </span>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -312,12 +342,12 @@ function MonthSelector({
             disabled={disabled}
             className={cn(selectClass, "pr-2 min-w-[7.5rem] text-left")}
           >
-            {formatSelectedMonthsLabel(year, sorted)}
+            {selectedLabel}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64 p-3">
           <p className="text-[11px] font-label-sm text-on-surface-variant mb-2">
-            Plage · {year}
+            {t("admin.analyticsRangeYear", { year })}
           </p>
           {grid}
           {actions}
@@ -342,8 +372,16 @@ function FilterControls({
   layout = "inline",
   limit,
 }: FilterControlsProps) {
+  const { t, locale } = useTranslation();
   const yearDisabled = filters.periodType === "rolling";
   const customDisabled = filters.periodType !== "custom";
+
+  const genderLabels: Record<Gender, string> = {
+    MALE: t("admin.analyticsGenderMale"),
+    FEMALE: t("admin.analyticsGenderFemale"),
+    OTHER: t("admin.analyticsGenderOther"),
+    UNSPECIFIED: t("admin.analyticsGenderUnspecified"),
+  };
 
   let fieldIndex = 0;
   const show = (node: React.ReactNode) => {
@@ -361,14 +399,16 @@ function FilterControls({
     <>
       {show(
       <FilterField
-        label="Examen"
+        label={t("admin.analyticsFilterExam")}
         value={filters.examType}
         onChange={(v) => onChange({ examType: v })}
       >
-        <option value="ALL">Tous examens</option>
+        <option value="ALL">{t("admin.analyticsFilterAllExams")}</option>
         {ALL_EXAM_TYPES.map((type) => (
           <option key={type} value={type}>
-            {EXAM_TYPE_LABELS[type]}
+            {type === "AUTRE"
+              ? t("admin.analyticsExamOther")
+              : EXAM_TYPE_LABELS[type]}
           </option>
         ))}
       </FilterField>
@@ -376,7 +416,7 @@ function FilterControls({
 
       {show(
       <FilterField
-        label="Période"
+        label={t("admin.analyticsFilterPeriod")}
         value={
           filters.periodType === "rolling"
             ? `rolling:${filters.months}`
@@ -401,17 +441,17 @@ function FilterControls({
           }
         }}
       >
-        <option value="rolling:3">3 derniers mois</option>
-        <option value="rolling:6">6 derniers mois</option>
-        <option value="rolling:12">12 derniers mois</option>
-        <option value="year">Année entière</option>
-        <option value="custom">Plage de mois</option>
+        <option value="rolling:3">{t("admin.analyticsFilterLast3")}</option>
+        <option value="rolling:6">{t("admin.analyticsFilterLast6")}</option>
+        <option value="rolling:12">{t("admin.analyticsFilterLast12")}</option>
+        <option value="year">{t("admin.analyticsFilterFullYear")}</option>
+        <option value="custom">{t("admin.analyticsFilterMonthRange")}</option>
       </FilterField>
       )}
 
       {show(
       <FilterField
-        label="Année"
+        label={t("admin.analyticsFilterYear")}
         value={filters.year}
         onChange={(v) => onChange({ year: parseInt(v, 10) })}
         disabled={yearDisabled}
@@ -436,14 +476,14 @@ function FilterControls({
 
       {show(
       <FilterField
-        label="Pays"
+        label={t("admin.analyticsFilterCountry")}
         value={filters.country}
         onChange={(v) => onChange({ country: v })}
       >
-        <option value="ALL">Tous pays</option>
+        <option value="ALL">{t("admin.analyticsFilterAllCountries")}</option>
         {options.countries.map((c) => (
           <option key={c} value={c}>
-            {countryLabel(c)}
+            {countryLabel(c, locale)}
           </option>
         ))}
       </FilterField>
@@ -451,14 +491,14 @@ function FilterControls({
 
       {show(
       <FilterField
-        label="Paiement"
+        label={t("admin.analyticsFilterPayment")}
         value={filters.paymentMethod}
         onChange={(v) => onChange({ paymentMethod: v })}
       >
-        <option value="ALL">Tous modes</option>
+        <option value="ALL">{t("admin.analyticsFilterAllMethods")}</option>
         {options.paymentMethods.map((m) => (
           <option key={m} value={m}>
-            {METHOD_LABELS[m] ?? m}
+            {paymentMethodLabel(m, t)}
           </option>
         ))}
       </FilterField>
@@ -466,17 +506,19 @@ function FilterControls({
 
       {show(
       <FilterField
-        label="Sexe"
+        label={t("admin.analyticsFilterGender")}
         value={filters.gender}
         onChange={(v) => onChange({ gender: v })}
         disabled={!options.hasGenderData}
       >
         <option value="ALL">
-          {options.hasGenderData ? "Tous" : "Non disponible"}
+          {options.hasGenderData
+            ? t("admin.all")
+            : t("admin.analyticsUnavailable")}
         </option>
         {options.genders.map((g) => (
           <option key={g} value={g}>
-            {GENDER_LABELS[g]}
+            {genderLabels[g]}
           </option>
         ))}
       </FilterField>
@@ -484,7 +526,7 @@ function FilterControls({
 
       {show(
       <FilterField
-        label="Tranche âge"
+        label={t("admin.analyticsFilterAgeRange")}
         value={
           filters.ageMin && filters.ageMax && !filters.ageExact
             ? `${filters.ageMin}-${filters.ageMax}`
@@ -509,11 +551,13 @@ function FilterControls({
         disabled={!options.hasAgeData}
       >
         <option value="">
-          {options.hasAgeData ? "Toutes tranches" : "Non disponible"}
+          {options.hasAgeData
+            ? t("admin.analyticsFilterAllAgeRanges")
+            : t("admin.analyticsUnavailable")}
         </option>
         {AGE_RANGES.map((r) => (
-          <option key={r.label} value={`${r.min}-${r.max}`}>
-            {r.label}
+          <option key={r.key} value={`${r.min}-${r.max}`}>
+            {t(r.key)}
           </option>
         ))}
       </FilterField>
@@ -521,7 +565,7 @@ function FilterControls({
 
       {show(
       <FilterField
-        label="Âge"
+        label={t("admin.analyticsFilterAge")}
         value={filters.ageExact}
         onChange={(v) =>
           onChange({
@@ -533,12 +577,12 @@ function FilterControls({
         disabled={!options.hasAgeData}
       >
         <option value="">
-          {options.hasAgeData ? "Tous âges" : "—"}
+          {options.hasAgeData ? t("admin.analyticsFilterAllAges") : "—"}
         </option>
         {options.hasAgeData &&
           Array.from({ length: 63 }, (_, i) => i + 18).map((age) => (
             <option key={age} value={age}>
-              {age} ans
+              {t("admin.analyticsAgeYears", { n: age })}
             </option>
           ))}
       </FilterField>
@@ -566,6 +610,7 @@ export function AdminAnalyticsFilters({
   options,
   onChange,
 }: AdminAnalyticsFiltersProps) {
+  const { t } = useTranslation();
   const barRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const [visibleCount, setVisibleCount] = useState(10);
@@ -646,7 +691,9 @@ export function AdminAnalyticsFilters({
                 activeCount > 0 && "border-primary/40 text-primary"
               )}
             >
-              {overflowCount > 0 ? "＋ Filtres" : "Filtres"}
+              {overflowCount > 0
+                ? t("admin.analyticsFiltersMore")
+                : t("admin.analyticsFilters")}
               {(activeCount > 0 || overflowCount > 0) && (
                 <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary/15 px-1 text-[10px]">
                   {activeCount > 0 ? activeCount : "…"}
@@ -656,7 +703,7 @@ export function AdminAnalyticsFilters({
           </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Filtres statistiques</DialogTitle>
+                <DialogTitle>{t("admin.analyticsFiltersTitle")}</DialogTitle>
               </DialogHeader>
               <FilterControls
                 filters={filters}
@@ -670,14 +717,14 @@ export function AdminAnalyticsFilters({
                   onClick={resetFilters}
                   className="h-9 px-4 rounded-lg text-[12px] text-on-surface-variant hover:bg-surface-container-low"
                 >
-                  Réinitialiser
+                  {t("admin.analyticsReset")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setDialogOpen(false)}
                   className="h-9 px-4 rounded-lg bg-primary text-on-primary text-[12px] font-label-sm"
                 >
-                  Appliquer
+                  {t("admin.analyticsApply")}
                 </button>
               </div>
             </DialogContent>

@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import type { LegalContent, LegalListItem, LegalSection } from "@/lib/marketing/content/legal";
+import { useTranslation } from "@/components/providers/locale-provider";
 import {
   MarketingPageHero,
   MarketingPageShell,
@@ -162,6 +163,8 @@ export function LegalPageView({
   downloadHref,
   downloadLabel,
 }: LegalPageProps) {
+  const { t } = useTranslation();
+
   return (
     <MarketingPageShell narrow>
       <MarketingPageHero title={content.title} subtitle={content.lastUpdated} />
@@ -173,7 +176,7 @@ export function LegalPageView({
             className="inline-flex items-center gap-sm rounded-xl border border-outline-variant bg-surface px-md py-sm font-label-md text-label-md text-on-surface hover:border-primary hover:text-primary transition-colors"
           >
             <span className="material-symbols-outlined text-[20px]">download</span>
-            {downloadLabel ?? "Télécharger en PDF"}
+            {downloadLabel ?? t("marketingPages.downloadPdf")}
           </a>
         </div>
       ) : null}

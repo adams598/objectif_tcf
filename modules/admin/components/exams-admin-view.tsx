@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { fetchJson } from "@/lib/api/fetch-json";
+import { useTranslation } from "@/components/providers/locale-provider";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   ALL_EXAM_TYPES,
@@ -126,6 +127,7 @@ function StatPill({ label, value }: { label: string; value: number }) {
 }
 
 export function ExamsAdminView() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -220,17 +222,15 @@ export function ExamsAdminView() {
       <div className="flex flex-col gap-sm md:flex-row md:items-start md:justify-between">
         <div>
           <h1 className="font-display-md text-display-md font-bold text-on-surface mb-xs">
-            Examens
+            {t("admin.examsTitle")}
           </h1>
           <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl">
-            Créez et gérez les examens proposés sur la plateforme (TCF, TEF,
-            IELTS, DELF, etc.). Chaque examen regroupe ses séries dans{" "}
-            <strong>Banque d&apos;exercices</strong>.
+            {t("admin.examsSubtitle")}
           </p>
         </div>
         <Button onClick={() => setShowCreate(true)} className="shrink-0">
           <span className="material-symbols-outlined text-[18px]">add</span>
-          Nouvel examen
+          {t("admin.newExam")}
         </Button>
       </div>
 

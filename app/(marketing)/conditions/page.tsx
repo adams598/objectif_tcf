@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { LegalPageView } from "@/modules/marketing/components/legal-page";
-import { termsFr } from "@/lib/marketing/content/legal";
+import { LegalPageClient } from "@/modules/marketing/components/legal-page-client";
 
 export const metadata: Metadata = {
   title: "Conditions d'utilisation | Objectif TCF",
@@ -10,10 +9,6 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <LegalPageView
-      content={termsFr}
-      downloadHref="/api/legal/cgu"
-      downloadLabel="Télécharger en PDF"
-    />
+    <LegalPageClient kind="terms" downloadHref="/api/legal/cgu" />
   );
 }

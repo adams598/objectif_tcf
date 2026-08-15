@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslation } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -28,6 +29,7 @@ interface CorrectorsResponse {
 }
 
 export function CorrecteursAdminView() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -52,9 +54,9 @@ export function CorrecteursAdminView() {
       queryClient.invalidateQueries({ queryKey: ["admin-correctors"] });
       setShowForm(false);
       setForm({ email: "", firstName: "", lastName: "", password: "" });
-      toast.success("Correcteur créé");
+      toast.success(t("admin.gradersCreated"));
     },
-    onError: () => toast.error("Erreur lors de la création"),
+    onError: () => toast.error(t("admin.gradersCreateError")),
   });
 
   const updateCorrector = useMutation({
@@ -65,7 +67,7 @@ export function CorrecteursAdminView() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-correctors"] });
-      toast.success("Correcteur mis à jour");
+      toast.success(t("admin.gradersUpdated"));
     },
   });
 
@@ -76,52 +78,53 @@ export function CorrecteursAdminView() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-md">
         <div>
           <h1 className="font-display-md text-display-md font-bold text-on-surface mb-xs">
-            Correcteurs
+            {t("admin.gradersTitle")}
           </h1>
           <p className="font-body-md text-body-md text-on-surface-variant">
-            Gérez l&apos;équipe de correction — {pendingCount} soumission
-            {pendingCount !== 1 ? "s" : ""} en attente.
+            {pendingCount !== 1
+              ? t("admin.gradersSubtitlePlural", { n: pendingCount })
+              : t("admin.gradersSubtitle", { n: pendingCount })}
           </p>
         </div>
         <Button onClick={() => setShowForm(!showForm)}>
           <span className="material-symbols-outlined text-[18px]">person_add</span>
-          Nouveau correcteur
+          {t("admin.gradersNew")}
         </Button>
       </div>
 
       {showForm && (
         <div className="bg-surface border border-outline-variant rounded-2xl p-lg grid grid-cols-1 md:grid-cols-2 gap-md">
           <Input
-            label="Prénom"
+            label={t("admin.firstName")}
             value={form.firstName}
             onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
           />
           <Input
-            label="Nom"
+            label={t("admin.lastName")}
             value={form.lastName}
             onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
           />
           <Input
-            label="Email"
+            label={t("admin.colEmail")}
             type="email"
             value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
           />
           <Input
-            label="Mot de passe temporaire"
+            label={t("admin.gradersTempPassword")}
             type="password"
             value={form.password}
             onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
           />
           <div className="md:col-span-2 flex justify-end gap-sm">
             <Button variant="secondary" onClick={() => setShowForm(false)}>
-              Annuler
+              {t("admin.cancel")}
             </Button>
             <Button
               onClick={() => createCorrector.mutate()}
               disabled={createCorrector.isPending}
             >
-              Créer le compte
+              {t("admin.createAccount")}
             </Button>
           </div>
         </div>
@@ -130,11 +133,11 @@ export function CorrecteursAdminView() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
         {query.isLoading ? (
           <div className="col-span-full p-xl text-center text-on-surface-variant animate-pulse">
-            Chargement…
+            {t("admin.loading")}
           </div>
         ) : correctors.length === 0 ? (
           <div className="col-span-full p-xl text-center text-on-surface-variant">
-            Aucun correcteur enregistré.
+            {t("admin.gradersNone")}
           </div>
         ) : (
           correctors.map((c) => (
@@ -153,15 +156,20 @@ export function CorrecteursAdminView() {
                   </div>
                 </div>
                 <Badge variant={c.isActive ? "success" : "error"}>
-                  {c.isActive ? "Actif" : "Inactif"}
+                  {c.isActive ? t("admin.colActive") : t("admin.colInactive")}
                 </Badge>
               </div>
               <p className="font-label-sm text-label-sm text-on-surface-variant mb-md">
-                {c._count.corrections} correction{c._count.corrections !== 1 ? "s" : ""} effectuée
-                {c._count.corrections !== 1 ? "s" : ""}
+                {c._count.corrections !== 1
+                  ? t("admin.gradersCorrectionsPlural", {
+                      n: c._count.corrections,
+                    })
+                  : t("admin.gradersCorrections", { n: c._count.corrections })}
               </p>
               <div className="flex items-center justify-between">
-                <span className="font-label-sm text-label-sm">Compte actif</span>
+                <span className="font-label-sm text-label-sm">
+                  {t("admin.gradersActiveAccount")}
+                </span>
                 <Switch
                   checked={c.isActive}
                   onCheckedChange={(checked) =>

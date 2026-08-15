@@ -153,21 +153,123 @@ const en: FaqContent = {
   subtitle:
     "Find a quick answer. If your question isn't listed, contact us.",
   searchPlaceholder: "Search a question...",
-  categories: fr.categories.map((cat) => ({
-    ...cat,
-    title:
-      cat.id === "platform"
-        ? "THE PLATFORM"
-        : cat.id === "exams"
-          ? "EXAMS & TESTS"
-          : cat.id === "correction"
-            ? "CORRECTION & RESULTS"
-            : cat.id === "subscription"
-              ? "SUBSCRIPTIONS & PAYMENT"
-              : cat.id === "mobile"
-                ? "MOBILE APP & OFFLINE"
-                : "PARTNERSHIP",
-  })),
+  categories: [
+    {
+      id: "platform",
+      title: "THE PLATFORM",
+      items: [
+        {
+          question: "What is Objectif TCF?",
+          answer:
+            "Objectif TCF is a preparation platform for the TCF Canada, TEF Canada and IELTS exams. You train in conditions close to the official exam, with automatic grading for listening/reading (CO/CE) and grading by certified examiners for writing/speaking (EE/EO).",
+        },
+        {
+          question: "Can I try for free before paying?",
+          answer:
+            "Yes. Each exam offers free series accessible without an account. Create a free account to save your progress and unlock all series with a subscription.",
+        },
+      ],
+    },
+    {
+      id: "exams",
+      title: "EXAMS & TESTS",
+      items: [
+        {
+          question: "Which exams are covered?",
+          answer:
+            "Objectif TCF covers TCF Canada, TEF Canada and IELTS. Each exam offers the four skills: listening comprehension, reading comprehension, written expression and spoken expression.",
+        },
+        {
+          question: "What are the tests in each exam?",
+          answer:
+            "Each exam includes CO (listening comprehension), CE (reading comprehension), EE (written expression) and EO (spoken expression). Formats and durations vary by exam; see the About TCF page for TCF Canada details.",
+        },
+        {
+          question: "What is a mock exam (a series)?",
+          answer:
+            "A series groups the four disciplines of an exam in the official order. It is the equivalent of a full mock exam so you can train under real conditions.",
+        },
+        {
+          question: "Does Objectif TCF register me for the official exam?",
+          answer:
+            "No. Objectif TCF is a preparation platform. Registration for the official exam is done with an accredited centre (France Éducation international for TCF Canada).",
+        },
+      ],
+    },
+    {
+      id: "correction",
+      title: "CORRECTION & RESULTS",
+      items: [
+        {
+          question: "How are listening and reading tests (CO/CE) graded?",
+          answer:
+            "Listening and reading multiple-choice questions are graded automatically. You get your score and the correct answers immediately after the series.",
+        },
+        {
+          question:
+            "How does grading work for written and spoken expression (EE/EO)?",
+          answer:
+            "Your productions are sent to certified graders who assess content, structure, vocabulary and grammar against the official exam criteria.",
+        },
+        {
+          question: "How long until I get my EE/EO result?",
+          answer:
+            "EE/EO corrections are generally available within 48 to 72 business hours. You receive a notification as soon as your correction is ready.",
+        },
+      ],
+    },
+    {
+      id: "subscription",
+      title: "SUBSCRIPTIONS & PAYMENT",
+      items: [
+        {
+          question: "How do I subscribe?",
+          answer:
+            "Go to the Pricing page, choose the plan that matches your exam and complete the secure payment. Your access is activated automatically after payment confirmation.",
+        },
+        {
+          question: "Which payment methods are accepted?",
+          answer:
+            "We accept Mobile Money (MTN, Orange, Wave, etc.) and bank cards via pawaPay, depending on your country. Currencies: CFA franc (XAF/XOF) and US dollar (USD).",
+        },
+        {
+          question: "What is the difference between a subscription and a top-up?",
+          answer:
+            "A subscription unlocks full access to premium series for the chosen duration. A top-up adds EE/EO correction credits if your plan includes them.",
+        },
+        {
+          question: "My payment did not activate my access. What should I do?",
+          answer: `Contact us via WhatsApp (${PUBLIC_CONTACT_PHONE}) or the contact form, providing your email and transaction reference. Our team will reactivate your access within 24 hours.`,
+        },
+      ],
+    },
+    {
+      id: "mobile",
+      title: "MOBILE APP & OFFLINE",
+      items: [
+        {
+          question: "Can I train without an internet connection?",
+          answer:
+            "Some series can be downloaded for offline use. Your results will be synced as soon as you reconnect.",
+        },
+        {
+          question: "What happens to results completed offline?",
+          answer:
+            "They are stored locally then automatically synced with your account when you reconnect.",
+        },
+      ],
+    },
+    {
+      id: "partnership",
+      title: "PARTNERSHIP",
+      items: [
+        {
+          question: "Can I become an Objectif TCF partner?",
+          answer: `Yes, we work with training centres, teachers and influencers. Contact us via the contact form or by email at ${PUBLIC_CONTACT_EMAIL}.`,
+        },
+      ],
+    },
+  ],
 };
 
 export function getFaqContent(locale: string): FaqContent {

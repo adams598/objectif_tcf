@@ -29,3 +29,8 @@ export const SUPPORTED_LOCALES: AppLocale[] = ["fr-FR", "fr-CA", "en-CA"];
 export function localeToHtmlLang(locale: AppLocale): string {
   return locale;
 }
+
+/** Locale pour dates / nombres (Intl). */
+export function dateLocaleTag(locale: AppLocale): string {
+  return locale.startsWith("en") ? "en-CA" : "fr-FR";
+}

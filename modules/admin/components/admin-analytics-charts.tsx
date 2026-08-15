@@ -27,6 +27,8 @@ import {
   YAxis,
 } from "recharts";
 import { EXAM_TYPE_LABELS } from "@/lib/exams/catalog";
+import { useTranslation } from "@/components/providers/locale-provider";
+import { dateLocaleTag, type AppLocale } from "@/lib/i18n/locales";
 
 export type AdminAnalyticsData = {
   overview: {
@@ -86,40 +88,73 @@ const TOOLTIP_STYLE = {
   fontSize: "12px",
 };
 
-const METHOD_LABELS: Record<string, string> = {
-  CARD: "Carte bancaire",
-  MOBILE_MONEY: "Mobile money",
-  MOBILE_MONEY_MTN: "MTN",
-  MOBILE_MONEY_ORANGE: "Orange Money",
-  MOBILE_MONEY_AIRTEL: "Airtel",
-  MOBILE_MONEY_WAVE: "Wave",
-  MOBILE_MONEY_MOOV: "Moov",
-  PAYPAL: "PayPal",
-  GOOGLE_PAY: "Google Pay",
-  BANK_TRANSFER: "Virement",
-  SEPA: "SEPA",
-  UNKNOWN: "Inconnu",
-};
-
-const PROVIDER_LABELS: Record<string, string> = {
-  STRIPE: "Stripe",
-  PAWAPAY: "pawaPay",
-  CINETPAY: "CinetPay",
-  FLUTTERWAVE: "Flutterwave",
-  PAYPAL: "PayPal",
-  MOCK: "Simulation",
-};
-
-function formatMonthLabel(key: string) {
-  const [y, m] = key.split("-");
-  const date = new Date(Number(y), Number(m) - 1, 1);
-  return date.toLocaleDateString("fr-FR", { month: "short", year: "2-digit" });
+function paymentMethodLabel(
+  method: string,
+  t: (key: string) => string
+): string {
+  switch (method) {
+    case "CARD":
+      return t("admin.analyticsCardBank");
+    case "MOBILE_MONEY":
+      return t("admin.analyticsMobileMoney");
+    case "MOBILE_MONEY_MTN":
+      return "MTN";
+    case "MOBILE_MONEY_ORANGE":
+      return "Orange Money";
+    case "MOBILE_MONEY_AIRTEL":
+      return "Airtel";
+    case "MOBILE_MONEY_WAVE":
+      return "Wave";
+    case "MOBILE_MONEY_MOOV":
+      return "Moov";
+    case "PAYPAL":
+      return "PayPal";
+    case "GOOGLE_PAY":
+      return "Google Pay";
+    case "BANK_TRANSFER":
+      return t("admin.methodTransfer");
+    case "SEPA":
+      return "SEPA";
+    case "UNKNOWN":
+      return t("admin.analyticsUnknown");
+    default:
+      return method;
+  }
 }
 
-function formatAmount(value: number, currency?: string) {
+function providerLabel(provider: string, t: (key: string) => string): string {
+  switch (provider) {
+    case "STRIPE":
+      return "Stripe";
+    case "PAWAPAY":
+      return "pawaPay";
+    case "CINETPAY":
+      return "CinetPay";
+    case "FLUTTERWAVE":
+      return "Flutterwave";
+    case "PAYPAL":
+      return "PayPal";
+    case "MOCK":
+      return t("admin.analyticsMock");
+    default:
+      return provider;
+  }
+}
+
+function formatMonthLabel(key: string, locale: AppLocale) {
+  const [y, m] = key.split("-");
+  const date = new Date(Number(y), Number(m) - 1, 1);
+  return date.toLocaleDateString(dateLocaleTag(locale), {
+    month: "short",
+    year: "2-digit",
+  });
+}
+
+function formatAmount(value: number, locale: AppLocale, currency?: string) {
+  const tag = dateLocaleTag(locale);
   if (currency && /^[A-Z]{3}$/i.test(currency)) {
     try {
-      return new Intl.NumberFormat("fr-FR", {
+      return new Intl.NumberFormat(tag, {
         style: "currency",
         currency: currency.toUpperCase(),
         maximumFractionDigits: 0,
@@ -128,21 +163,22 @@ function formatAmount(value: number, currency?: string) {
       // Devise non reconnue par Intl — repli numérique
     }
   }
-  return value.toLocaleString("fr-FR");
+  return value.toLocaleString(tag);
 }
 
 function formatRevenueLegend(
   currency: string,
   nativeAmount: number,
-  amountXaf: number
+  amountXaf: number,
+  locale: AppLocale
 ): string {
-  const native = formatAmount(nativeAmount, currency);
+  const native = formatAmount(nativeAmount, locale, currency);
   if (currency === "XAF") return native;
-  return `${native} (~${formatAmount(amountXaf, "XAF")})`;
+  return `${native} (~${formatAmount(amountXaf, locale, "XAF")})`;
 }
 
-function withLabels<T extends { month: string }>(rows: T[] = []) {
-  return rows.map((r) => ({ ...r, label: formatMonthLabel(r.month) }));
+function withLabels<T extends { month: string }>(rows: T[] = [], locale: AppLocale) {
+  return rows.map((r) => ({ ...r, label: formatMonthLabel(r.month, locale) }));
 }
 
 function normalizeAnalyticsData(raw: AdminAnalyticsData): AdminAnalyticsData {
@@ -176,7 +212,7 @@ function normalizeAnalyticsData(raw: AdminAnalyticsData): AdminAnalyticsData {
 
 function toNamedPieData(
   items: Array<{ name: string; value: number }>,
-  emptyLabel = "Aucune donnée"
+  emptyLabel: string
 ) {
   const filtered = items.filter((i) => i.value > 0);
   if (filtered.length === 0) {
@@ -186,23 +222,24 @@ function toNamedPieData(
 }
 
 export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsData }) {
+  const { t, locale } = useTranslation();
   const data = useMemo(() => normalizeAnalyticsData(rawData), [rawData]);
 
   const registrations = useMemo(
-    () => withLabels(data.registrationsByMonth),
-    [data.registrationsByMonth]
+    () => withLabels(data.registrationsByMonth, locale),
+    [data.registrationsByMonth, locale]
   );
   const revenue = useMemo(
-    () => withLabels(data.revenueByMonth),
-    [data.revenueByMonth]
+    () => withLabels(data.revenueByMonth, locale),
+    [data.revenueByMonth, locale]
   );
   const attempts = useMemo(
-    () => withLabels(data.attemptsByMonth),
-    [data.attemptsByMonth]
+    () => withLabels(data.attemptsByMonth, locale),
+    [data.attemptsByMonth, locale]
   );
   const completedAttempts = useMemo(
-    () => withLabels(data.completedAttemptsByMonth),
-    [data.completedAttemptsByMonth]
+    () => withLabels(data.completedAttemptsByMonth, locale),
+    [data.completedAttemptsByMonth, locale]
   );
 
   const activityTrend = useMemo(
@@ -220,57 +257,75 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
     () =>
       data.subscriptionsByExamType.map((e) => ({
         name:
-          EXAM_TYPE_LABELS[e.examType as keyof typeof EXAM_TYPE_LABELS] ??
-          e.examType,
+          e.examType === "AUTRE"
+            ? t("admin.analyticsExamOther")
+            : EXAM_TYPE_LABELS[e.examType as keyof typeof EXAM_TYPE_LABELS] ??
+              e.examType,
         gratuit: e.free,
         payant: e.paid,
         total: e.totalActive,
       })),
-    [data.subscriptionsByExamType]
+    [data.subscriptionsByExamType, t]
   );
 
   const planPie = useMemo(
     () =>
       toNamedPieData(
         data.subscriptionsByPlan.map((p) => ({
-          name: p.label,
+          name:
+            p.plan === "FREE"
+              ? t("common.free")
+              : p.plan === "STARTER"
+                ? t("admin.analyticsPlanStarter")
+                : p.plan === "PRO"
+                  ? t("admin.analyticsPlanPro")
+                  : p.plan === "ELITE"
+                    ? t("admin.analyticsPlanElite")
+                    : p.label,
           value: p.count,
-        }))
+        })),
+        t("admin.analyticsNoData")
       ),
-    [data.subscriptionsByPlan]
+    [data.subscriptionsByPlan, t]
   );
 
   const freePaidPie = useMemo(
     () =>
-      toNamedPieData([
-        { name: "Gratuit", value: data.overview.freeSubscriptions },
-        { name: "Payant", value: data.overview.paidSubscriptions },
-      ]),
-    [data.overview.freeSubscriptions, data.overview.paidSubscriptions]
+      toNamedPieData(
+        [
+          { name: t("common.free"), value: data.overview.freeSubscriptions },
+          {
+            name: t("admin.analyticsPaid"),
+            value: data.overview.paidSubscriptions,
+          },
+        ],
+        t("admin.analyticsNoData")
+      ),
+    [data.overview.freeSubscriptions, data.overview.paidSubscriptions, t]
   );
 
   const methodPie = useMemo(
     () =>
       toNamedPieData(
         data.paymentsByMethod.map((p) => ({
-          name: METHOD_LABELS[p.method] ?? p.method,
+          name: paymentMethodLabel(p.method, t),
           value: p.count,
         })),
-        "Aucun paiement"
+        t("admin.analyticsNoPayments")
       ),
-    [data.paymentsByMethod]
+    [data.paymentsByMethod, t]
   );
 
   const providerPie = useMemo(
     () =>
       toNamedPieData(
         data.paymentsByProvider.map((p) => ({
-          name: PROVIDER_LABELS[p.provider] ?? p.provider,
+          name: providerLabel(p.provider, t),
           value: p.count,
         })),
-        "Aucun paiement"
+        t("admin.analyticsNoPayments")
       ),
-    [data.paymentsByProvider]
+    [data.paymentsByProvider, t]
   );
 
   const currencyPie = useMemo(() => {
@@ -279,25 +334,42 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
       .map((r) => ({
         name: r.currency,
         value: r.amountXaf,
-        legendLabel: formatRevenueLegend(r.currency, r.amount, r.amountXaf),
+        legendLabel: formatRevenueLegend(
+          r.currency,
+          r.amount,
+          r.amountXaf,
+          locale
+        ),
       }));
 
     if (items.length === 0) {
-      return [{ name: "Aucun revenu", value: 1, isEmpty: true }];
+      return [
+        { name: t("admin.analyticsNoRevenue"), value: 1, isEmpty: true },
+      ];
     }
     return items;
-  }, [data.revenueTotals]);
+  }, [data.revenueTotals, locale, t]);
 
   const attemptCompletionPie = useMemo(() => {
     const incomplete = Math.max(
       0,
       data.overview.totalAttempts - data.overview.completedAttempts
     );
-    return toNamedPieData([
-      { name: "Complétées", value: data.overview.completedAttempts },
-      { name: "En cours / abandonnées", value: incomplete },
-    ]);
-  }, [data.overview.totalAttempts, data.overview.completedAttempts]);
+    return toNamedPieData(
+      [
+        {
+          name: t("admin.analyticsCompleted"),
+          value: data.overview.completedAttempts,
+        },
+        { name: t("admin.analyticsInProgress"), value: incomplete },
+      ],
+      t("admin.analyticsNoData")
+    );
+  }, [
+    data.overview.totalAttempts,
+    data.overview.completedAttempts,
+    t,
+  ]);
 
   const completionRate =
     data.overview.totalAttempts > 0
@@ -318,27 +390,37 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
 
   const kpis = [
     {
-      label: "Utilisateurs",
+      label: t("admin.analyticsKpiUsers"),
       value: data.overview.totalUsers,
-      sub: `${data.overview.activeUsers} actifs`,
+      sub: t("admin.analyticsKpiUsersSub", {
+        n: data.overview.activeUsers,
+      }),
       accent: CHART_COLORS[0],
     },
     {
-      label: "Abonnements actifs",
+      label: t("admin.analyticsKpiSubs"),
       value: data.overview.totalSubscriptions,
-      sub: `${data.overview.freeSubscriptions} gratuits · ${data.overview.paidSubscriptions} payants`,
+      sub: t("admin.analyticsKpiSubsSub", {
+        free: data.overview.freeSubscriptions,
+        paid: data.overview.paidSubscriptions,
+      }),
       accent: CHART_COLORS[1],
     },
     {
-      label: "Nouveaux (période)",
+      label: t("admin.analyticsKpiNew"),
       value: data.overview.newUsersInPeriod,
-      sub: `Conversion ${data.overview.conversionRate}%`,
+      sub: t("admin.analyticsKpiNewSub", {
+        rate: data.overview.conversionRate,
+      }),
       accent: CHART_COLORS[2],
     },
     {
-      label: "Tentatives",
+      label: t("admin.analyticsKpiAttempts"),
       value: data.overview.totalAttempts,
-      sub: `${data.overview.completedAttempts} complétées (${completionRate}%)`,
+      sub: t("admin.analyticsKpiAttemptsSub", {
+        n: data.overview.completedAttempts,
+        rate: completionRate,
+      }),
       accent: CHART_COLORS[3],
     },
   ];
@@ -346,8 +428,8 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
   return (
     <div className="flex flex-col gap-xl">
       <AnalyticsSection
-        title="Indicateurs clés"
-        description="Synthèse instantanée de l'activité sur la période filtrée"
+        title={t("admin.analyticsSectionKpis")}
+        description={t("admin.analyticsSectionKpisDesc")}
       >
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-md">
           {kpis.map((kpi) => (
@@ -363,7 +445,7 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
                 {kpi.label}
               </p>
               <p className="font-display-md text-[26px] font-bold text-on-surface mt-xs">
-                {kpi.value.toLocaleString("fr-FR")}
+                {kpi.value.toLocaleString(dateLocaleTag(locale))}
               </p>
               <p className="font-label-sm text-[11px] text-on-surface-variant mt-xs">
                 {kpi.sub}
@@ -374,11 +456,14 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
       </AnalyticsSection>
 
       <AnalyticsSection
-        title="Évolution temporelle"
-        description="Tendances mois par mois — toutes les périodes sont affichées, y compris sans activité"
+        title={t("admin.analyticsSectionTime")}
+        description={t("admin.analyticsSectionTimeDesc")}
       >
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-lg">
-          <ChartCard title="Inscriptions" subtitle="Courbe aire">
+          <ChartCard
+            title={t("admin.analyticsRegistrations")}
+            subtitle={t("admin.analyticsAreaCurve")}
+          >
             <ResponsiveContainer width="100%" height={240}>
               <AreaChart data={registrations}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e6e0e9" />
@@ -388,7 +473,7 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
                 <Area
                   type="monotone"
                   dataKey="count"
-                  name="Inscriptions"
+                  name={t("admin.analyticsRegistrations")}
                   stroke={CHART_COLORS[0]}
                   fill={CHART_COLORS[0]}
                   fillOpacity={0.18}
@@ -399,8 +484,8 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
           </ChartCard>
 
           <ChartCard
-            title="Activité combinée"
-            subtitle="Courbes superposées — inscriptions, tentatives, complétions"
+            title={t("admin.analyticsCombined")}
+            subtitle={t("admin.analyticsCombinedSub")}
           >
             <ResponsiveContainer width="100%" height={240}>
               <ComposedChart data={activityTrend}>
@@ -412,7 +497,7 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
                 <Line
                   type="monotone"
                   dataKey="inscriptions"
-                  name="Inscriptions"
+                  name={t("admin.analyticsRegistrations")}
                   stroke={CHART_COLORS[0]}
                   strokeWidth={2}
                   dot={{ r: 3 }}
@@ -420,7 +505,7 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
                 <Line
                   type="monotone"
                   dataKey="tentatives"
-                  name="Tentatives"
+                  name={t("admin.analyticsAttempts")}
                   stroke={CHART_COLORS[2]}
                   strokeWidth={2}
                   dot={{ r: 3 }}
@@ -428,7 +513,7 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
                 <Line
                   type="monotone"
                   dataKey="completees"
-                  name="Complétées"
+                  name={t("admin.analyticsCompleted")}
                   stroke={CHART_COLORS[3]}
                   strokeWidth={2}
                   strokeDasharray="4 4"
@@ -438,7 +523,10 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Revenus mensuels" subtitle="Barres groupées par devise">
+          <ChartCard
+            title={t("admin.analyticsMonthlyRevenue")}
+            subtitle={t("admin.analyticsGroupedBars")}
+          >
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={revenue}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e6e0e9" />
@@ -468,7 +556,10 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Revenus XAF" subtitle="Courbe de tendance">
+          <ChartCard
+            title={t("admin.analyticsRevenueXaf")}
+            subtitle={t("admin.analyticsTrendLine")}
+          >
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={revenue}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e6e0e9" />
@@ -476,7 +567,7 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip
                   contentStyle={TOOLTIP_STYLE}
-                  formatter={(v) => formatAmount(Number(v), "XAF")}
+                  formatter={(v) => formatAmount(Number(v), locale, "XAF")}
                 />
                 <Line
                   type="monotone"
@@ -494,16 +585,19 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
       </AnalyticsSection>
 
       <AnalyticsSection
-        title="Répartition des abonnements"
-        description="Disques et barres pour visualiser la composition du parc abonnés"
+        title={t("admin.analyticsSectionSubs")}
+        description={t("admin.analyticsSectionSubsDesc")}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-lg">
-          <ChartCard title="Par plan" subtitle="Donut">
+          <ChartCard title={t("admin.analyticsByPlan")} subtitle={t("admin.analyticsDonut")}>
             <DonutChart data={planPie} height={240} />
             <PieLegend data={planPie} />
           </ChartCard>
 
-          <ChartCard title="Gratuit vs payant" subtitle="Donut">
+          <ChartCard
+            title={t("admin.analyticsFreeVsPaid")}
+            subtitle={t("admin.analyticsDonut")}
+          >
             <DonutChart
               data={freePaidPie}
               height={240}
@@ -512,7 +606,10 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
             <PieLegend data={freePaidPie} />
           </ChartCard>
 
-          <ChartCard title="Par type d'examen" subtitle="Radar">
+          <ChartCard
+            title={t("admin.analyticsByExamType")}
+            subtitle={t("admin.analyticsRadar")}
+          >
             {radarExamData.length > 0 ? (
               <ResponsiveContainer width="100%" height={240}>
                 <RadarChart data={radarExamData} cx="50%" cy="50%" outerRadius="70%">
@@ -521,7 +618,7 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
                   <PolarRadiusAxis tick={{ fontSize: 9 }} allowDecimals={false} />
                   <Tooltip contentStyle={TOOLTIP_STYLE} />
                   <Radar
-                    name="Abonnements"
+                    name={t("admin.analyticsSubscriptions")}
                     dataKey="abonnements"
                     stroke={CHART_COLORS[0]}
                     fill={CHART_COLORS[0]}
@@ -536,7 +633,10 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-lg mt-lg">
-          <ChartCard title="Abonnements par examen" subtitle="Barres empilées">
+          <ChartCard
+            title={t("admin.analyticsSubsByExam")}
+            subtitle={t("admin.analyticsStackedBars")}
+          >
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={examSubs}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e6e0e9" />
@@ -546,13 +646,13 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Bar
                   dataKey="gratuit"
-                  name="Gratuit"
+                  name={t("common.free")}
                   stackId="a"
                   fill="#9ca3af"
                 />
                 <Bar
                   dataKey="payant"
-                  name="Payant"
+                  name={t("admin.analyticsPaid")}
                   stackId="a"
                   fill={CHART_COLORS[0]}
                   radius={[4, 4, 0, 0]}
@@ -561,7 +661,10 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Volume par examen" subtitle="Barres horizontales">
+          <ChartCard
+            title={t("admin.analyticsVolumeByExam")}
+            subtitle={t("admin.analyticsHorizontalBars")}
+          >
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={examSubs} layout="vertical" margin={{ left: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e6e0e9" />
@@ -575,7 +678,7 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
                 <Tooltip contentStyle={TOOLTIP_STYLE} />
                 <Bar
                   dataKey="total"
-                  name="Total actifs"
+                  name={t("admin.analyticsTotalActive")}
                   fill={CHART_COLORS[3]}
                   radius={[0, 4, 4, 0]}
                 />
@@ -586,33 +689,45 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
       </AnalyticsSection>
 
       <AnalyticsSection
-        title="Paiements & revenus"
-        description="Analyse des flux financiers sur la période"
+        title={t("admin.analyticsSectionPayments")}
+        description={t("admin.analyticsSectionPaymentsDesc")}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-lg">
-          <ChartCard title="Par devise" subtitle="Donut — base F CFA (équivalents)">
+          <ChartCard
+            title={t("admin.analyticsByCurrency")}
+            subtitle={t("admin.analyticsDonutXaf")}
+          >
             <DonutChart
               data={currencyPie}
               height={200}
               tooltipFormatter={(value, name) => [
-                formatAmount(Number(value), "XAF"),
-                `${name} (équiv. F CFA)`,
+                formatAmount(Number(value), locale, "XAF"),
+                t("admin.analyticsEquivXaf", { name: String(name) }),
               ]}
             />
             <PieLegend data={currencyPie} showPercent />
           </ChartCard>
 
-          <ChartCard title="Par méthode" subtitle="Donut">
+          <ChartCard
+            title={t("admin.analyticsByMethod")}
+            subtitle={t("admin.analyticsDonut")}
+          >
             <DonutChart data={methodPie} height={200} />
             <PieLegend data={methodPie} />
           </ChartCard>
 
-          <ChartCard title="Par prestataire" subtitle="Donut">
+          <ChartCard
+            title={t("admin.analyticsByProvider")}
+            subtitle={t("admin.analyticsDonut")}
+          >
             <DonutChart data={providerPie} height={200} />
             <PieLegend data={providerPie} />
           </ChartCard>
 
-          <ChartCard title="Taux de complétion" subtitle="Jauge radiale">
+          <ChartCard
+            title={t("admin.analyticsCompletionRate")}
+            subtitle={t("admin.analyticsRadialGauge")}
+          >
             <ResponsiveContainer width="100%" height={200}>
               <RadialBarChart
                 cx="50%"
@@ -620,7 +735,13 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
                 innerRadius="55%"
                 outerRadius="90%"
                 barSize={14}
-                data={[{ name: "Complétion", value: completionRate, fill: CHART_COLORS[0] }]}
+                data={[
+                  {
+                    name: t("admin.analyticsCompletion"),
+                    value: completionRate,
+                    fill: CHART_COLORS[0],
+                  },
+                ]}
                 startAngle={180}
                 endAngle={0}
               >
@@ -647,7 +768,7 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
                   className="fill-on-surface-variant"
                   style={{ fontSize: 11 }}
                 >
-                  tentatives complétées
+                  {t("admin.analyticsAttemptsCompleted")}
                 </text>
               </RadialBarChart>
             </ResponsiveContainer>
@@ -656,11 +777,14 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
       </AnalyticsSection>
 
       <AnalyticsSection
-        title="Activité examens"
-        description="Engagement des utilisateurs sur les séries et examens"
+        title={t("admin.analyticsSectionExams")}
+        description={t("admin.analyticsSectionExamsDesc")}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-lg">
-          <ChartCard title="Tentatives mensuelles" subtitle="Courbe aire">
+          <ChartCard
+            title={t("admin.analyticsMonthlyAttempts")}
+            subtitle={t("admin.analyticsAreaCurve")}
+          >
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={attempts}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e6e0e9" />
@@ -670,7 +794,7 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
                 <Area
                   type="monotone"
                   dataKey="count"
-                  name="Tentatives"
+                  name={t("admin.analyticsAttempts")}
                   stroke={CHART_COLORS[2]}
                   fill={CHART_COLORS[2]}
                   fillOpacity={0.15}
@@ -680,7 +804,10 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Complétions mensuelles" subtitle="Courbe">
+          <ChartCard
+            title={t("admin.analyticsMonthlyCompletions")}
+            subtitle={t("admin.analyticsCurve")}
+          >
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={completedAttempts}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e6e0e9" />
@@ -690,7 +817,7 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
                 <Line
                   type="monotone"
                   dataKey="count"
-                  name="Complétées"
+                  name={t("admin.analyticsCompleted")}
                   stroke={CHART_COLORS[3]}
                   strokeWidth={2}
                   dot={{ r: 3 }}
@@ -699,7 +826,10 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Statut des tentatives" subtitle="Disque — période">
+          <ChartCard
+            title={t("admin.analyticsAttemptStatus")}
+            subtitle={t("admin.analyticsDiskPeriod")}
+          >
             <DonutChart
               data={attemptCompletionPie}
               height={200}
@@ -738,9 +868,10 @@ function AnalyticsSection({
 }
 
 function EmptyChartMessage() {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-center h-[200px] text-on-surface-variant font-label-sm">
-      Aucune donnée sur cette période
+      {t("admin.analyticsNoDataPeriod")}
     </div>
   );
 }
@@ -840,6 +971,8 @@ function PieLegend({
   formatValue?: (value: number, name: string) => string;
   showPercent?: boolean;
 }) {
+  const { locale } = useTranslation();
+  const tag = dateLocaleTag(locale);
   const isEmpty = data.length === 1 && data[0]?.isEmpty;
   const total = isEmpty ? 0 : data.reduce((s, d) => s + d.value, 0);
 
@@ -858,8 +991,8 @@ function PieLegend({
               : formatValue
                 ? formatValue(item.value, item.name)
                 : showPercent
-                  ? `${item.value.toLocaleString("fr-FR")} (${pct}%)`
-                  : item.value.toLocaleString("fr-FR");
+                  ? `${item.value.toLocaleString(tag)} (${pct}%)`
+                  : item.value.toLocaleString(tag);
         return (
           <li
             key={item.name}

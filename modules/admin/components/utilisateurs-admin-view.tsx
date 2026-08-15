@@ -21,6 +21,7 @@ import { fetchJson } from "@/lib/api/fetch-json";
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
 import { EXAM_TYPE_LABELS } from "@/lib/exams/catalog";
 import { EXAM_TAB_LABELS, type ExamTab } from "@/lib/pricing/constants";
+import { useTranslation } from "@/components/providers/locale-provider";
 
 interface AdminOffer {
   id: string;
@@ -78,12 +79,7 @@ type RowDraft = {
   showPassword: boolean;
 };
 
-const ROLE_LABELS: Record<string, string> = {
-  USER: "Apprenant",
-  ADMIN: "Admin",
-  SUPER_ADMIN: "Super admin",
-  CORRECTOR: "Correcteur",
-};
+const ROLE_KEYS: Role[] = ["USER", "ADMIN", "SUPER_ADMIN", "CORRECTOR"];
 
 const EXAM_TABS: ExamTab[] = ["tcf", "tef", "ielts"];
 const TAB_TO_EXAM: Record<ExamTab, string> = {
@@ -156,13 +152,56 @@ function buildPatchBody(user: AdminUser, draft: RowDraft) {
   return body;
 }
 
+function FilterPills({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: Array<{ value: string; label: string }>;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-sm">
+      <span className="font-label-sm text-label-sm text-on-surface-variant w-[7.5rem] shrink-0">
+        {label}
+      </span>
+      <div className="flex flex-wrap gap-sm">
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={cn(
+              "px-md py-xs rounded-full font-label-sm text-label-sm border transition-all",
+              value === opt.value
+                ? "bg-primary text-on-primary border-primary"
+                : "bg-surface border-outline-variant text-on-surface-variant hover:border-primary"
+            )}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function UtilisateursAdminView() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { role: currentRole } = useCurrentUser();
 
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("USER");
-  const [showFilters, setShowFilters] = useState(false);
+  const [roleFilter, setRoleFilter] = useState<string>("ALL");
+  const [subscriptionFilter, setSubscriptionFilter] = useState<
+    "ALL" | "with" | "without"
+  >("ALL");
+  const [activeFilter, setActiveFilter] = useState<"ALL" | "active" | "inactive">(
+    "ALL"
+  );
   const [page, setPage] = useState(1);
   const [showCreate, setShowCreate] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, RowDraft>>({});
@@ -183,11 +222,23 @@ export function UtilisateursAdminView() {
   const [bulkOfferId, setBulkOfferId] = useState("");
 
   const query = useQuery({
-    queryKey: ["admin-users", search, page, roleFilter],
+    queryKey: [
+      "admin-users",
+      search,
+      page,
+      roleFilter,
+      subscriptionFilter,
+      activeFilter,
+    ],
     queryFn: () => {
       const params = new URLSearchParams({ page: String(page), limit: "20" });
       if (search.trim()) params.set("search", search.trim());
       if (roleFilter !== "ALL") params.set("role", roleFilter);
+      if (subscriptionFilter === "with" || subscriptionFilter === "without") {
+        params.set("subscription", subscriptionFilter);
+      }
+      if (activeFilter === "active") params.set("active", "true");
+      if (activeFilter === "inactive") params.set("active", "false");
       return fetchJson<UsersResponse>(`/api/admin/utilisateurs?${params}`);
     },
   });
@@ -219,7 +270,7 @@ export function UtilisateursAdminView() {
   React.useEffect(() => {
     setSelectedIds([]);
     setBulkPanel(null);
-  }, [search, page, roleFilter]);
+  }, [search, page, roleFilter, subscriptionFilter, activeFilter]);
 
   const selectedUsers = useMemo(
     () => users.filter((u) => selectedIds.includes(u.id)),
@@ -291,10 +342,10 @@ export function UtilisateursAdminView() {
         password: data.password,
       });
       setCreateForm({ email: "", firstName: "", lastName: "" });
-      toast.success("Compte créé");
+      toast.success(t("admin.toastCreated"));
     },
     onError: (error) =>
-      toast.error(error instanceof Error ? error.message : "Création impossible"),
+      toast.error(error instanceof Error ? error.message : t("admin.toastCreateError")),
   });
 
   const saveAll = useMutation({
@@ -308,7 +359,7 @@ export function UtilisateursAdminView() {
         const draft = drafts[user.id]!;
         if (draft.password.trim() && draft.password.trim().length < 8) {
           throw new Error(
-            `Mot de passe trop court pour ${user.email} (min. 8 caractères)`
+            t("admin.toastPasswordShort", { email: user.email })
           );
         }
         if (
@@ -317,7 +368,7 @@ export function UtilisateursAdminView() {
           draft.role !== user.role
         ) {
           throw new Error(
-            `Seul un super admin peut attribuer ce rôle (${user.email})`
+            t("admin.toastSuperAdminOnly", { email: user.email })
           );
         }
       }
@@ -349,7 +400,9 @@ export function UtilisateursAdminView() {
               } else if (updated.accessEmailError) {
                 emailErrors.push(`${user.email}: ${updated.accessEmailError}`);
               } else if (updated.grantedOfferName) {
-                emailErrors.push(`${user.email}: email non envoyé`);
+                emailErrors.push(
+                  `${user.email}: ${t("admin.toastAccessNoEmail")}`
+                );
               }
             }
           }
@@ -363,13 +416,15 @@ export function UtilisateursAdminView() {
         } catch (error) {
           fail += 1;
           errors.push(
-            error instanceof Error ? error.message : `Échec pour ${user.email}`
+            error instanceof Error
+              ? error.message
+              : t("admin.toastFailUser", { email: user.email })
           );
         }
       }
 
       if (fail > 0 && ok === 0) {
-        throw new Error(errors[0] ?? "Enregistrement impossible");
+        throw new Error(errors[0] ?? t("admin.toastSaveError"));
       }
       return { ok, fail, errors, grantedOffers, emailsSent, emailErrors };
     },
@@ -379,7 +434,7 @@ export function UtilisateursAdminView() {
       setCreatedAccount(null);
       if (result.fail > 0) {
         toast.warning(
-          `${result.ok} enregistré(s), ${result.fail} échec(s)${
+          `${t("admin.toastPartial", { ok: result.ok, fail: result.fail })}${
             result.errors?.[0] ? ` — ${result.errors[0]}` : ""
           }`
         );
@@ -387,12 +442,15 @@ export function UtilisateursAdminView() {
         if (result.emailsSent === result.grantedOffers) {
           toast.success(
             result.grantedOffers > 1
-              ? `${result.ok} mis à jour — ${result.emailsSent} emails d'accès envoyés`
-              : "Accès accordé — email avec identifiants envoyé"
+              ? t("admin.toastAccessEmails", {
+                  ok: result.ok,
+                  n: result.emailsSent,
+                })
+              : t("admin.toastAccessGranted")
           );
         } else {
           toast.warning(
-            `Accès accordé, mais email non envoyé${
+            `${t("admin.toastAccessNoEmail")}${
               result.emailErrors?.[0] ? ` — ${result.emailErrors[0]}` : ""
             }`
           );
@@ -400,14 +458,14 @@ export function UtilisateursAdminView() {
       } else {
         toast.success(
           result.ok > 1
-            ? `${result.ok} utilisateurs mis à jour`
-            : "Modifications enregistrées"
+            ? t("admin.toastUpdatedN", { n: result.ok })
+            : t("admin.toastSaved")
         );
       }
     },
     onError: (error) =>
       toast.error(
-        error instanceof Error ? error.message : "Enregistrement impossible"
+        error instanceof Error ? error.message : t("admin.toastSaveError")
       ),
   });
 
@@ -431,12 +489,14 @@ export function UtilisateursAdminView() {
         } catch (error) {
           fail += 1;
           errors.push(
-            error instanceof Error ? error.message : `Échec pour ${id}`
+            error instanceof Error
+              ? error.message
+              : t("admin.toastFailUser", { email: id })
           );
         }
       }
       if (fail > 0 && ok === 0) {
-        throw new Error(errors[0] ?? "Suppression impossible");
+        throw new Error(errors[0] ?? t("admin.toastDeleteError"));
       }
       return { ok, fail, errors, mode };
     },
@@ -451,21 +511,21 @@ export function UtilisateursAdminView() {
       clearSelection();
       if (result.fail > 0) {
         toast.warning(
-          `${result.ok} traité(s), ${result.fail} échec(s)${
+          `${t("admin.toastPartial", { ok: result.ok, fail: result.fail })}${
             result.errors[0] ? ` — ${result.errors[0]}` : ""
           }`
         );
       } else {
         toast.success(
           result.mode === "permanent"
-            ? `${result.ok} utilisateur(s) définitivement supprimé(s)`
-            : `${result.ok} utilisateur(s) archivé(s)`
+            ? t("admin.toastDeleted", { n: result.ok })
+            : t("admin.toastArchived", { n: result.ok })
         );
       }
     },
     onError: (error) =>
       toast.error(
-        error instanceof Error ? error.message : "Suppression impossible"
+        error instanceof Error ? error.message : t("admin.toastDeleteError")
       ),
   });
 
@@ -505,12 +565,14 @@ export function UtilisateursAdminView() {
         } catch (error) {
           fail += 1;
           errors.push(
-            error instanceof Error ? error.message : `Échec pour ${id}`
+            error instanceof Error
+              ? error.message
+              : t("admin.toastFailUser", { email: id })
           );
         }
       }
       if (fail > 0 && ok === 0) {
-        throw new Error(errors[0] ?? "Mise à jour impossible");
+        throw new Error(errors[0] ?? t("admin.toastSaveError"));
       }
       return {
         ok,
@@ -528,29 +590,32 @@ export function UtilisateursAdminView() {
       clearSelection();
       if (result.fail > 0) {
         toast.warning(
-          `${result.ok} mis à jour, ${result.fail} échec(s)${
+          `${t("admin.toastPartial", { ok: result.ok, fail: result.fail })}${
             result.errors[0] ? ` — ${result.errors[0]}` : ""
           }`
         );
       } else if (result.grantedOffers > 0) {
         if (result.emailsSent === result.grantedOffers) {
           toast.success(
-            `${result.ok} accès accordé(s) — emails envoyés`
+            t("admin.toastAccessEmails", {
+              ok: result.ok,
+              n: result.emailsSent,
+            })
           );
         } else {
           toast.warning(
-            `Accès accordé(s), email partiel${
+            `${t("admin.toastAccessNoEmail")}${
               result.emailErrors[0] ? ` — ${result.emailErrors[0]}` : ""
             }`
           );
         }
       } else {
-        toast.success(`${result.ok} utilisateur(s) mis à jour`);
+        toast.success(t("admin.toastUpdatedN", { n: result.ok }));
       }
     },
     onError: (error) =>
       toast.error(
-        error instanceof Error ? error.message : "Mise à jour impossible"
+        error instanceof Error ? error.message : t("admin.toastSaveError")
       ),
   });
 
@@ -569,11 +634,10 @@ export function UtilisateursAdminView() {
       <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-md">
         <div>
           <h1 className="font-display-md text-display-md text-on-surface font-bold">
-            Gestion des Utilisateurs
+            {t("admin.usersTitle")}
           </h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">
-            Modifiez directement dans le tableau, puis enregistrez toutes les
-            modifications d&apos;un coup.
+            {t("admin.usersSubtitle")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-sm">
@@ -583,7 +647,7 @@ export function UtilisateursAdminView() {
             </span>
             <input
               className="w-full bg-surface border border-outline-variant rounded-xl py-sm pl-10 pr-md font-body-md text-body-md outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-[0_4px_20px_rgba(79,55,138,0.04)]"
-              placeholder="Rechercher un utilisateur…"
+              placeholder={t("admin.searchUsers")}
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -592,14 +656,6 @@ export function UtilisateursAdminView() {
             />
           </div>
           <Button
-            variant="secondary"
-            onClick={() => setShowFilters((v) => !v)}
-            className={cn(showFilters && "border-primary text-primary")}
-          >
-            <span className="material-symbols-outlined text-[18px]">filter_list</span>
-            Filtrer
-          </Button>
-          <Button
             onClick={() => {
               setCreatedAccount(null);
               setCreateForm({ email: "", firstName: "", lastName: "" });
@@ -607,7 +663,7 @@ export function UtilisateursAdminView() {
             }}
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
-            Ajouter
+            {t("admin.add")}
           </Button>
         </div>
       </header>
@@ -615,24 +671,24 @@ export function UtilisateursAdminView() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-md">
         {[
           {
-            label: "Total",
+            label: t("admin.kpiTotal"),
             value: meta.total,
-            hint: "comptes filtrés",
+            hint: t("admin.kpiFilteredAccounts"),
           },
           {
-            label: "Avec abonnement",
+            label: t("admin.kpiWithSub"),
             value: activeSubsCount,
-            hint: "sur cette page",
+            hint: t("admin.kpiOnPage"),
           },
           {
-            label: "Inactifs",
+            label: t("admin.kpiInactive"),
             value: inactiveCount,
-            hint: "sur cette page",
+            hint: t("admin.kpiOnPage"),
           },
           {
-            label: "Modifs en cours",
+            label: t("admin.kpiPendingEdits"),
             value: dirtyUsers.length,
-            hint: dirtyUsers.length ? "à enregistrer" : "aucune",
+            hint: dirtyUsers.length ? t("admin.kpiToSave") : t("admin.kpiNone"),
             accent: dirtyUsers.length > 0,
           },
         ].map((kpi) => (
@@ -658,38 +714,51 @@ export function UtilisateursAdminView() {
         ))}
       </div>
 
-      {showFilters && (
-        <div className="flex flex-wrap gap-sm p-md rounded-2xl border border-outline-variant bg-surface shadow-[0_4px_20px_rgba(79,55,138,0.05)]">
-          {(
-            [
-              { value: "USER", label: "Apprenants" },
-              { value: "ALL", label: "Tous" },
-              { value: "ADMIN", label: "Admins" },
-              { value: "CORRECTOR", label: "Correcteurs" },
-              ...(currentRole === "SUPER_ADMIN"
-                ? [{ value: "SUPER_ADMIN", label: "Super admins" }]
-                : []),
-            ] as const
-          ).map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => {
-                setRoleFilter(opt.value);
-                setPage(1);
-              }}
-              className={cn(
-                "px-md py-xs rounded-full font-label-sm text-label-sm border transition-all",
-                roleFilter === opt.value
-                  ? "bg-primary text-on-primary border-primary"
-                  : "bg-surface border-outline-variant text-on-surface-variant hover:border-primary"
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="flex flex-col gap-md p-md rounded-2xl border border-outline-variant bg-surface shadow-[0_4px_20px_rgba(79,55,138,0.05)]">
+        <FilterPills
+          label={t("admin.filterRole")}
+          value={roleFilter}
+          options={[
+            { value: "ALL", label: t("admin.all") },
+            { value: "USER", label: t("admin.roleLearners") },
+            { value: "ADMIN", label: t("admin.roleAdmins") },
+            { value: "CORRECTOR", label: t("admin.roleCorrectors") },
+            ...(currentRole === "SUPER_ADMIN"
+              ? [{ value: "SUPER_ADMIN", label: t("admin.roleSuperAdmins") }]
+              : []),
+          ]}
+          onChange={(value) => {
+            setRoleFilter(value);
+            setPage(1);
+          }}
+        />
+        <FilterPills
+          label={t("admin.filterSubscription")}
+          value={subscriptionFilter}
+          options={[
+            { value: "ALL", label: t("admin.all") },
+            { value: "with", label: t("admin.filterWithSub") },
+            { value: "without", label: t("admin.filterWithoutSub") },
+          ]}
+          onChange={(value) => {
+            setSubscriptionFilter(value as "ALL" | "with" | "without");
+            setPage(1);
+          }}
+        />
+        <FilterPills
+          label={t("admin.filterStatus")}
+          value={activeFilter}
+          options={[
+            { value: "ALL", label: t("admin.all") },
+            { value: "active", label: t("admin.filterActive") },
+            { value: "inactive", label: t("admin.filterInactive") },
+          ]}
+          onChange={(value) => {
+            setActiveFilter(value as "ALL" | "active" | "inactive");
+            setPage(1);
+          }}
+        />
+      </div>
 
       <Dialog
         open={showCreate}
@@ -705,22 +774,20 @@ export function UtilisateursAdminView() {
           {createdAccount ? (
             <>
               <DialogHeader>
-                <DialogTitle>Compte créé</DialogTitle>
+                <DialogTitle>{t("admin.accountCreated")}</DialogTitle>
                 <DialogDescription>
-                  Le mot de passe est visible ci-dessous. Accordez ensuite une
-                  offre sur la ligne du tableau pour envoyer l&apos;email
-                  d&apos;accès.
+                  {t("admin.accountCreatedDesc")}
                 </DialogDescription>
               </DialogHeader>
               <div className="rounded-xl border border-outline-variant bg-surface-container-low p-md space-y-sm">
                 <p className="font-label-sm text-label-sm text-on-surface-variant">
-                  Email
+                  {t("admin.colEmail")}
                 </p>
                 <p className="font-label-md text-label-md font-semibold break-all">
                   {createdAccount.email}
                 </p>
                 <p className="font-label-sm text-label-sm text-on-surface-variant pt-xs">
-                  Mot de passe
+                  {t("admin.colPassword")}
                 </p>
                 <p className="font-mono text-lg text-primary font-semibold tracking-wide">
                   {createdAccount.password}
@@ -731,10 +798,10 @@ export function UtilisateursAdminView() {
                   variant="secondary"
                   onClick={async () => {
                     await navigator.clipboard.writeText(createdAccount.password);
-                    toast.success("Mot de passe copié");
+                    toast.success(t("admin.passwordCopied"));
                   }}
                 >
-                  Copier le mdp
+                  {t("admin.copyPwdShort")}
                 </Button>
                 <Button
                   onClick={() => {
@@ -742,22 +809,21 @@ export function UtilisateursAdminView() {
                     setCreatedAccount(null);
                   }}
                 >
-                  Fermer
+                  {t("admin.close")}
                 </Button>
               </DialogFooter>
             </>
           ) : (
             <>
               <DialogHeader>
-                <DialogTitle>Créer un compte apprenant</DialogTitle>
+                <DialogTitle>{t("admin.createLearner")}</DialogTitle>
                 <DialogDescription>
-                  Le mot de passe est généré automatiquement. Vous pourrez
-                  ensuite accorder une offre directement sur sa ligne.
+                  {t("admin.createLearnerDesc")}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-md">
                 <Input
-                  label="Email *"
+                  label={t("admin.emailRequired")}
                   type="email"
                   value={createForm.email}
                   onChange={(e) =>
@@ -767,14 +833,14 @@ export function UtilisateursAdminView() {
                 />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
                   <Input
-                    label="Prénom"
+                    label={t("admin.firstName")}
                     value={createForm.firstName}
                     onChange={(e) =>
                       setCreateForm((f) => ({ ...f, firstName: e.target.value }))
                     }
                   />
                   <Input
-                    label="Nom"
+                    label={t("admin.lastName")}
                     value={createForm.lastName}
                     onChange={(e) =>
                       setCreateForm((f) => ({ ...f, lastName: e.target.value }))
@@ -787,14 +853,14 @@ export function UtilisateursAdminView() {
                   variant="secondary"
                   onClick={() => setShowCreate(false)}
                 >
-                  Annuler
+                  {t("admin.cancel")}
                 </Button>
                 <Button
                   onClick={() => createLearner.mutate()}
                   disabled={!createForm.email.trim() || createLearner.isPending}
                   loading={createLearner.isPending}
                 >
-                  Créer le compte
+                  {t("admin.createAccount")}
                 </Button>
               </DialogFooter>
             </>
@@ -805,21 +871,20 @@ export function UtilisateursAdminView() {
       <div className="bg-surface border border-outline-variant rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(79,55,138,0.05)]">
         <div className="px-lg py-md border-b border-outline-variant bg-surface-container-low flex flex-wrap items-center justify-between gap-sm">
           <h2 className="font-headline-lg text-[18px] md:text-[20px] font-semibold text-on-surface">
-            Liste des utilisateurs
+            {t("admin.listTitle")}
           </h2>
           <span className="font-label-sm text-label-sm text-on-surface-variant">
-            Sélection multiple · édition en ligne · {meta.total} compte
-            {meta.total > 1 ? "s" : ""}
+            {t("admin.listMeta", { n: meta.total })}
           </span>
         </div>
 
         {query.isLoading ? (
           <div className="p-2xl text-center text-on-surface-variant animate-pulse">
-            Chargement…
+            {t("admin.loading")}
           </div>
         ) : users.length === 0 ? (
           <div className="p-2xl text-center text-on-surface-variant">
-            Aucun utilisateur trouvé.
+            {t("admin.noUsers")}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -838,17 +903,17 @@ export function UtilisateursAdminView() {
                         }
                       }}
                       onChange={toggleSelectAllPage}
-                      title="Tout sélectionner sur la page"
+                      title={t("admin.selectAllPage")}
                     />
                   </th>
                   {[
-                    "Utilisateur",
-                    "Email",
-                    "Rôle",
-                    "Actif",
-                    "Abonnements / offre",
-                    "Mot de passe",
-                    "Activité",
+                    t("admin.colUser"),
+                    t("admin.colEmail"),
+                    t("admin.colRole"),
+                    t("admin.colActive"),
+                    t("admin.colSubs"),
+                    t("admin.colPassword"),
+                    t("admin.colActivity"),
                     "",
                   ].map((h) => (
                     <th
@@ -898,7 +963,7 @@ export function UtilisateursAdminView() {
                           <Link
                             href={`/admin/utilisateurs/${user.id}`}
                             className="shrink-0 rounded-full ring-offset-2 hover:ring-2 hover:ring-primary/40 transition-all"
-                            title="Progression & statistiques"
+                            title={t("admin.statsTitle")}
                           >
                             <Avatar
                               src={user.avatarUrl ?? undefined}
@@ -913,7 +978,7 @@ export function UtilisateursAdminView() {
                           <div className="flex flex-col gap-1 flex-1">
                             <input
                               className={cellInputClass}
-                              placeholder="Prénom"
+                              placeholder={t("admin.firstName")}
                               value={draft.firstName}
                               onChange={(e) =>
                                 updateDraft(user.id, user, {
@@ -923,7 +988,7 @@ export function UtilisateursAdminView() {
                             />
                             <input
                               className={cellInputClass}
-                              placeholder="Nom"
+                              placeholder={t("admin.lastName")}
                               value={draft.lastName}
                               onChange={(e) =>
                                 updateDraft(user.id, user, {
@@ -933,7 +998,7 @@ export function UtilisateursAdminView() {
                             />
                             {dirty && (
                               <span className="text-[10px] text-primary font-semibold">
-                                Modifié
+                                {t("admin.kpiPendingEdits")}
                               </span>
                             )}
                           </div>
@@ -961,15 +1026,13 @@ export function UtilisateursAdminView() {
                               nextRole === "SUPER_ADMIN" &&
                               currentRole !== "SUPER_ADMIN"
                             ) {
-                              toast.error(
-                                "Seul un super admin peut attribuer ce rôle"
-                              );
+                              toast.error(t("admin.onlySuperAdminRole"));
                               return;
                             }
                             updateDraft(user.id, user, { role: nextRole });
                           }}
                         >
-                          {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                          {ROLE_KEYS.map((value) => (
                             <option
                               key={value}
                               value={value}
@@ -978,7 +1041,7 @@ export function UtilisateursAdminView() {
                                 currentRole !== "SUPER_ADMIN"
                               }
                             >
-                              {label}
+                              {t(`admin.roles.${value}`)}
                             </option>
                           ))}
                         </select>
@@ -1000,7 +1063,9 @@ export function UtilisateursAdminView() {
                                 : "text-error"
                             )}
                           >
-                            {draft.isActive ? "Actif" : "Inactif"}
+                            {draft.isActive
+                              ? t("admin.colActive")
+                              : t("admin.colInactive")}
                           </span>
                         </div>
                       </td>
@@ -1023,7 +1088,7 @@ export function UtilisateursAdminView() {
                                   ] ?? sub.examType}
                                   <button
                                     type="button"
-                                    title="Retirer à l'enregistrement"
+                                    title={t("admin.revokeOnSave")}
                                     className="hover:text-error"
                                     onClick={() =>
                                       updateDraft(user.id, user, {
@@ -1052,7 +1117,7 @@ export function UtilisateursAdminView() {
                                 })
                               }
                             >
-                              Annuler retraits ({draft.revokeExamTypes.length})
+                              {t("admin.revokeOnSave")} ({draft.revokeExamTypes.length})
                             </button>
                           )}
                           <select
@@ -1064,7 +1129,7 @@ export function UtilisateursAdminView() {
                               })
                             }
                           >
-                            <option value="">+ Accorder une offre…</option>
+                            <option value="">{t("admin.grantOffer")}</option>
                             {offers.map((o) => (
                               <option key={o.id} value={o.id}>
                                 {EXAM_TAB_LABELS[
@@ -1113,7 +1178,7 @@ export function UtilisateursAdminView() {
                                     await navigator.clipboard.writeText(
                                       user.password!
                                     );
-                                    toast.success("Mot de passe copié");
+                                    toast.success(t("admin.passwordCopied"));
                                   }}
                                 >
                                   <span className="material-symbols-outlined text-[14px]">
@@ -1125,7 +1190,7 @@ export function UtilisateursAdminView() {
                           </div>
                           <input
                             className={cellInputClass}
-                            placeholder="Nouveau mdp…"
+                            placeholder={t("admin.newPasswordPlaceholder")}
                             value={draft.password}
                             onChange={(e) =>
                               updateDraft(user.id, user, {
@@ -1141,8 +1206,13 @@ export function UtilisateursAdminView() {
                           <span className="material-symbols-outlined text-[16px]">
                             history
                           </span>
-                          {user._count.attempts} examen
-                          {user._count.attempts > 1 ? "s" : ""}
+                          {user._count.attempts > 1
+                            ? t("admin.examCountPlural", {
+                                n: user._count.attempts,
+                              })
+                            : t("admin.examCount", {
+                                n: user._count.attempts,
+                              })}
                         </div>
                       </td>
 
@@ -1151,7 +1221,7 @@ export function UtilisateursAdminView() {
                           <Link
                             href={`/admin/utilisateurs/${user.id}`}
                             className="p-1.5 rounded-lg text-primary hover:bg-primary/10 transition-colors"
-                            title="Progression & statistiques"
+                            title={t("admin.statsTitle")}
                           >
                             <span className="material-symbols-outlined text-[18px]">
                               analytics
@@ -1162,7 +1232,7 @@ export function UtilisateursAdminView() {
                             <button
                               type="button"
                               className="p-1.5 rounded-lg text-error hover:bg-error-container/30 transition-colors"
-                              title="Archiver ou supprimer"
+                              title={t("admin.archiveOrDelete")}
                               onClick={() => setDeleteTargets([user])}
                             >
                               <span className="material-symbols-outlined text-[18px]">
@@ -1182,7 +1252,11 @@ export function UtilisateursAdminView() {
 
         <div className="px-lg py-md border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-sm bg-surface">
           <span className="font-label-md text-label-md text-on-surface-variant">
-            Affichage de {from}–{to} sur {meta.total} utilisateurs
+            {t("admin.showingUsers", {
+              from,
+              to,
+              total: meta.total,
+            })}
           </span>
           <div className="flex items-center gap-xs">
             <button
@@ -1222,11 +1296,12 @@ export function UtilisateursAdminView() {
               <div className="flex flex-wrap items-center justify-between gap-md rounded-2xl border border-primary/25 bg-surface px-lg py-md shadow-[0_-8px_40px_rgba(79,55,138,0.18)]">
                 <div>
                   <p className="font-label-md text-label-md font-semibold text-on-surface">
-                    {selectedIds.length} sélectionné
-                    {selectedIds.length > 1 ? "s" : ""}
+                    {selectedIds.length > 1
+                      ? t("admin.selectedNPlural", { n: selectedIds.length })
+                      : t("admin.selectedN", { n: selectedIds.length })}
                   </p>
                   <p className="font-label-sm text-[11px] text-on-surface-variant">
-                    Actions groupées sur la sélection
+                    {t("admin.bulkActions")}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-sm">
@@ -1238,7 +1313,7 @@ export function UtilisateursAdminView() {
                     }}
                     disabled={bulkUpdate.isPending || removeLearners.isPending}
                   >
-                    Changer le rôle
+                    {t("admin.changeRole")}
                   </Button>
                   <Button
                     variant="secondary"
@@ -1248,7 +1323,7 @@ export function UtilisateursAdminView() {
                     }}
                     disabled={bulkUpdate.isPending || removeLearners.isPending}
                   >
-                    Accorder une offre
+                    {t("admin.grantOfferBtn")}
                   </Button>
                   <Button
                     variant="secondary"
@@ -1262,10 +1337,10 @@ export function UtilisateursAdminView() {
                     disabled={bulkUpdate.isPending || removeLearners.isPending}
                     className="text-error border-error/30"
                   >
-                    Archiver / Supprimer
+                    {t("admin.archiveDelete")}
                   </Button>
                   <Button variant="secondary" onClick={clearSelection}>
-                    Tout désélectionner
+                    {t("admin.deselectAll")}
                   </Button>
                 </div>
               </div>
@@ -1274,11 +1349,12 @@ export function UtilisateursAdminView() {
               <div className="flex flex-wrap items-center justify-between gap-md rounded-2xl border border-primary/20 bg-surface px-lg py-md shadow-[0_-8px_40px_rgba(79,55,138,0.18)]">
                 <div>
                   <p className="font-label-md text-label-md font-semibold text-on-surface">
-                    {dirtyUsers.length} modification
-                    {dirtyUsers.length > 1 ? "s" : ""} en attente
+                    {dirtyUsers.length > 1
+                      ? t("admin.pendingEditsPlural", { n: dirtyUsers.length })
+                      : t("admin.pendingEdits", { n: dirtyUsers.length })}
                   </p>
                   <p className="font-label-sm text-[11px] text-on-surface-variant">
-                    Les lignes surlignées seront enregistrées ensemble.
+                    {t("admin.pendingEditsHint")}
                   </p>
                 </div>
                 <div className="flex items-center gap-sm">
@@ -1287,14 +1363,14 @@ export function UtilisateursAdminView() {
                     onClick={discardDrafts}
                     disabled={saveAll.isPending}
                   >
-                    Annuler
+                    {t("admin.cancel")}
                   </Button>
                   <Button
                     onClick={() => saveAll.mutate()}
                     loading={saveAll.isPending}
                     disabled={saveAll.isPending}
                   >
-                    Enregistrer tout
+                    {t("admin.saveAll")}
                   </Button>
                 </div>
               </div>
@@ -1313,14 +1389,14 @@ export function UtilisateursAdminView() {
           <DialogHeader>
             <DialogTitle>
               {deleteTargets.length > 1
-                ? `Que faire de ces ${deleteTargets.length} comptes ?`
-                : "Que faire de ce compte ?"}
+                ? t("admin.deleteTitleN", { n: deleteTargets.length })
+                : t("admin.deleteTitle")}
             </DialogTitle>
             <DialogDescription>
               {deleteTargets.length === 1
                 ? `${deleteTargets[0].name} (${deleteTargets[0].email}). `
-                : `${deleteTargets.length} utilisateurs sélectionnés. `}
-              Côté apprenant, les deux options retirent l&apos;accès.
+                : `${t("admin.deleteUsersSelected", { n: deleteTargets.length })} `}
+              {t("admin.deleteDescAccess")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-sm">
@@ -1339,10 +1415,10 @@ export function UtilisateursAdminView() {
                 <span className="material-symbols-outlined text-[20px] text-primary">
                   inventory_2
                 </span>
-                Archiver
+                {t("admin.archive")}
               </p>
               <p className="font-label-sm text-[12px] text-on-surface-variant mt-xs">
-                Retire tous les accès et sessions. Les comptes restent en base.
+                {t("admin.archiveDesc")}
               </p>
             </button>
             <button
@@ -1360,11 +1436,10 @@ export function UtilisateursAdminView() {
                 <span className="material-symbols-outlined text-[20px]">
                   delete_forever
                 </span>
-                Supprimer définitivement
+                {t("admin.deleteForever")}
               </p>
               <p className="font-label-sm text-[12px] text-on-surface-variant mt-xs">
-                Retire les accès puis efface entièrement les comptes et données
-                liées.
+                {t("admin.deleteForeverDesc")}
               </p>
             </button>
           </div>
@@ -1374,7 +1449,7 @@ export function UtilisateursAdminView() {
               disabled={removeLearners.isPending}
               onClick={() => setDeleteTargets([])}
             >
-              Annuler
+              {t("admin.cancel")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1386,22 +1461,23 @@ export function UtilisateursAdminView() {
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Changer le rôle</DialogTitle>
+            <DialogTitle>{t("admin.changeRole")}</DialogTitle>
             <DialogDescription>
-              Appliquer un rôle à {selectedIds.length} utilisateur
-              {selectedIds.length > 1 ? "s" : ""}.
+              {selectedIds.length > 1
+                ? t("admin.applyRolePlural", { n: selectedIds.length })
+                : t("admin.applyRole", { n: selectedIds.length })}
             </DialogDescription>
           </DialogHeader>
           <div>
             <label className="font-label-sm text-[12px] text-on-surface-variant mb-xs block">
-              Nouveau rôle
+              {t("admin.newRole")}
             </label>
             <select
               className={selectClassName}
               value={bulkRole}
               onChange={(e) => setBulkRole(e.target.value as Role)}
             >
-              {Object.entries(ROLE_LABELS).map(([value, label]) => (
+              {ROLE_KEYS.map((value) => (
                 <option
                   key={value}
                   value={value}
@@ -1409,14 +1485,14 @@ export function UtilisateursAdminView() {
                     value === "SUPER_ADMIN" && currentRole !== "SUPER_ADMIN"
                   }
                 >
-                  {label}
+                  {t(`admin.roles.${value}`)}
                 </option>
               ))}
             </select>
           </div>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setBulkPanel(null)}>
-              Annuler
+              {t("admin.cancel")}
             </Button>
             <Button
               loading={bulkUpdate.isPending}
@@ -1426,7 +1502,7 @@ export function UtilisateursAdminView() {
                   bulkRole === "SUPER_ADMIN" &&
                   currentRole !== "SUPER_ADMIN"
                 ) {
-                  toast.error("Seul un super admin peut attribuer ce rôle");
+                  toast.error(t("admin.onlySuperAdminRole"));
                   return;
                 }
                 bulkUpdate.mutate({
@@ -1435,7 +1511,7 @@ export function UtilisateursAdminView() {
                 });
               }}
             >
-              Appliquer
+              {t("admin.changeRole")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1447,23 +1523,21 @@ export function UtilisateursAdminView() {
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Accorder une offre</DialogTitle>
+            <DialogTitle>{t("admin.grantOfferBtn")}</DialogTitle>
             <DialogDescription>
-              Accorde l&apos;accès et envoie l&apos;email d&apos;identifiants à{" "}
-              {selectedIds.length} utilisateur
-              {selectedIds.length > 1 ? "s" : ""}.
+              {t("admin.toastAccessGranted")}
             </DialogDescription>
           </DialogHeader>
           <div>
             <label className="font-label-sm text-[12px] text-on-surface-variant mb-xs block">
-              Offre
+              {t("admin.grantOfferBtn")}
             </label>
             <select
               className={selectClassName}
               value={bulkOfferId}
               onChange={(e) => setBulkOfferId(e.target.value)}
             >
-              <option value="">Choisir une offre…</option>
+              <option value="">{t("admin.grantOffer")}</option>
               {offers.map((o) => (
                 <option key={o.id} value={o.id}>
                   {EXAM_TAB_LABELS[
@@ -1478,7 +1552,7 @@ export function UtilisateursAdminView() {
           </div>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setBulkPanel(null)}>
-              Annuler
+              {t("admin.cancel")}
             </Button>
             <Button
               loading={bulkUpdate.isPending}
@@ -1490,7 +1564,7 @@ export function UtilisateursAdminView() {
                 })
               }
             >
-              Accorder &amp; envoyer
+              {t("admin.grantOfferBtn")}
             </Button>
           </DialogFooter>
         </DialogContent>

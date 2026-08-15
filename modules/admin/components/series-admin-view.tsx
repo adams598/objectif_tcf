@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { fetchJson } from "@/lib/api/fetch-json";
+import { useTranslation } from "@/components/providers/locale-provider";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   BUNDLE_SKILLS,
@@ -374,6 +375,7 @@ function formatShortDate(iso: string) {
 }
 
 export function SeriesAdminView() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const examIdFromUrl = searchParams.get("examId");
@@ -559,15 +561,15 @@ export function SeriesAdminView() {
       <div className="flex flex-col gap-sm md:flex-row md:items-start md:justify-between">
         <div>
           <h1 className="font-display-md text-display-md text-on-surface font-bold mb-xs">
-            Séries d&apos;examen
+            {t("admin.seriesPageTitle")}
           </h1>
           <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl">
-            Créez une série en 2 étapes : informations de base, puis questions CO / CE / EE / EO.
+            {t("admin.seriesSubtitle")}
           </p>
         </div>
         <Button onClick={() => setShowCreate(true)} className="shrink-0">
           <span className="material-symbols-outlined text-[18px]">add</span>
-          Nouvelle série
+          {t("admin.newSeries")}
         </Button>
       </div>
 
@@ -680,7 +682,7 @@ export function SeriesAdminView() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-lg">
         <div className="lg:col-span-1 bg-surface border border-outline-variant rounded-2xl p-md max-h-[75vh] overflow-y-auto">
           <h2 className="font-label-md text-label-md font-bold mb-md">
-            Séries ({filteredGroups.length})
+            {t("admin.seriesCount", { n: filteredGroups.length })}
           </h2>
           {seriesQuery.isLoading ? (
             <p className="text-on-surface-variant font-label-sm">Chargement…</p>

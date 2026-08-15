@@ -274,7 +274,7 @@ export function ParametresView() {
                 onClick={openAvatarPicker}
                 disabled={isUploadingAvatar}
                 className="absolute bottom-0 right-0 bg-surface-container-high p-sm rounded-full border border-outline-variant shadow-sm hover:bg-secondary-container transition-colors disabled:opacity-50"
-                aria-label="Modifier l'avatar"
+                aria-label={t("settings.changeAvatar")}
               >
                 <span className="material-symbols-outlined text-[16px]">
                   {isUploadingAvatar ? "progress_activity" : "edit"}
@@ -326,7 +326,7 @@ export function ParametresView() {
               label={t("settings.country")}
               value={country}
               onChange={(e) => setCountry(e.target.value)}
-              placeholder="Ex : Cameroun"
+              placeholder={t("profile.countryPlaceholder")}
             />
             <div className="md:col-span-2">
               <Input
@@ -702,7 +702,7 @@ export function ParametresView() {
               <Input
                 label={t("settings.newPassword")}
                 type="password"
-                placeholder="Min. 8 caractères"
+                placeholder={t("auth.passwordPlaceholder")}
                 hint={t("settings.passwordHint")}
               />
               <Input

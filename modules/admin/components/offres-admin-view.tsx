@@ -3,14 +3,16 @@
 import React, { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslation } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { fetchJson } from "@/lib/api/fetch-json";
+import { dateLocaleTag } from "@/lib/i18n/locales";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { OfferFeature } from "@/lib/pricing/constants";
-import { EXAM_TAB_LABELS, type ExamTab } from "@/lib/pricing/constants";
+import { type ExamTab } from "@/lib/pricing/constants";
 
 type ExamType = "TCF_CANADA" | "TEF_CANADA" | "IELTS";
 
@@ -48,7 +50,14 @@ interface AdminOffer {
 
 const EXAM_TABS: ExamTab[] = ["tcf", "tef", "ielts"];
 
+function examTabKey(tab: ExamTab) {
+  if (tab === "tcf") return "admin.examTabTcf";
+  if (tab === "tef") return "admin.examTabTef";
+  return "admin.examTabIelts";
+}
+
 export function OffresAdminView() {
+  const { t, locale } = useTranslation();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<ExamTab>("tcf");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -93,9 +102,9 @@ export function OffresAdminView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-pricing"] });
       queryClient.invalidateQueries({ queryKey: ["offers"] });
-      toast.success("Tarification unitaire mise à jour.");
+      toast.success(t("admin.offersPricingSaved"));
     },
-    onError: () => toast.error("Erreur lors de la sauvegarde."),
+    onError: () => toast.error(t("admin.offersSaveError")),
   });
 
   const deleteOfferMutation = useMutation({
@@ -104,7 +113,7 @@ export function OffresAdminView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-offers"] });
       queryClient.invalidateQueries({ queryKey: ["offers"] });
-      toast.success("Offre supprimée.");
+      toast.success(t("admin.offersDeleted"));
     },
   });
 
@@ -119,11 +128,11 @@ export function OffresAdminView() {
       queryClient.invalidateQueries({ queryKey: ["offers"] });
       toast.success(
         vars.isFeatured
-          ? "Offre visible sur l'accueil et la page offres."
-          : "Offre masquée de l'accueil et de la page offres."
+          ? t("admin.offersFeaturedOn")
+          : t("admin.offersFeaturedOff")
       );
     },
-    onError: () => toast.error("Impossible de modifier la visibilité."),
+    onError: () => toast.error(t("admin.offersVisibilityError")),
   });
 
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
@@ -136,11 +145,10 @@ export function OffresAdminView() {
     <div className="flex flex-col gap-xl">
       <div>
         <h1 className="font-display-md text-display-md text-on-surface font-bold mb-xs">
-          Gestion des offres
+          {t("admin.offersTitle")}
         </h1>
         <p className="font-body-md text-body-md text-on-surface-variant">
-          Créez autant d&apos;offres que nécessaire, choisissez celles visibles
-          côté client, et accordez un accès par email.
+          {t("admin.offersSubtitle")}
         </p>
       </div>
 
@@ -160,18 +168,18 @@ export function OffresAdminView() {
                 : "bg-surface border-outline-variant text-on-surface-variant"
             )}
           >
-            {EXAM_TAB_LABELS[tab]}
+            {t(examTabKey(tab))}
           </button>
         ))}
       </div>
 
       <section className="bg-surface border border-outline-variant rounded-2xl p-lg">
         <h2 className="font-headline-lg text-[20px] font-semibold text-on-surface mb-md">
-          Prix unitaire par jour — {EXAM_TAB_LABELS[activeTab]}
+          {t("admin.offersUnitPrice", { exam: t(examTabKey(activeTab)) })}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-md mb-md">
           <Input
-            label="Prix / jour (XAF)"
+            label={t("admin.offersPricePerDayXaf")}
             type="number"
             value={pricingForm.pricePerDayXaf}
             onChange={(e) =>
@@ -182,7 +190,7 @@ export function OffresAdminView() {
             }
           />
           <Input
-            label="Prix / jour (USD $)"
+            label={t("admin.offersPricePerDayUsd")}
             type="number"
             value={pricingForm.pricePerDayUsd}
             onChange={(e) =>
@@ -193,7 +201,7 @@ export function OffresAdminView() {
             }
           />
           <Input
-            label="Prix / jour (XOF)"
+            label={t("admin.offersPricePerDayXof")}
             type="number"
             value={pricingForm.pricePerDayXof}
             onChange={(e) =>
@@ -208,7 +216,7 @@ export function OffresAdminView() {
           onClick={() => savePricingMutation.mutate()}
           disabled={savePricingMutation.isPending}
         >
-          Enregistrer la tarification
+          {t("admin.offersSavePricing")}
         </Button>
       </section>
 
@@ -218,11 +226,13 @@ export function OffresAdminView() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-sm">
           <div>
             <h2 className="font-headline-lg text-[20px] font-semibold text-on-surface">
-              Offres — {EXAM_TAB_LABELS[activeTab]}
+              {t("admin.offersSection", { exam: t(examTabKey(activeTab)) })}
             </h2>
             <p className="font-label-sm text-label-sm text-on-surface-variant">
-              {visibleCount} visible{visibleCount > 1 ? "s" : ""} côté client ·{" "}
-              {offers.length} au total. Activez « Visible » pour publier une offre.
+              {t("admin.offersVisibleMeta", {
+                visible: visibleCount,
+                total: offers.length,
+              })}
             </p>
           </div>
           <Button
@@ -232,7 +242,7 @@ export function OffresAdminView() {
               setEditingId(editingId === "new" ? null : "new")
             }
           >
-            {editingId === "new" ? "Annuler" : "Nouvelle offre"}
+            {editingId === "new" ? t("admin.cancel") : t("admin.add")}
           </Button>
         </div>
 
@@ -252,7 +262,7 @@ export function OffresAdminView() {
           <div className="h-40 bg-surface-container rounded-2xl animate-pulse" />
         ) : offers.length === 0 ? (
           <p className="text-on-surface-variant">
-            Aucune offre. Lancez le seed ou créez une offre.
+            {t("admin.offersNone")}
           </p>
         ) : (
           offers.map((offer) =>
@@ -279,18 +289,26 @@ export function OffresAdminView() {
                       {offer.name}
                     </h3>
                     {!offer.isActive && (
-                      <span className="text-xs text-error">Inactive</span>
+                      <span className="text-xs text-error">
+                        {t("admin.offersInactive")}
+                      </span>
                     )}
                     {offer.isFeatured && offer.isActive && (
                       <span className="text-xs px-sm py-xs rounded-full bg-primary/10 text-primary">
-                        Visible
+                        {t("admin.offersVisible")}
                       </span>
                     )}
                   </div>
                   <p className="font-label-sm text-label-sm text-on-surface-variant">
-                    {offer.priceXaf.toLocaleString("fr-CA")} XAF · {offer.priceUsd}$ ·{" "}
-                    {offer.priceXof.toLocaleString("fr-CA")} XOF —{" "}
-                    {offer.baseDays + offer.bonusDays} jours
+                    {offer.priceXaf.toLocaleString(dateLocaleTag(locale))} XAF · {offer.priceUsd}$ ·{" "}
+                    {offer.priceXof.toLocaleString(dateLocaleTag(locale))} XOF —{" "}
+                    {offer.baseDays + offer.bonusDays > 1
+                      ? t("admin.daysCountPlural", {
+                          n: offer.baseDays + offer.bonusDays,
+                        })
+                      : t("admin.daysCount", {
+                          n: offer.baseDays + offer.bonusDays,
+                        })}
                     {offer.bonusDays > 0
                       ? ` (${offer.baseDays}+${offer.bonusDays})`
                       : ""}
@@ -306,7 +324,7 @@ export function OffresAdminView() {
                         })
                       }
                     />
-                    Visible sur l&apos;accueil et la page offres
+                    {t("admin.offersVisibleToggle")}
                   </label>
                 </div>
                 <div className="flex gap-sm shrink-0">
@@ -315,22 +333,22 @@ export function OffresAdminView() {
                     size="sm"
                     onClick={() => setEditingId(offer.id)}
                   >
-                    Modifier
+                    {t("admin.edit")}
                   </Button>
                   <Button
                     variant="destructive"
                     size="sm"
                     onClick={() =>
                       confirm({
-                        title: "Supprimer cette offre ?",
-                        description: "Cette action est définitive.",
-                        confirmLabel: "Supprimer",
+                        title: t("admin.offersDeleteConfirm"),
+                        description: t("admin.offersDeleteDesc"),
+                        confirmLabel: t("admin.delete"),
                         destructive: true,
                         onConfirm: () => deleteOfferMutation.mutateAsync(offer.id),
                       })
                     }
                   >
-                    Supprimer
+                    {t("admin.delete")}
                   </Button>
                 </div>
               </div>
@@ -350,6 +368,7 @@ function GrantAccessSection({
   offers: AdminOffer[];
   examTab: ExamTab;
 }) {
+  const { t } = useTranslation();
   const [offerId, setOfferId] = useState("");
   const [emailsText, setEmailsText] = useState("");
 
@@ -392,16 +411,20 @@ function GrantAccessSection({
       const granted = data.results.filter((r) => r.status === "granted").length;
       const mailOk = data.results.filter((r) => r.emailSent).length;
       toast.success(
-        `Accès « ${data.offerName} » accordé à ${granted} personne${granted > 1 ? "s" : ""} (${data.days} j). Identifiants envoyés par email — consultables aussi dans Admin → Apprenants.`
+        t("admin.offersGrantSuccess", {
+          name: data.offerName,
+          n: granted,
+          days: data.days,
+        })
       );
       if (mailOk < granted) {
-        toast.message("Certains emails n'ont pas pu être envoyés. Vérifiez Resend.");
+        toast.message(t("admin.offersGrantEmailPartial"));
       }
       setEmailsText("");
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error ? error.message : "Échec de l'attribution"
+        error instanceof Error ? error.message : t("admin.offersGrantFail")
       );
     },
   });
@@ -410,25 +433,23 @@ function GrantAccessSection({
     <section className="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md">
       <div>
         <h2 className="font-headline-lg text-[20px] font-semibold text-on-surface mb-xs">
-          Accorder un accès par email
+          {t("admin.offersGrantTitle")}
         </h2>
         <p className="font-body-md text-body-md text-on-surface-variant">
-          Ajoutez une ou plusieurs adresses, choisissez une offre {EXAM_TAB_LABELS[examTab]} :
-          durée = offre. Chaque destinataire reçoit un email avec le lien, son email et un
-          mot de passe généré (aussi visible dans Admin → Apprenants).
+          {t("admin.offersGrantDesc", { exam: t(examTabKey(examTab)) })}
         </p>
       </div>
 
       {offers.length === 0 ? (
         <p className="font-label-sm text-label-sm text-on-surface-variant">
-          Créez d&apos;abord une offre active pour pouvoir inviter des clients.
+          {t("admin.offersGrantNeedOffer")}
         </p>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
             <div>
               <label className="font-label-md text-label-md text-on-surface-variant block mb-sm">
-                Offre
+                {t("admin.offersGrantOffer")}
               </label>
               <select
                 className="w-full rounded-xl border border-outline-variant bg-surface px-md py-sm font-body-md text-body-md"
@@ -437,22 +458,34 @@ function GrantAccessSection({
               >
                 {offers.map((offer) => (
                   <option key={offer.id} value={offer.id}>
-                    {offer.name} — {offer.baseDays + offer.bonusDays} jours
+                    {offer.name} —{" "}
+                    {offer.baseDays + offer.bonusDays > 1
+                      ? t("admin.daysCountPlural", {
+                          n: offer.baseDays + offer.bonusDays,
+                        })
+                      : t("admin.daysCount", {
+                          n: offer.baseDays + offer.bonusDays,
+                        })}
                   </option>
                 ))}
               </select>
               {selectedOffer && (
                 <p className="font-label-sm text-label-sm text-primary mt-xs">
-                  Durée incluse : {totalDays} jour{totalDays > 1 ? "s" : ""}
+                  {totalDays > 1
+                    ? t("admin.offersGrantDurationPlural", { n: totalDays })
+                    : t("admin.offersGrantDuration", { n: totalDays })}
                   {selectedOffer.bonusDays > 0
-                    ? ` (${selectedOffer.baseDays} + ${selectedOffer.bonusDays} offerts)`
+                    ? ` ${t("admin.offersGrantBonus", {
+                        base: selectedOffer.baseDays,
+                        bonus: selectedOffer.bonusDays,
+                      })}`
                     : ""}
                 </p>
               )}
             </div>
             <div>
               <label className="font-label-md text-label-md text-on-surface-variant block mb-sm">
-                Adresses email
+                {t("admin.offersGrantEmails")}
               </label>
               <textarea
                 className="w-full min-h-[110px] rounded-xl border border-outline-variant bg-surface p-md font-body-md text-body-md"
@@ -461,7 +494,7 @@ function GrantAccessSection({
                 onChange={(e) => setEmailsText(e.target.value)}
               />
               <p className="font-label-sm text-label-sm text-on-surface-variant mt-xs">
-                Une adresse par ligne, ou séparées par des virgules.
+                {t("admin.offersGrantEmailsHint")}
               </p>
             </div>
           </div>
@@ -474,7 +507,7 @@ function GrantAccessSection({
               }
               loading={grantMutation.isPending}
             >
-              Accorder l&apos;accès et envoyer l&apos;invitation
+              {t("admin.offersGrantButton")}
             </Button>
           </div>
         </>
@@ -494,6 +527,7 @@ function OfferForm({
   onSuccess: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     name: offer?.name ?? "",
     slug: offer?.slug ?? "",
@@ -552,35 +586,37 @@ function OfferForm({
       });
     },
     onSuccess: () => {
-      toast.success(offer ? "Offre mise à jour." : "Offre créée.");
+      toast.success(
+        offer ? t("admin.offersUpdated") : t("admin.offersCreated")
+      );
       onSuccess();
     },
-    onError: () => toast.error("Erreur lors de l'enregistrement."),
+    onError: () => toast.error(t("admin.offersRecordError")),
   });
 
   return (
     <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-lg space-y-md">
       <h3 className="font-label-md text-label-md font-bold text-on-surface">
-        {offer ? "Modifier l'offre" : "Nouvelle offre"}
+        {offer ? t("admin.offersFormEdit") : t("admin.offersNew")}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
         <Input
-          label="Nom"
+          label={t("admin.offersName")}
           value={form.name}
           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
         />
         <Input
-          label="Slug (identifiant unique)"
+          label={t("admin.offersSlug")}
           value={form.slug}
           onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
         />
         <Input
-          label="Sous-titre"
+          label={t("admin.offersSubtitleField")}
           value={form.subtitle}
           onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value }))}
         />
         <Input
-          label="Ordre d'affichage"
+          label={t("admin.offersSortOrder")}
           type="number"
           value={form.sortOrder}
           onChange={(e) =>
@@ -588,7 +624,7 @@ function OfferForm({
           }
         />
         <Input
-          label="Prix XAF"
+          label={t("admin.offersPriceXaf")}
           type="number"
           value={form.priceXaf}
           onChange={(e) =>
@@ -596,7 +632,7 @@ function OfferForm({
           }
         />
         <Input
-          label="Prix USD ($)"
+          label={t("admin.offersPriceUsd")}
           type="number"
           value={form.priceUsd}
           onChange={(e) =>
@@ -604,7 +640,7 @@ function OfferForm({
           }
         />
         <Input
-          label="Prix XOF"
+          label={t("admin.offersPriceXof")}
           type="number"
           value={form.priceXof}
           onChange={(e) =>
@@ -612,7 +648,7 @@ function OfferForm({
           }
         />
         <Input
-          label="Jours de base"
+          label={t("admin.offersBaseDays")}
           type="number"
           value={form.baseDays}
           onChange={(e) =>
@@ -620,7 +656,7 @@ function OfferForm({
           }
         />
         <Input
-          label="Jours offerts"
+          label={t("admin.offersBonusDays")}
           type="number"
           value={form.bonusDays}
           onChange={(e) =>
@@ -635,20 +671,20 @@ function OfferForm({
             checked={form.isFeatured}
             onCheckedChange={(v) => setForm((f) => ({ ...f, isFeatured: v }))}
           />
-          Visible sur l&apos;accueil et la page offres (côté client)
+          {t("admin.offersVisibleClient")}
         </label>
         <label className="flex items-center gap-sm font-label-md text-label-md">
           <Switch
             checked={form.isActive}
             onCheckedChange={(v) => setForm((f) => ({ ...f, isActive: v }))}
           />
-          Active
+          {t("admin.offersActive")}
         </label>
       </div>
 
       <div>
         <label className="font-label-md text-label-md text-on-surface-variant block mb-sm">
-          Fonctionnalités (une par ligne, préfixez - pour exclure)
+          {t("admin.offersFeatures")}
         </label>
         <textarea
           className="w-full min-h-[120px] rounded-xl border border-outline-variant bg-surface p-md font-body-md text-body-md"
@@ -661,13 +697,13 @@ function OfferForm({
 
       <div className="flex gap-sm justify-end">
         <Button variant="secondary" onClick={onCancel}>
-          Annuler
+          {t("admin.cancel")}
         </Button>
         <Button
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending || !form.name || !form.slug}
         >
-          Enregistrer
+          {t("admin.save")}
         </Button>
       </div>
     </div>

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { LegalPageView } from "@/modules/marketing/components/legal-page";
-import { privacyFr } from "@/lib/marketing/content/legal";
+import { LegalPageClient } from "@/modules/marketing/components/legal-page-client";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité | Objectif TCF",
@@ -9,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <LegalPageView content={privacyFr} />;
+  return <LegalPageClient kind="privacy" />;
 }

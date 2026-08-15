@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslation } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -10,23 +11,21 @@ import {
   type LegalDocumentSlug,
 } from "@/lib/legal/documents";
 
-const GROUPS: { id: "prestation" | "site"; title: string; intro: string }[] = [
-  {
-    id: "prestation",
-    title: "Votre relation avec le prestataire",
-    intro:
-      "CGV du développement du site : engagements, périmètre livré, garantie et propriété intellectuelle.",
-  },
-  {
-    id: "site",
-    title: "Documents du site (utilisateurs)",
-    intro:
-      "Textes destinés aux candidats et abonnés d'Objectif TCF — distincts du contrat de prestation.",
-  },
-];
-
 export function DocumentsAdminView() {
+  const { t } = useTranslation();
   const [activeSlug, setActiveSlug] = useState<LegalDocumentSlug>("prestation-cgv");
+  const groups: { id: "prestation" | "site"; title: string; intro: string }[] = [
+    {
+      id: "prestation",
+      title: t("admin.docsGroupPrestation"),
+      intro: t("admin.docsGroupPrestationIntro"),
+    },
+    {
+      id: "site",
+      title: t("admin.docsGroupSite"),
+      intro: t("admin.docsGroupSiteIntro"),
+    },
+  ];
   const active = LEGAL_DOCUMENTS.find((d) => d.slug === activeSlug)!;
   const previewUrl = `/api/admin/documents/${active.slug}?inline=1`;
   const downloadUrl = `/api/admin/documents/${active.slug}`;
@@ -35,15 +34,14 @@ export function DocumentsAdminView() {
     <div className="flex flex-col gap-xl">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="font-display-md text-display-md text-on-surface font-bold mb-xs">
-          Documents
+          {t("admin.documentsTitle")}
         </h1>
         <p className="font-body-md text-body-md text-on-surface-variant">
-          Consultez et téléchargez les CGV de la prestation web, ainsi que les
-          textes juridiques du site.
+          {t("admin.documentsSubtitle")}
         </p>
       </motion.div>
 
-      {GROUPS.map((group) => {
+      {groups.map((group) => {
         const docs = LEGAL_DOCUMENTS.filter((d) => d.group === group.id);
         return (
           <section key={group.id} className="flex flex-col gap-md">
@@ -106,7 +104,7 @@ export function DocumentsAdminView() {
                   <span className="material-symbols-outlined text-[18px]">
                     open_in_new
                   </span>
-                  Voir sur le site
+                  {t("admin.docsViewOnSite")}
                 </Link>
               </Button>
             ) : null}
@@ -115,7 +113,7 @@ export function DocumentsAdminView() {
                 <span className="material-symbols-outlined text-[18px]">
                   visibility
                 </span>
-                Ouvrir le PDF
+                {t("admin.docsOpenPdf")}
               </a>
             </Button>
             <Button size="sm" asChild>
@@ -123,7 +121,7 @@ export function DocumentsAdminView() {
                 <span className="material-symbols-outlined text-[18px]">
                   download
                 </span>
-                Télécharger le PDF
+                {t("admin.downloadPdf")}
               </a>
             </Button>
           </div>

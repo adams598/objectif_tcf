@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { LegalPageView } from "@/modules/marketing/components/legal-page";
-import { refundFr } from "@/lib/marketing/content/legal";
+import { LegalPageClient } from "@/modules/marketing/components/legal-page-client";
 
 export const metadata: Metadata = {
   title: "Conditions de remboursement et de retour | Objectif TCF",
@@ -9,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <LegalPageView content={refundFr} />;
+  return <LegalPageClient kind="refund" />;
 }

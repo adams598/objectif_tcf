@@ -3,8 +3,10 @@
 import React, { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslation } from "@/components/providers/locale-provider";
 import { cn } from "@/lib/utils";
 import { fetchJson } from "@/lib/api/fetch-json";
+import { dateLocaleTag } from "@/lib/i18n/locales";
 import { formatPaymentAmount } from "@/lib/payments/methods";
 import { Button } from "@/components/ui/button";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -51,13 +53,13 @@ interface AdminPaymentsResponse {
   };
 }
 
-const STATUS_LABELS: Record<PaymentStatus, string> = {
-  PENDING: "En attente",
-  PROCESSING: "En cours",
-  SUCCEEDED: "Réussi",
-  FAILED: "Échoué",
-  REFUNDED: "Remboursé",
-  CANCELLED: "Annulé",
+const STATUS_KEYS: Record<PaymentStatus, string> = {
+  PENDING: "admin.statusPending",
+  PROCESSING: "admin.statusProcessing",
+  SUCCEEDED: "admin.statusSucceeded",
+  FAILED: "admin.statusFailed",
+  REFUNDED: "admin.statusRefunded",
+  CANCELLED: "admin.statusCancelled",
 };
 
 const STATUS_COLORS: Record<PaymentStatus, string> = {
@@ -69,20 +71,22 @@ const STATUS_COLORS: Record<PaymentStatus, string> = {
   CANCELLED: "bg-on-surface-variant/10 text-on-surface-variant",
 };
 
-const METHOD_LABELS: Partial<Record<PaymentMethod, string>> = {
-  CARD: "Carte",
-  MOBILE_MONEY_MTN: "MTN MoMo",
-  MOBILE_MONEY_ORANGE: "Orange Money",
-  MOBILE_MONEY_AIRTEL: "Airtel",
-  MOBILE_MONEY_WAVE: "Wave",
-  MOBILE_MONEY_MOOV: "Moov",
-  PAYPAL: "PayPal",
-  BANK_TRANSFER: "Virement",
-  SEPA: "SEPA",
-};
-
 export function PaiementsAdminView() {
+  const { t, locale } = useTranslation();
   const queryClient = useQueryClient();
+  const dateTag = dateLocaleTag(locale);
+
+  const methodLabels: Partial<Record<PaymentMethod, string>> = {
+    CARD: t("admin.methodCard"),
+    MOBILE_MONEY_MTN: "MTN MoMo",
+    MOBILE_MONEY_ORANGE: "Orange Money",
+    MOBILE_MONEY_AIRTEL: "Airtel",
+    MOBILE_MONEY_WAVE: "Wave",
+    MOBILE_MONEY_MOOV: "Moov",
+    PAYPAL: "PayPal",
+    BANK_TRANSFER: t("admin.methodTransfer"),
+    SEPA: "SEPA",
+  };
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | "ALL">("ALL");
   const [page, setPage] = useState(1);
   const [deleteTargets, setDeleteTargets] = useState<AdminPaymentRow[]>([]);
@@ -104,11 +108,11 @@ export function PaiementsAdminView() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-payments"] });
-      toast.success("Paiement remboursé");
+      toast.success(t("admin.toastRefunded"));
     },
     onError: (error) => {
       const message =
-        error instanceof Error ? error.message : "Impossible de rembourser ce paiement";
+        error instanceof Error ? error.message : t("admin.toastRefundError");
       toast.error(message);
     },
   });
@@ -133,12 +137,14 @@ export function PaiementsAdminView() {
         } catch (error) {
           fail += 1;
           errors.push(
-            error instanceof Error ? error.message : `Échec pour ${id}`
+            error instanceof Error
+              ? error.message
+              : t("admin.toastFailUser", { email: id })
           );
         }
       }
       if (fail > 0 && ok === 0) {
-        throw new Error(errors[0] ?? "Suppression impossible");
+        throw new Error(errors[0] ?? t("admin.toastDeleteError"));
       }
       return { ok, fail, errors, mode };
     },
@@ -147,21 +153,22 @@ export function PaiementsAdminView() {
       setDeleteTargets([]);
       if (result.fail > 0) {
         toast.warning(
-          `${result.ok} traité(s), ${result.fail} échec(s)${
-            result.errors[0] ? ` — ${result.errors[0]}` : ""
-          }`
+          `${t("admin.toastProcessedPartial", {
+            ok: result.ok,
+            fail: result.fail,
+          })}${result.errors[0] ? ` — ${result.errors[0]}` : ""}`
         );
       } else {
         toast.success(
           result.mode === "permanent"
-            ? `${result.ok} paiement(s) définitivement supprimé(s)`
-            : `${result.ok} paiement(s) archivé(s)`
+            ? t("admin.toastPaymentsDeleted", { n: result.ok })
+            : t("admin.toastPaymentsArchived", { n: result.ok })
         );
       }
     },
     onError: (error) =>
       toast.error(
-        error instanceof Error ? error.message : "Suppression impossible"
+        error instanceof Error ? error.message : t("admin.toastDeleteError")
       ),
   });
 
@@ -177,19 +184,22 @@ export function PaiementsAdminView() {
     <div className="flex flex-col gap-xl">
       <div>
         <h1 className="font-display-md text-display-md font-bold text-on-surface mb-xs">
-          Paiements
+          {t("admin.paymentsTitle")}
         </h1>
         <p className="font-body-md text-body-md text-on-surface-variant">
-          Suivi des transactions — pawaPay (Mobile Money et cartes).
+          {t("admin.paymentsSubtitle")}
         </p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-md">
         {[
-          { label: "Total", value: stats.total },
-          { label: "Réussis", value: stats.succeeded },
-          { label: "En attente", value: stats.pending },
-          { label: "Revenus (XAF)", value: formatPaymentAmount(stats.revenueXaf, "XAF") },
+          { label: t("admin.kpiTotal"), value: stats.total },
+          { label: t("admin.kpiSucceeded"), value: stats.succeeded },
+          { label: t("admin.kpiPending"), value: stats.pending },
+          {
+            label: t("admin.kpiRevenue"),
+            value: formatPaymentAmount(stats.revenueXaf, "XAF"),
+          },
         ].map((item) => (
           <div
             key={item.label}
@@ -222,7 +232,7 @@ export function PaiementsAdminView() {
                   : "border-outline-variant text-on-surface-variant hover:border-primary"
               )}
             >
-              {status === "ALL" ? "Tous" : STATUS_LABELS[status]}
+              {status === "ALL" ? t("admin.all") : t(STATUS_KEYS[status])}
             </button>
           )
         )}
@@ -231,18 +241,26 @@ export function PaiementsAdminView() {
       <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
         {query.isLoading ? (
           <div className="p-xl text-center text-on-surface-variant animate-pulse">
-            Chargement…
+            {t("admin.loading")}
           </div>
         ) : payments.length === 0 ? (
           <div className="p-xl text-center text-on-surface-variant">
-            Aucun paiement pour le moment.
+            {t("admin.noPayments")}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-outline-variant bg-surface-container-low">
-                  {["Date", "Utilisateur", "Description", "Montant", "Méthode", "Statut", "Actions"].map(
+                  {[
+                    t("admin.colDate"),
+                    t("admin.colUser"),
+                    t("admin.colDescription"),
+                    t("admin.colAmount"),
+                    t("admin.colMethod"),
+                    t("admin.colStatus"),
+                    t("admin.colActions"),
+                  ].map(
                     (h) => (
                       <th
                         key={h}
@@ -261,7 +279,7 @@ export function PaiementsAdminView() {
                     className="border-b border-outline-variant/50 hover:bg-surface-container-low/50"
                   >
                     <td className="px-md py-sm font-label-sm text-label-sm whitespace-nowrap">
-                      {new Date(payment.createdAt).toLocaleDateString("fr-FR")}
+                      {new Date(payment.createdAt).toLocaleDateString(dateTag)}
                     </td>
                     <td className="px-md py-sm">
                       <p className="font-label-md text-label-md">{payment.userName}</p>
@@ -273,7 +291,8 @@ export function PaiementsAdminView() {
                       {payment.description ?? "—"}
                       {payment.subscriptionDays && (
                         <span className="text-on-surface-variant">
-                          {" "}({payment.subscriptionDays} j)
+                          {" "}
+                          ({t("admin.daysShort", { n: payment.subscriptionDays })})
                         </span>
                       )}
                     </td>
@@ -282,7 +301,7 @@ export function PaiementsAdminView() {
                     </td>
                     <td className="px-md py-sm font-label-sm text-label-sm">
                       {payment.method
-                        ? METHOD_LABELS[payment.method] ?? payment.method
+                        ? methodLabels[payment.method] ?? payment.method
                         : "—"}
                       {payment.provider && (
                         <span className="block text-on-surface-variant text-[11px]">
@@ -297,7 +316,7 @@ export function PaiementsAdminView() {
                           STATUS_COLORS[payment.status]
                         )}
                       >
-                        {STATUS_LABELS[payment.status]}
+                        {t(STATUS_KEYS[payment.status])}
                       </span>
                     </td>
                     <td className="px-md py-sm">
@@ -309,23 +328,22 @@ export function PaiementsAdminView() {
                             disabled={refundMutation.isPending}
                             onClick={() =>
                               confirm({
-                                title: "Rembourser ce paiement ?",
-                                description:
-                                  "L'abonnement associé sera révoqué. Cette action est définitive.",
-                                confirmLabel: "Rembourser",
+                                title: t("admin.refundConfirmTitle"),
+                                description: t("admin.refundConfirmDesc"),
+                                confirmLabel: t("admin.refund"),
                                 destructive: true,
                                 onConfirm: () =>
                                   refundMutation.mutateAsync(payment.id),
                               })
                             }
                           >
-                            Rembourser
+                            {t("admin.refund")}
                           </Button>
                         )}
                         <button
                           type="button"
                           className="p-1.5 rounded-lg text-error hover:bg-error-container/30 transition-colors"
-                          title="Archiver ou supprimer"
+                          title={t("admin.archiveOrDelete")}
                           onClick={() => setDeleteTargets([payment])}
                         >
                           <span className="material-symbols-outlined text-[18px]">
@@ -350,10 +368,10 @@ export function PaiementsAdminView() {
             onClick={() => setPage((p) => p - 1)}
             className="px-md py-xs rounded-lg border border-outline-variant disabled:opacity-40"
           >
-            Précédent
+            {t("exam.previous")}
           </button>
           <span className="px-md py-xs font-label-sm text-label-sm text-on-surface-variant">
-            Page {page} / {meta.totalPages}
+            {t("admin.pageOf", { page, total: meta.totalPages })}
           </span>
           <button
             type="button"
@@ -361,7 +379,7 @@ export function PaiementsAdminView() {
             onClick={() => setPage((p) => p + 1)}
             className="px-md py-xs rounded-lg border border-outline-variant disabled:opacity-40"
           >
-            Suivant
+            {t("exam.next")}
           </button>
         </div>
       )}
@@ -376,14 +394,14 @@ export function PaiementsAdminView() {
           <DialogHeader>
             <DialogTitle>
               {deleteTargets.length > 1
-                ? `Que faire de ces ${deleteTargets.length} paiements ?`
-                : "Que faire de ce paiement ?"}
+                ? t("admin.paymentsDeleteTitleN", { n: deleteTargets.length })
+                : t("admin.paymentsDeleteTitle")}
             </DialogTitle>
             <DialogDescription>
               {deleteTargets.length === 1
                 ? `${deleteTargets[0].userName} (${deleteTargets[0].userEmail}) — ${formatPaymentAmount(deleteTargets[0].amount, deleteTargets[0].currency)}. `
-                : `${deleteTargets.length} paiements sélectionnés. `}
-              L&apos;archivage masque le paiement des listes admin.
+                : `${t("admin.paymentsSelected", { n: deleteTargets.length })} `}
+              {t("admin.paymentsArchiveHint")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-sm">
@@ -402,10 +420,10 @@ export function PaiementsAdminView() {
                 <span className="material-symbols-outlined text-[20px] text-primary">
                   inventory_2
                 </span>
-                Archiver
+                {t("admin.archive")}
               </p>
               <p className="font-label-sm text-[12px] text-on-surface-variant mt-xs">
-                Masque le paiement des listes admin. Il reste en base.
+                {t("admin.paymentsArchiveDesc")}
               </p>
             </button>
             <button
@@ -423,10 +441,10 @@ export function PaiementsAdminView() {
                 <span className="material-symbols-outlined text-[20px]">
                   delete_forever
                 </span>
-                Supprimer définitivement
+                {t("admin.deleteForever")}
               </p>
               <p className="font-label-sm text-[12px] text-on-surface-variant mt-xs">
-                Efface entièrement le paiement. Cette action est irréversible.
+                {t("admin.paymentsDeleteForeverDesc")}
               </p>
             </button>
           </div>
@@ -436,7 +454,7 @@ export function PaiementsAdminView() {
               disabled={removePayments.isPending}
               onClick={() => setDeleteTargets([])}
             >
-              Annuler
+              {t("admin.cancel")}
             </Button>
           </DialogFooter>
         </DialogContent>

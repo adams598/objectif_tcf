@@ -10,7 +10,7 @@ import {
 import { useTranslation } from "@/components/providers/locale-provider";
 
 export function FaqPage() {
-  const { locale } = useTranslation();
+  const { locale, t } = useTranslation();
   const content = getFaqContent(locale);
   const [search, setSearch] = useState("");
 
@@ -53,7 +53,7 @@ export function FaqPage() {
       <div className="space-y-2xl">
         {visibleCategories.length === 0 ? (
           <p className="font-body-md text-body-md text-on-surface-variant text-center py-xl">
-            Aucun résultat pour « {search} »
+            {t("marketingPages.faqNoResults", { query: search })}
           </p>
         ) : (
           visibleCategories.map((category) => (

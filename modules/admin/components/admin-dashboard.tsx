@@ -3,8 +3,8 @@
 import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { useTranslation } from "@/components/providers/locale-provider";
 import { fetchJson } from "@/lib/api/fetch-json";
-import { AdminSystemStatusPanel } from "@/modules/admin/components/admin-system-status-panel";
 import {
   AdminAnalyticsCharts,
   type AdminAnalyticsData,
@@ -33,6 +33,7 @@ const FALLBACK_OPTIONS: AnalyticsFilterOptions = {
 };
 
 export function AdminDashboard() {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<AnalyticsFilterState>(() =>
     defaultAnalyticsFilters(new Date().getFullYear())
   );
@@ -60,10 +61,10 @@ export function AdminDashboard() {
     <div className="flex flex-col gap-xl">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="font-display-md text-display-md text-on-surface font-bold mb-xs">
-          Vue d&apos;ensemble
+          {t("admin.overviewTitle")}
         </h1>
         <p className="font-body-md text-body-md text-on-surface-variant">
-          Statistiques utilisateurs, abonnements, examens et paiements
+          {t("admin.overviewSubtitle")}
         </p>
       </motion.div>
 
@@ -73,15 +74,13 @@ export function AdminDashboard() {
         onChange={patchFilters}
       />
 
-      <AdminSystemStatusPanel />
-
       {isLoading ? (
         <div className="p-xl text-center text-on-surface-variant animate-pulse">
-          Chargement des statistiques…
+          {t("admin.overviewLoading")}
         </div>
       ) : isError ? (
         <div className="p-xl text-center text-error rounded-2xl border border-error/30 bg-error/5">
-          Impossible de charger les statistiques
+          {t("admin.overviewError")}
           {error instanceof Error ? ` : ${error.message}` : ""}
         </div>
       ) : data ? (

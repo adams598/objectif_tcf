@@ -15,26 +15,6 @@ import { useTranslation } from "@/components/providers/locale-provider";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { useQueryClient } from "@tanstack/react-query";
 
-const loginSchema = z.object({
-  email: z.string().email("Email invalide"),
-  password: z.string().min(1, "Mot de passe requis"),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
-
-const AUTH_ERROR_MESSAGES: Record<string, string> = {
-  google_not_configured:
-    "La connexion Google n'est pas configurée sur le serveur.",
-  google_auth_failed:
-    "La connexion Google a échoué. Vérifiez l'URI de redirection dans Google Cloud Console.",
-  server_config:
-    "Configuration serveur incomplète (JWT_SECRET manquant sur Vercel). Contactez l'administrateur.",
-  google_denied: "Connexion Google annulée.",
-  google_invalid_state: "Session Google expirée. Veuillez réessayer.",
-  google_email_unverified: "Votre email Google n'est pas vérifié.",
-  account_disabled: "Ce compte est désactivé.",
-};
-
 export function LoginForm() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -45,6 +25,22 @@ export function LoginForm() {
     redirectTo?.startsWith("/") ? redirectTo : "/tableau-de-bord";
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const loginSchema = z.object({
+    email: z.string().email(t("auth.invalidEmail")),
+    password: z.string().min(1, t("auth.passwordRequired")),
+  });
+  type LoginFormData = z.infer<typeof loginSchema>;
+
+  const AUTH_ERROR_MESSAGES: Record<string, string> = {
+    google_not_configured: t("auth.googleNotConfigured"),
+    google_auth_failed: t("auth.googleAuthFailed"),
+    server_config: t("auth.googleServerConfig"),
+    google_denied: t("auth.googleDenied"),
+    google_invalid_state: t("auth.googleInvalidState"),
+    google_email_unverified: t("auth.googleEmailUnverified"),
+    account_disabled: t("auth.accountDisabled"),
+  };
 
   const {
     register,
@@ -73,16 +69,16 @@ export function LoginForm() {
       const result = await response.json();
 
       if (!response.ok) {
-        toast.error(result.error || "Erreur de connexion");
+        toast.error(result.error || t("auth.loginError"));
         return;
       }
 
-      toast.success("Connexion réussie !");
+      toast.success(t("auth.loginSuccess"));
       queryClient.invalidateQueries({ queryKey: ["auth-session"] });
       router.push(safeRedirect);
       router.refresh();
     } catch {
-      toast.error("Une erreur est survenue. Veuillez réessayer.");
+      toast.error(t("auth.genericError"));
     } finally {
       setIsLoading(false);
     }

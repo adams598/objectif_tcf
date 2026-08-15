@@ -289,11 +289,6 @@ export async function initiatePayment(
     throw new Error("NO_PAYMENT_PROVIDER_CONFIGURED");
   }
 
-  const existingMeta =
-    typeof payment.metadata === "object" && payment.metadata
-      ? (payment.metadata as Record<string, unknown>)
-      : {};
-
   await prisma.payment.update({
     where: { id: payment.id },
     data: {
@@ -306,7 +301,6 @@ export async function initiatePayment(
       externalId,
       checkoutUrl,
       failureReason: null,
-      metadata: existingMeta,
     },
   });
 

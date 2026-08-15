@@ -134,7 +134,6 @@ export function resolvePaymentLocaleFromCountry(
       preferredMethods: [
         "MOBILE_MONEY_MTN",
         "MOBILE_MONEY_ORANGE",
-        "MOBILE_MONEY",
         "MOBILE_MONEY_WAVE",
         "CARD",
         "BANK_TRANSFER",
@@ -150,7 +149,6 @@ export function resolvePaymentLocaleFromCountry(
       preferredMethods: [
         "MOBILE_MONEY_MTN",
         "MOBILE_MONEY_ORANGE",
-        "MOBILE_MONEY",
         "MOBILE_MONEY_WAVE",
         "CARD",
         "BANK_TRANSFER",
@@ -164,7 +162,6 @@ export function resolvePaymentLocaleFromCountry(
       countryLabel: country ?? null,
       phonePrefix: PHONE_PREFIX[key] ?? "+221",
       preferredMethods: [
-        "MOBILE_MONEY",
         "MOBILE_MONEY_ORANGE",
         "MOBILE_MONEY_WAVE",
         "MOBILE_MONEY_MOOV",
@@ -183,7 +180,6 @@ export function resolvePaymentLocaleFromCountry(
       preferredMethods: [
         "MOBILE_MONEY_ORANGE",
         "MOBILE_MONEY_MTN",
-        "MOBILE_MONEY",
         "CARD",
         "BANK_TRANSFER",
       ],
@@ -203,7 +199,7 @@ export function resolvePaymentLocaleFromCountry(
     currency: "USD",
     countryLabel: country ?? null,
     phonePrefix: PHONE_PREFIX[key] ?? null,
-    preferredMethods: ["CARD", "MOBILE_MONEY", "MOBILE_MONEY_MTN"],
+    preferredMethods: ["CARD", "MOBILE_MONEY_MTN", "BANK_TRANSFER"],
   };
 }
 
@@ -211,7 +207,6 @@ export function resolvePaymentLocaleFromCountry(
 export const CHECKOUT_METHOD_IDS: PaymentMethod[] = [
   "MOBILE_MONEY_MTN",
   "MOBILE_MONEY_ORANGE",
-  "MOBILE_MONEY",
   "MOBILE_MONEY_WAVE",
   "MOBILE_MONEY_MOOV",
   "MOBILE_MONEY_AIRTEL",

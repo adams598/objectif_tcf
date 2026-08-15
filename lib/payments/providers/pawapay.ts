@@ -7,8 +7,14 @@ import {
   getPawaPayApiToken,
   isPawaPayConfigured,
 } from "./pawapay-config";
+import {
+  isMobileMoneyMethod,
+  operatorFamilyFromMethod,
+  resolvePawaPayMmoProvider,
+} from "./pawapay-providers";
 
 export { isPawaPayConfigured, getPawaPayCallbackUrl } from "./pawapay-config";
+export { resolvePawaPayMmoProvider } from "./pawapay-providers";
 
 export class PawaPayApiError extends Error {
   constructor(
@@ -20,22 +26,16 @@ export class PawaPayApiError extends Error {
   }
 }
 
-/** Provider pawaPay hinté depuis le moyen choisi côté UI (Cameroun). */
-export function providerHintFromMethod(method: PaymentMethod): string | null {
-  switch (method) {
-    case "MOBILE_MONEY_MTN":
-      return "MTN_MOMO_CMR";
-    case "MOBILE_MONEY_ORANGE":
-      return "ORANGE_MONEY_CMR";
-    case "MOBILE_MONEY_AIRTEL":
-      return "AIRTEL_OAPI_COG";
-    case "MOBILE_MONEY_MOOV":
-      return "MOOV_BEN";
-    case "MOBILE_MONEY_WAVE":
-      return "WAVE_SEN";
-    default:
-      return null;
-  }
+/** @deprecated Préférer resolvePawaPayMmoProvider (pays + choix UI). */
+export function providerHintFromMethod(
+  method: PaymentMethod,
+  countryIso3 = "CMR"
+): string | null {
+  return resolvePawaPayMmoProvider({
+    method,
+    predicted: null,
+    countryIso3,
+  });
 }
 
 function authHeaders(): HeadersInit {
@@ -194,18 +194,22 @@ export async function createPawaPayCheckout(
     ],
   };
 
-  if (params.phoneNumber?.trim()) {
+  if (isMobileMoneyMethod(params.method) && params.phoneNumber?.trim()) {
     const phoneNumber = normalizeMsisdn(params.phoneNumber);
     const predicted = await predictPawaPayProvider(phoneNumber);
-    const hinted = providerHintFromMethod(params.method);
-    // Le numéro prime : le predict-provider pawaPay est plus fiable que l’UI.
-    const provider = predicted ?? hinted;
+    const provider = resolvePawaPayMmoProvider({
+      method: params.method,
+      predicted,
+      countryIso3: countries[0] ?? "CMR",
+    });
+    const explicitOperator = operatorFamilyFromMethod(params.method) != null;
     body.payer = {
       type: "MMO",
       accountDetails: {
         phoneNumber,
         ...(provider ? { provider } : {}),
-        allowCustomerToOverride: true,
+        // Marque choisie (Orange, MTN…) : on ne laisse pas predict-provider basculer vers MoMo.
+        allowCustomerToOverride: !explicitOperator,
       },
     };
   }

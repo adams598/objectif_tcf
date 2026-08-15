@@ -37,9 +37,9 @@ export const PAYMENT_METHODS: PaymentMethodOption[] = [
 
     id: "MOBILE_MONEY_MTN",
 
-    label: "MTN Mobile Money",
+    label: "MTN MoMo",
 
-    description: "MoMo — Cameroun, Côte d'Ivoire, Ghana…",
+    description: "MTN Mobile Money — Cameroun, Côte d'Ivoire, Ghana…",
 
     icon: "smartphone",
 
@@ -57,9 +57,9 @@ export const PAYMENT_METHODS: PaymentMethodOption[] = [
 
     id: "MOBILE_MONEY",
 
-    label: "Mobile Money",
+    label: "Autre opérateur",
 
-    description: "Orange, Wave, Moov, Airtel… selon votre pays",
+    description: "Je choisirai l'opérateur sur la page de paiement",
 
     icon: "payments",
 
@@ -97,7 +97,7 @@ export const PAYMENT_METHODS: PaymentMethodOption[] = [
 
     label: "Orange Money",
 
-    description: "Sénégal, Mali, Cameroun, Côte d'Ivoire…",
+    description: "Orange Money — Cameroun, Côte d'Ivoire, Sénégal…",
 
     icon: "phone_android",
 
@@ -175,9 +175,9 @@ export const PAYMENT_METHODS: PaymentMethodOption[] = [
 
     id: "BANK_TRANSFER",
 
-    label: "Virement / autres moyens",
+    label: "Autres moyens",
 
-    description: "Page pawaPay — opérateurs selon votre pays",
+    description: "Carte ou opérateurs disponibles sur la page de paiement",
 
     icon: "account_balance",
 

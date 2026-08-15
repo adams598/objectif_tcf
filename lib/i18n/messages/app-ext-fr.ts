@@ -750,10 +750,10 @@ export const appExtFr = {
     testimonial3Profession: "Développeur",
     testimonial3Quote:
       "Même en étant francophone natif, le format du TCF est particulier. Objectif TCF m'a appris la 'méthodologie' de l'examen. J'ai sécurisé le score maximum sans mauvaise surprise.",
-    pricingLabel: "Grille de prix",
+    pricingLabel: "Nos formules",
     pricingTitle: "Des formules adaptées à votre rythme",
     pricingSubtitle:
-      "Choisissez un forfait ou calculez votre abonnement au jour. TCF, TEF et IELTS — tarifs en XAF, USD et XOF.",
+      "Choisissez un forfait TCF, TEF ou IELTS. Les tarifs sont indiqués sur la page Tarifs.",
     pricingFrom: "dès {{price}}",
     pricingDays: "Forfaits à partir de {{days}}",
     tryFree: "Essayer gratuitement",

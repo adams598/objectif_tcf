@@ -71,22 +71,44 @@ export function PricingPage() {
 
   const { data: session, isLoading: isSessionLoading } = useAuthSession();
 
-  useEffect(() => {
-    setActiveTab(parseExamTab(searchParams.get("examen")));
-  }, [searchParams]);
+  const selectExamTab = useCallback(
+    (tab: ExamTab) => {
+      setActiveTab(tab);
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("examen", tab);
+      params.delete("checkout");
+      params.delete("offerId");
+      router.replace(`/offres?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams]
+  );
 
   useEffect(() => {
     const fromUrl = parseCheckoutFromSearchParams(searchParams);
-    const fromStorage = loadCheckoutIntent();
-    const intent = fromUrl ?? fromStorage;
+    const examenParam = searchParams.get("examen");
 
-    if (!intent) return;
-
-    setActiveTab(intent.examTab);
-    if (intent.type === "custom") {
-      setDaysInput(String(intent.days));
+    if (fromUrl) {
+      setActiveTab(fromUrl.examTab);
+      if (fromUrl.type === "custom") {
+        setDaysInput(String(fromUrl.days));
+      }
+      setResumeCheckout(fromUrl);
+      return;
     }
-    setResumeCheckout(intent);
+
+    if (examenParam) {
+      setActiveTab(parseExamTab(examenParam));
+      return;
+    }
+
+    const fromStorage = loadCheckoutIntent();
+    if (!fromStorage) return;
+
+    setActiveTab(fromStorage.examTab);
+    if (fromStorage.type === "custom") {
+      setDaysInput(String(fromStorage.days));
+    }
+    setResumeCheckout(fromStorage);
   }, [searchParams]);
 
   const { data, isLoading } = useQuery({
@@ -211,10 +233,10 @@ export function PricingPage() {
 
       <div className="flex justify-center gap-sm flex-wrap">
         {EXAM_TABS.map((tab) => (
-          <Link
+          <button
             key={tab}
-            href={`/offres?examen=${tab}`}
-            onClick={() => setActiveTab(tab)}
+            type="button"
+            onClick={() => selectExamTab(tab)}
             className={cn(
               "px-lg py-sm rounded-full font-label-md text-label-md transition-all border",
               activeTab === tab
@@ -223,7 +245,7 @@ export function PricingPage() {
             )}
           >
             {EXAM_TAB_LABELS[tab]}
-          </Link>
+          </button>
         ))}
       </div>
 

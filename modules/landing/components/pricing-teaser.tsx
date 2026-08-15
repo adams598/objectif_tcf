@@ -10,7 +10,6 @@ import { fetchJson } from "@/lib/api/fetch-json";
 import { EXAM_TYPE_LABELS } from "@/lib/exams/catalog";
 import {
   EXAM_TYPE_TO_TAB,
-  formatPricePair,
   type PricingOffer,
 } from "@/lib/pricing/constants";
 import { cn } from "@/lib/utils";
@@ -110,9 +109,6 @@ export function PricingTeaser() {
                       {offer.subtitle}
                     </p>
                   )}
-                  <p className="font-display-md text-[26px] text-primary font-bold">
-                    {formatPricePair(offer.priceXaf, offer.priceUsd)}
-                  </p>
                   <p className="font-label-sm text-label-sm text-on-surface-variant mt-xs">
                     {totalDays} jour{totalDays > 1 ? "s" : ""}
                     {offer.bonusDays > 0

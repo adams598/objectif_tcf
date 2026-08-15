@@ -740,10 +740,10 @@ export const appExtEn = {
     testimonial3Profession: "Developer",
     testimonial3Quote:
       "Even as a native French speaker, the TCF format is particular. Objectif TCF taught me the exam methodology. I secured the maximum score with no surprises.",
-    pricingLabel: "Pricing grid",
+    pricingLabel: "Our plans",
     pricingTitle: "Plans adapted to your pace",
     pricingSubtitle:
-      "Choose a package or calculate your subscription by the day. TCF, TEF and IELTS — prices in XAF, USD and XOF.",
+      "Choose a TCF, TEF or IELTS plan. Prices are listed on the Pricing page.",
     pricingFrom: "from {{price}}",
     pricingDays: "Plans starting from {{days}}",
     tryFree: "Try for free",

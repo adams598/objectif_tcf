@@ -84,41 +84,6 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
     ? getAmountForCurrency(data.payment.amounts, currency)
     : 0;
 
-  const phoneField = (() => {
-    switch (selectedMethod?.id) {
-      case "MOBILE_MONEY_ORANGE":
-        return {
-          label: t("pricing.phoneLabelOrange"),
-          hint: t("pricing.phoneHintOrange"),
-        };
-      case "MOBILE_MONEY_MTN":
-        return {
-          label: t("pricing.phoneLabelMtn"),
-          hint: t("pricing.phoneHintMtn"),
-        };
-      case "MOBILE_MONEY_WAVE":
-        return {
-          label: t("pricing.phoneLabelWave"),
-          hint: t("pricing.phoneHint"),
-        };
-      case "MOBILE_MONEY_AIRTEL":
-        return {
-          label: t("pricing.phoneLabelAirtel"),
-          hint: t("pricing.phoneHint"),
-        };
-      case "MOBILE_MONEY_MOOV":
-        return {
-          label: t("pricing.phoneLabelMoov"),
-          hint: t("pricing.phoneHint"),
-        };
-      default:
-        return {
-          label: t("pricing.mobileMoneyNumber"),
-          hint: t("pricing.phoneHint"),
-        };
-    }
-  })();
-
   const initiateMutation = useMutation({
     mutationFn: () =>
       fetchJson<{ checkoutUrl: string }>(`/api/paiement/${paymentId}/initier`, {
@@ -126,9 +91,7 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
         body: JSON.stringify({
           currency,
           method,
-          ...(selectedMethod?.requiresPhone && phoneNumber
-            ? { phoneNumber }
-            : {}),
+          ...(phoneNumber ? { phoneNumber } : {}),
         }),
       }),
     onSuccess: (result) => {
@@ -325,19 +288,13 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
       {selectedMethod?.requiresPhone && (
         <div className="bg-surface border border-outline-variant rounded-2xl p-lg">
           <Input
-            label={phoneField.label}
+            label={t("pricing.mobileMoneyNumber")}
             placeholder={t("pricing.phonePlaceholder")}
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
-            hint={phoneField.hint}
+            hint={t("pricing.phoneHint")}
           />
         </div>
-      )}
-
-      {selectedMethod && (
-        <p className="font-label-sm text-label-sm text-on-surface text-center font-semibold">
-          {t("pricing.payingVia", { method: selectedMethod.label })}
-        </p>
       )}
 
       <div className="flex flex-col sm:flex-row gap-md">

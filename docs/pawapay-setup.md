@@ -124,7 +124,6 @@ PAWAPAY_API_TOKEN="token_production"
 | « PAWAPAY_NOT_CONFIGURED » | Token absent ou trop court dans `.env.local` |
 | Paiement bloqué en PROCESSING | Callback URL incorrecte ou localhost sans tunnel |
 | `AUTHENTICATION_ERROR` | Token sandbox utilisé avec `PAWAPAY_ENV=production` (ou inverse) |
-| Orange affiche MoMo | Ancien bug : le numéro prédisait MTN. Orange Money envoie désormais `ORANGE_CMR` (pas `ORANGE_MONEY_CMR`). |
-| Numéro rejeté | Format MSISDN : chiffres seuls, indicatif pays (`237…`, `221…`). Pour Orange Money, le numéro doit être un compte Orange. |
+| Numéro rejeté | Format MSISDN : chiffres seuls, indicatif pays (`237…`, `221…`) |
 
 Collection Postman officielle : [Run in Postman](https://docs.pawapay.io/getting_started) (section Postman).

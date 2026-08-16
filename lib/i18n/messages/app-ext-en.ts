@@ -511,25 +511,15 @@ export const appExtEn = {
     addEnvKeys: "Add your pawaPay key (PAWAPAY_API_TOKEN) in .env.local.",
     demoModeActive: "Demo mode active — no real provider configured.",
     pawapaySecureDesc:
-      "Secure payment via pawaPay — the operator you choose (Orange Money, MTN MoMo…) is kept through to payment",
+      "Secure payment via pawaPay — Mobile Money and Visa/Mastercard depending on your country",
     daysCount: "{{n}} days",
     mobileMoneyNumber: "Mobile Money number",
-    phoneLabelMtn: "MTN MoMo number",
-    phoneLabelOrange: "Orange Money number",
-    phoneLabelWave: "Wave number",
-    phoneLabelAirtel: "Airtel Money number",
-    phoneLabelMoov: "Moov Money number",
     phonePlaceholder: "E.g. +237 6 70 00 00 00",
     phoneHint: "Include country code (+237, +225, +221…)",
-    phoneHintOrange:
-      "Use an Orange Money number, including the country code (+237, +225, +221…).",
-    phoneHintMtn:
-      "Use an MTN MoMo number, including the country code (+237, +225, +221…).",
-    payingVia: "You are paying with {{method}}",
     modifyChoice: "Change my selection",
     payAmount: "Pay {{amount}}",
     paymentProvidersDesc:
-      "Secure payments via pawaPay. The method you choose (Orange Money, MTN MoMo, Wave, card…) is the one used on the payment page. Currencies: XAF, XOF, USD.",
+      "Secure payments via pawaPay: Mobile Money (MTN, Orange, Wave…) and cards depending on your country. Currencies: XAF, XOF, USD.",
     redirecting: "Redirecting…",
     simulateSuccess: "Payment simulated successfully.",
     simulateError: "Simulation failed.",

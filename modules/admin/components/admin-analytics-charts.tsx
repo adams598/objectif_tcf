@@ -98,7 +98,7 @@ function paymentMethodLabel(
     case "MOBILE_MONEY":
       return t("admin.analyticsMobileMoney");
     case "MOBILE_MONEY_MTN":
-      return "MTN MoMo";
+      return "MTN";
     case "MOBILE_MONEY_ORANGE":
       return "Orange Money";
     case "MOBILE_MONEY_AIRTEL":

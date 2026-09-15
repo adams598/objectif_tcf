@@ -47,6 +47,7 @@ const adminNavItems: NavItem[] = [
   { href: "/admin/utilisateurs", labelKey: "nav.adminUsers", icon: "group" },
   { href: "/admin/examens", labelKey: "nav.adminExams", icon: "school" },
   { href: "/admin/series", labelKey: "nav.adminSeries", icon: "library_books" },
+  { href: "/admin/guides", labelKey: "nav.adminGuides", icon: "menu_book" },
   { href: "/admin/communaute", labelKey: "nav.adminCommunity", icon: "forum" },
   { href: "/admin/correcteurs", labelKey: "nav.adminCorrectors", icon: "edit_note" },
   // Masqué temporairement — ne pas supprimer

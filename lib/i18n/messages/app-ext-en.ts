@@ -227,6 +227,13 @@ export const appExtEn = {
     preparingAudio: "Preparing audio…",
     micDenied:
       "Microphone denied or unavailable. Allow microphone access in your browser.",
+    launchVideo: "Start the video document",
+    watchUntilPause: "Watch the document. It will pause at the set moment.",
+    videoPausedForQuestions:
+      "Video paused — answer, then continue to resume.",
+    waitingForVideo: "Document playing…",
+    seriesMediaHint:
+      "The document keeps playing. Answer the question on screen (A, B, C or D), then go to the next one. You can go back if you skipped a question.",
   },
   auth: {
     welcomeBack: "Welcome back!",
@@ -355,6 +362,10 @@ export const appExtEn = {
     refund: "Refund and return policy",
     newsTopics: "News topics",
     newsTopicsDesc: "Canadian themes for written and oral expression.",
+    expressionWriting: "Written expression",
+    expressionWritingDesc: "Method, combinations and recent topics, month by month.",
+    expressionSpeaking: "Oral expression",
+    expressionSpeakingDesc: "Method, combinations and recent topics, month by month.",
     prepTcfDesc: "TCF Canada training in real exam conditions.",
     prepTefDesc: "TEF Canada preparation with full series.",
     prepIeltsDesc: "IELTS preparation with certified correction.",
@@ -917,7 +928,8 @@ export const appExtEn = {
     save: "Save",
     add: "Add",
     overviewTitle: "Overview",
-    overviewSubtitle: "User, subscription, exam and payment statistics",
+    overviewSubtitle:
+      "Site traffic, sign-up funnel, subscriptions, exams and payments",
     overviewLoading: "Loading statistics…",
     overviewError: "Unable to load statistics",
     roles: {
@@ -1178,6 +1190,35 @@ export const appExtEn = {
     analyticsSectionKpis: "Key indicators",
     analyticsSectionKpisDesc:
       "Instant snapshot of activity over the filtered period",
+    analyticsSectionTraffic: "Site traffic",
+    analyticsSectionTrafficDesc:
+      "Public pages only — first-party, cookieless measurement. Unique visitors are rotated daily.",
+    analyticsTrafficViews: "Page views",
+    analyticsTrafficViewsSub: "Marketing and sign-up pages",
+    analyticsTrafficVisitors: "Visitors",
+    analyticsTrafficVisitorsSub: "Identifier renewed every day",
+    analyticsTrafficSessions: "Sessions",
+    analyticsTrafficSessionsSub: "Tab / visit",
+    analyticsTrafficCheckout: "Checkout starts",
+    analyticsTrafficCheckoutSub: "{{n}} offer views",
+    analyticsTopPages: "Top pages",
+    analyticsTopPagesSub: "Top 10 over the period",
+    analyticsSources: "Sources",
+    analyticsSourceDirect: "Direct / unknown",
+    analyticsCountries: "Countries",
+    analyticsDevices: "Devices",
+    analyticsDeviceMobile: "Mobile",
+    analyticsDeviceTablet: "Tablet",
+    analyticsDeviceDesktop: "Desktop",
+    analyticsSectionFunnel: "Product funnel",
+    analyticsSectionFunnelDesc:
+      "From anonymous traffic to business data (sign-ups, payments, exams) — not a tracking script",
+    analyticsFunnelVisitors: "Site visitors",
+    analyticsFunnelSignups: "Sign-ups",
+    analyticsFunnelPaid: "Paying customers",
+    analyticsFunnelExams: "Started an exam",
+    analyticsFunnelFromPrev: "vs previous step",
+    analyticsFunnelFromStart: "of traffic",
     analyticsSectionTime: "Over time",
     analyticsSectionTimeDesc:
       "Month-by-month trends — all periods are shown, including those with no activity",

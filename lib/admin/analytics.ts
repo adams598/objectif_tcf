@@ -14,6 +14,7 @@ import {
 } from "@/lib/admin/analytics-period";
 import { sumNativeAndXaf } from "@/lib/admin/payment-currency";
 import { realUsersWhere } from "@/lib/admin/real-users";
+import { fetchTrafficAnalytics } from "@/lib/admin/traffic-analytics";
 
 export {
   type AnalyticsFilters,
@@ -121,6 +122,7 @@ async function fetchFilterOptions() {
     oldestUser,
     oldestPayment,
     oldestAttempt,
+    oldestTrafficEvent,
   ] = await Promise.all([
     prisma.user.findMany({
       where: realUsersWhere({ country: { not: null } }),
@@ -156,12 +158,19 @@ async function fetchFilterOptions() {
       orderBy: { startedAt: "asc" },
       select: { startedAt: true },
     }),
+    prisma.analyticsEvent
+      .findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+      })
+      .catch(() => null),
   ]);
 
   const yearsFromData = [
     oldestUser?.createdAt,
     oldestPayment?.paidAt,
     oldestAttempt?.startedAt,
+    oldestTrafficEvent?.createdAt,
   ]
     .filter((d): d is Date => d != null)
     .map((d) => d.getFullYear());
@@ -271,6 +280,9 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
     exams,
     subStatsMap,
     filterOptions,
+    traffic,
+    paidUserGroups,
+    examStarterGroups,
   ] = await Promise.all([
     prisma.user.count({ where: userWhere }),
     prisma.user.count({
@@ -338,6 +350,17 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
     }),
     fetchActiveSubscriptionStatsByExamType(),
     fetchFilterOptions(),
+    fetchTrafficAnalytics(since, until, monthKeys),
+    prisma.payment.findMany({
+      where: paymentWhere,
+      distinct: ["userId"],
+      select: { userId: true },
+    }),
+    prisma.attempt.findMany({
+      where: attemptWhere,
+      distinct: ["userId"],
+      select: { userId: true },
+    }),
   ]);
 
   const freeSubs = subscriptionsByPlan
@@ -486,5 +509,12 @@ export async function fetchAdminAnalytics(filters: AnalyticsFilters = {}) {
         },
       };
     }),
+    traffic,
+    funnel: {
+      visitors: traffic.visitors,
+      signups: newUsersInPeriod,
+      paidUsers: paidUserGroups.length,
+      examStarters: examStarterGroups.length,
+    },
   };
 }

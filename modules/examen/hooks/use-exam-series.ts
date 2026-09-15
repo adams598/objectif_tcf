@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchJson } from "@/lib/api/fetch-json";
+import type { SeriesVideoCue } from "@/lib/series/video-cues";
 
 export interface PlayQuestion {
   id: string;
@@ -37,6 +38,9 @@ export interface PlaySeries {
   examType: string;
   examTitle: string;
   questionCount: number;
+  videoUrl: string | null;
+  audioUrl: string | null;
+  videoCues: SeriesVideoCue[];
   questions: PlayQuestion[];
   activeAttempt: PlayActiveAttempt | null;
 }

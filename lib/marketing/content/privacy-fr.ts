@@ -88,6 +88,14 @@ export const privacyFr: LegalContent = {
                 "Nous pouvons également collecter des informations que votre navigateur envoie chaque fois que vous visitez notre Service ou lorsque vous accédez au Service par ou via un appareil mobile.",
               ],
             },
+            {
+              title: "Mesure d'audience du site",
+              paragraphs: [
+                "Nous mesurons le trafic des pages publiques (accueil, offres, contenus d'information, inscription) avec un outil first-party hébergé sur notre propre infrastructure. Aucun outil publicitaire tiers de type Google Analytics n'est utilisé pour cette mesure.",
+                "Cette mesure est cookieless : nous n'écrivons pas de cookie d'analytics. Un identifiant technique est calculé chaque jour puis haché ; l'adresse IP n'est pas conservée. Nous enregistrons la page visitée, le site référent, les paramètres UTM le cas échéant, le pays approximatif et le type d'appareil (mobile, tablette, ordinateur).",
+                "Ces données servent uniquement à comprendre l'audience du site et le parcours d'inscription / paiement, pour le titulaire du service. Elles ne sont pas vendues ni croisées avec des données publicitaires. Les indicateurs métier (inscriptions, paiements, examens) proviennent du compte utilisateur, pas du script de mesure.",
+              ],
+            },
           ],
         },
         {

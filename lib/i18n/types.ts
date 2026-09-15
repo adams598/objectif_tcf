@@ -41,6 +41,7 @@ export interface CoreMessages {
     adminUsers: string;
     adminExams: string;
     adminSeries: string;
+    adminGuides: string;
     adminCorrectors: string;
     adminCommunity: string;
     adminDocuments: string;

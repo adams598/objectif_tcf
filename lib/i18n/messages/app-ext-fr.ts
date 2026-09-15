@@ -231,6 +231,14 @@ export const appExtFr = {
     preparingAudio: "Préparation de l'audio…",
     micDenied:
       "Microphone refusé ou indisponible. Autorisez l'accès au micro dans votre navigateur.",
+    launchVideo: "Lancer le document vidéo",
+    watchUntilPause:
+      "Regardez le document. Il se mettra en pause au moment prévu.",
+    videoPausedForQuestions:
+      "Vidéo en pause — répondez, puis validez pour continuer.",
+    waitingForVideo: "Document en cours…",
+    seriesMediaHint:
+      "Le document continue. Répondez à la question affichée (A, B, C ou D), puis passez à la suivante. Vous pouvez revenir en arrière si vous avez sauté une question.",
   },
   auth: {
     welcomeBack: "Bon retour !",
@@ -364,6 +372,10 @@ export const appExtFr = {
     newsTopics: "Sujets d'actualité",
     newsTopicsDesc:
       "Thèmes canadiens pour l'expression écrite et orale.",
+    expressionWriting: "Expression écrite",
+    expressionWritingDesc: "Méthode, combinaisons et sujets récents, mois par mois.",
+    expressionSpeaking: "Expression orale",
+    expressionSpeakingDesc: "Méthode, combinaisons et sujets récents, mois par mois.",
     prepTcfDesc: "Entraînement TCF Canada en conditions réelles.",
     prepTefDesc: "Préparation TEF Canada avec séries complètes.",
     prepIeltsDesc: "Préparation IELTS avec correction certifiée.",
@@ -929,7 +941,7 @@ export const appExtFr = {
     add: "Ajouter",
     overviewTitle: "Vue d'ensemble",
     overviewSubtitle:
-      "Statistiques utilisateurs, abonnements, examens et paiements",
+      "Trafic du site, funnel d'inscription, abonnements, examens et paiements",
     overviewLoading: "Chargement des statistiques…",
     overviewError: "Impossible de charger les statistiques",
     roles: {
@@ -1197,6 +1209,35 @@ export const appExtFr = {
     analyticsSectionKpis: "Indicateurs clés",
     analyticsSectionKpisDesc:
       "Synthèse instantanée de l'activité sur la période filtrée",
+    analyticsSectionTraffic: "Trafic du site",
+    analyticsSectionTrafficDesc:
+      "Pages publiques uniquement — mesure first-party, sans cookie. Les visiteurs uniques sont recalculés chaque jour.",
+    analyticsTrafficViews: "Pages vues",
+    analyticsTrafficViewsSub: "Pages marketing et inscription",
+    analyticsTrafficVisitors: "Visiteurs",
+    analyticsTrafficVisitorsSub: "Identifiant renouvelé chaque jour",
+    analyticsTrafficSessions: "Sessions",
+    analyticsTrafficSessionsSub: "Onglet / visite",
+    analyticsTrafficCheckout: "Débuts de paiement",
+    analyticsTrafficCheckoutSub: "{{n}} vues offres",
+    analyticsTopPages: "Pages les plus vues",
+    analyticsTopPagesSub: "Top 10 sur la période",
+    analyticsSources: "Sources",
+    analyticsSourceDirect: "Direct / inconnu",
+    analyticsCountries: "Pays",
+    analyticsDevices: "Appareils",
+    analyticsDeviceMobile: "Mobile",
+    analyticsDeviceTablet: "Tablette",
+    analyticsDeviceDesktop: "Ordinateur",
+    analyticsSectionFunnel: "Funnel produit",
+    analyticsSectionFunnelDesc:
+      "Du trafic anonyme aux données métier (inscriptions, paiements, examens) — pas un script de tracking",
+    analyticsFunnelVisitors: "Visiteurs du site",
+    analyticsFunnelSignups: "Inscriptions",
+    analyticsFunnelPaid: "Clients payants",
+    analyticsFunnelExams: "Ont commencé un examen",
+    analyticsFunnelFromPrev: "vs étape précédente",
+    analyticsFunnelFromStart: "du trafic",
     analyticsSectionTime: "Évolution temporelle",
     analyticsSectionTimeDesc:
       "Tendances mois par mois — toutes les périodes sont affichées, y compris sans activité",

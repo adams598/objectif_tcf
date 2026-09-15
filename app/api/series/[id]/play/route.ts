@@ -39,6 +39,7 @@ import {
   getLearnerActivityStats,
   trackSeriesOpened,
 } from "@/lib/examen/learner-activity";
+import { sanitizeVideoCues } from "@/lib/series/video-cues";
 
 export async function GET(
   _req: NextRequest,
@@ -138,6 +139,8 @@ export async function GET(
       }
     }
 
+    const questionIds = new Set(series.questions.map((q) => q.id));
+
     return successResponse({
       id: series.id,
       title: series.title,
@@ -148,6 +151,9 @@ export async function GET(
       examType: series.exam.type,
       examTitle: series.exam.title,
       questionCount: series.questions.length,
+      videoUrl: series.videoUrl,
+      audioUrl: series.audioUrl,
+      videoCues: sanitizeVideoCues(series.videoCues, questionIds),
       questions: series.questions.map((q) => ({
         id: q.id,
         order: q.order,

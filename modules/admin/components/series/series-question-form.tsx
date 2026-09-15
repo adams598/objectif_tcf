@@ -157,7 +157,7 @@ export function SeriesQuestionForm({
               />
               <AdminMediaUpload
                 kind="video"
-                label="Vidéo de la question (optionnel)"
+                label="Vidéo de cette question seulement (optionnel)"
                 value={qcmForm.videoUrl}
                 onChange={(url) =>
                   onQcmChange((f) => ({ ...f, videoUrl: url }))

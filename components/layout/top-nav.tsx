@@ -71,6 +71,16 @@ export function TopNav() {
       description: t("marketingNav.newsTopicsDesc"),
     },
     {
+      href: "/expression-ecrite",
+      label: t("marketingNav.expressionWriting"),
+      description: t("marketingNav.expressionWritingDesc"),
+    },
+    {
+      href: "/expression-orale",
+      label: t("marketingNav.expressionSpeaking"),
+      description: t("marketingNav.expressionSpeakingDesc"),
+    },
+    {
       href: "/preparation/tcf",
       label: "TCF Canada",
       description: t("marketingNav.prepTcfDesc"),

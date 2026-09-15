@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { BrandLogo } from "@/components/layout/brand-logo";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 
 export const metadata: Metadata = {
   title: {
@@ -16,6 +17,7 @@ export default function AuthLayout({
 }) {
   return (
     <div className="min-h-screen bg-surface flex flex-col">
+      <PageViewTracker />
       {/* Minimal header */}
       <header className="flex justify-between items-center px-lg h-16 border-b border-outline-variant bg-surface/80 backdrop-blur-md">
         <BrandLogo variant="full" href="/" imageClassName="h-12 max-w-[220px]" />

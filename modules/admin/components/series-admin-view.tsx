@@ -37,6 +37,7 @@ import {
   type QcmFormState,
   type TaskFormState,
 } from "@/modules/admin/components/series/series-question-form";
+import { SeriesSectionMediaEditor } from "@/modules/admin/components/series/series-section-media-editor";
 
 interface AdminExam {
   id: string;
@@ -113,6 +114,12 @@ function questionToTaskForm(q: AdminQuestion): TaskFormState {
   };
 }
 
+interface AdminSeriesDetail {
+  videoUrl?: string | null;
+  audioUrl?: string | null;
+  questions: AdminQuestion[];
+}
+
 function SkillPanel({
   group,
   skill,
@@ -134,11 +141,13 @@ function SkillPanel({
   const detailQuery = useQuery({
     queryKey: ["admin-series-detail", seriesId],
     queryFn: () =>
-      fetchJson<{ questions: AdminQuestion[] }>(`/api/admin/series/${seriesId}`),
+      fetchJson<AdminSeriesDetail>(`/api/admin/series/${seriesId}`),
     enabled: !!seriesId,
   });
 
   const questions = detailQuery.data?.questions ?? [];
+  const seriesVideoUrl = detailQuery.data?.videoUrl ?? "";
+  const seriesAudioUrl = detailQuery.data?.audioUrl ?? "";
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-series"] });
@@ -198,6 +207,23 @@ function SkillPanel({
     },
     onError: (e) =>
       toast.error(e instanceof Error ? e.message : "Erreur lors de la suppression"),
+  });
+
+  const updateSeriesMedia = useMutation({
+    mutationFn: (payload: {
+      videoUrl?: string | null;
+      audioUrl?: string | null;
+    }) =>
+      fetchJson(`/api/admin/series/${seriesId}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => {
+      invalidate();
+      toast.success("Média de la compréhension orale enregistré");
+    },
+    onError: (e) =>
+      toast.error(e instanceof Error ? e.message : "Erreur d'enregistrement"),
   });
 
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
@@ -287,6 +313,20 @@ function SkillPanel({
           </Button>
         </div>
       </div>
+
+      {skill === "COMPREHENSION_ORALE" && (
+        <SeriesSectionMediaEditor
+          audioUrl={seriesAudioUrl}
+          videoUrl={seriesVideoUrl}
+          saving={updateSeriesMedia.isPending}
+          onAudioUrlChange={(url) =>
+            updateSeriesMedia.mutate({ audioUrl: url || null })
+          }
+          onVideoUrlChange={(url) =>
+            updateSeriesMedia.mutate({ videoUrl: url || null })
+          }
+        />
+      )}
 
       {showForm && (
         <SeriesQuestionForm

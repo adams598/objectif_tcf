@@ -35,6 +35,7 @@ export const frFR: CoreMessages = {
     adminUsers: "Utilisateurs",
     adminExams: "Examens",
     adminSeries: "Séries",
+    adminGuides: "Expression EE/EO",
     adminCorrectors: "Correcteurs",
     adminCommunity: "Communauté",
     adminDocuments: "Documents",

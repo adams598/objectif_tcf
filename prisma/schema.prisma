@@ -426,6 +426,7 @@ model ExamSeries {
   isCustomContent Boolean      @default(false)
   audioUrl     String?
   videoUrl     String?
+  videoCues    Json?
   imageUrl     String?
   deletedAt    DateTime?
   createdById  String?
@@ -830,4 +831,96 @@ model AuditLog {
   @@index([action])
   @@index([entity, entityId])
   @@index([createdAt])
+}
+
+// ===========================
+// SITE TRAFFIC (first-party, cookieless)
+// ===========================
+
+enum AnalyticsEventType {
+  PAGE_VIEW
+  SIGNUP_VIEW
+  OFFER_VIEW
+  CHECKOUT_START
+}
+
+model AnalyticsEvent {
+  id          String             @id @default(uuid())
+  type        AnalyticsEventType @default(PAGE_VIEW)
+  path        String
+  referrer    String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  country     String?
+  device      String?
+  visitorHash String
+  sessionId   String
+  createdAt   DateTime           @default(now())
+
+  @@index([createdAt])
+  @@index([type, createdAt])
+  @@index([path, createdAt])
+  @@index([visitorHash, createdAt])
+  @@index([sessionId, createdAt])
+  @@index([country, createdAt])
+  @@index([device, createdAt])
+}
+
+model SkillGuide {
+  id        String   @id @default(uuid())
+  skill     Skill    @unique
+  title     String
+  intro     String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  topicSets SkillGuideTopicSet[]
+}
+
+model SkillGuideTopicSet {
+  id          String   @id @default(uuid())
+  guideId     String
+  year        Int
+  month       Int
+  title       String
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  guide         SkillGuide               @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  combinations  SkillGuideCombination[]
+
+  @@unique([guideId, year, month])
+  @@index([guideId, year, month])
+}
+
+model SkillGuideCombination {
+  id         String   @id @default(uuid())
+  topicSetId String
+  order      Int
+  title      String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  topicSet SkillGuideTopicSet @relation(fields: [topicSetId], references: [id], onDelete: Cascade)
+  tasks    SkillGuideTask[]
+
+  @@unique([topicSetId, order])
+  @@index([topicSetId, order])
+}
+
+model SkillGuideTask {
+  id             String   @id @default(uuid())
+  combinationId  String
+  taskNumber     Int
+  heading        String   @default("")
+  prompt         String   @db.Text @default("")
+  items          Json     @default("[]")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  combination SkillGuideCombination @relation(fields: [combinationId], references: [id], onDelete: Cascade)
+
+  @@unique([combinationId, taskNumber])
+  @@index([combinationId, taskNumber])
 }

@@ -35,6 +35,7 @@ export const enCA: CoreMessages = {
     adminUsers: "Users",
     adminExams: "Exams",
     adminSeries: "Series",
+    adminGuides: "Writing & speaking pages",
     adminCorrectors: "Graders",
     adminCommunity: "Community",
     adminDocuments: "Documents",

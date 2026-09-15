@@ -87,6 +87,14 @@ export const privacyEn: LegalContent = {
                 "We may also collect information that your browser sends whenever you visit our Service or when you access the Service by or through a mobile device.",
               ],
             },
+            {
+              title: "Site audience measurement",
+              paragraphs: [
+                "We measure traffic on public pages (home, offers, informational content, sign-up) with a first-party tool hosted on our own infrastructure. No third-party advertising tool such as Google Analytics is used for this measurement.",
+                "This measurement is cookieless: we do not set an analytics cookie. A technical identifier is computed each day and hashed; the IP address is not stored. We record the page visited, the referring site, UTM parameters if any, the approximate country, and the device type (mobile, tablet, desktop).",
+                "This data is used only to understand site audience and the sign-up / payment journey, for the service owner. It is not sold or matched with advertising data. Business metrics (sign-ups, payments, exams) come from the user account, not from the measurement script.",
+              ],
+            },
           ],
         },
         {

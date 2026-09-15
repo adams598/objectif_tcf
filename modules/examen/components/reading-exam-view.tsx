@@ -250,7 +250,6 @@ export function ReadingExamView({
           showFallback={false}
         />
 
-        {/* Passage à lire */}
         {(question.passage || question.instruction) && (
           <div className="bg-surface rounded-xl border border-outline-variant p-md md:p-lg shadow-violet-sm">
             <span className="inline-flex items-center gap-xs px-sm py-0.5 bg-secondary/10 text-secondary rounded-md font-label-sm text-label-sm mb-sm">
@@ -266,7 +265,6 @@ export function ReadingExamView({
           </div>
         )}
 
-        {/* Question */}
         <AnimatePresence mode="wait">
           <motion.div
             key={question.id}

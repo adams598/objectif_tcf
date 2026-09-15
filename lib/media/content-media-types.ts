@@ -37,7 +37,7 @@ export const VIDEO_MIME_LIST = [
 ] as const;
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-export const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
+export const MAX_AUDIO_BYTES = 80 * 1024 * 1024;
 export const MAX_VIDEO_BYTES = 150 * 1024 * 1024;
 
 const IMAGE_MIME = new Set<string>(IMAGE_MIME_LIST);

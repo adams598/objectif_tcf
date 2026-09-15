@@ -10,6 +10,7 @@ interface QuestionMapProps {
   answered: Set<number>;
   onSelect: (index: number) => void;
   startNumber?: number;
+  isLocked?: (index: number) => boolean;
 }
 
 export function QuestionMap({
@@ -18,6 +19,7 @@ export function QuestionMap({
   answered,
   onSelect,
   startNumber = 1,
+  isLocked,
 }: QuestionMapProps) {
   const { t } = useTranslation();
 
@@ -31,19 +33,25 @@ export function QuestionMap({
           const num = startNumber + i;
           const isCurrent = i === current;
           const isAnswered = answered.has(i);
+          const locked = Boolean(isLocked?.(i));
 
           return (
             <button
               key={i}
               type="button"
-              onClick={() => onSelect(i)}
+              disabled={locked}
+              onClick={() => {
+                if (!locked) onSelect(i);
+              }}
               className={cn(
                 "aspect-square w-full flex items-center justify-center text-[11px] leading-none font-bold transition-colors",
                 isCurrent
                   ? "bg-primary text-on-primary shadow-violet-sm"
-                  : isAnswered
-                    ? "bg-success-container text-success hover:opacity-90"
-                    : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
+                  : locked
+                    ? "bg-surface-container text-on-surface-variant/50 cursor-not-allowed"
+                    : isAnswered
+                      ? "bg-success-container text-success hover:opacity-90"
+                      : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
               )}
             >
               {num}

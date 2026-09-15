@@ -10,6 +10,8 @@ export function Footer() {
 
   const navigationLinks = [
     { href: "/a-propos-tcf", label: t("marketingNav.aboutTcf") },
+    { href: "/expression-ecrite", label: t("marketingNav.expressionWriting") },
+    { href: "/expression-orale", label: t("marketingNav.expressionSpeaking") },
     { href: "/faq", label: t("marketingNav.faq") },
     { href: "/contact", label: t("marketingNav.contact") },
   ];

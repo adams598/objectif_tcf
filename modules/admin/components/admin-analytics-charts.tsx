@@ -29,6 +29,10 @@ import {
 import { EXAM_TYPE_LABELS } from "@/lib/exams/catalog";
 import { useTranslation } from "@/components/providers/locale-provider";
 import { dateLocaleTag, type AppLocale } from "@/lib/i18n/locales";
+import type {
+  ProductFunnel,
+  TrafficAnalytics,
+} from "@/lib/admin/traffic-analytics";
 
 export type AdminAnalyticsData = {
   overview: {
@@ -67,6 +71,8 @@ export type AdminAnalyticsData = {
     amount: number;
     amountXaf: number;
   }>;
+  traffic: TrafficAnalytics;
+  funnel: ProductFunnel;
 };
 
 const CHART_COLORS = [
@@ -177,6 +183,28 @@ function formatRevenueLegend(
   return `${native} (~${formatAmount(amountXaf, locale, "XAF")})`;
 }
 
+function countryLabel(
+  code: string,
+  locale: AppLocale,
+  unknownLabel: string
+): string {
+  if (!code || code === "ZZ") return unknownLabel;
+  try {
+    return (
+      new Intl.DisplayNames([dateLocaleTag(locale)], { type: "region" }).of(
+        code
+      ) ?? code
+    );
+  } catch {
+    return code;
+  }
+}
+
+function pct(part: number, total: number): number {
+  if (total <= 0) return 0;
+  return Math.round((part / total) * 1000) / 10;
+}
+
 function withLabels<T extends { month: string }>(rows: T[] = [], locale: AppLocale) {
   return rows.map((r) => ({ ...r, label: formatMonthLabel(r.month, locale) }));
 }
@@ -207,6 +235,25 @@ function normalizeAnalyticsData(raw: AdminAnalyticsData): AdminAnalyticsData {
       amount: r.amount ?? 0,
       amountXaf: r.amountXaf ?? r.amount ?? 0,
     })),
+    traffic: {
+      pageViews: raw.traffic?.pageViews ?? 0,
+      visitors: raw.traffic?.visitors ?? 0,
+      sessions: raw.traffic?.sessions ?? 0,
+      offerViews: raw.traffic?.offerViews ?? 0,
+      signupViews: raw.traffic?.signupViews ?? 0,
+      checkoutStarts: raw.traffic?.checkoutStarts ?? 0,
+      pageViewsByMonth: raw.traffic?.pageViewsByMonth ?? [],
+      topPages: raw.traffic?.topPages ?? [],
+      sources: raw.traffic?.sources ?? [],
+      countries: raw.traffic?.countries ?? [],
+      devices: raw.traffic?.devices ?? [],
+    },
+    funnel: {
+      visitors: raw.funnel?.visitors ?? 0,
+      signups: raw.funnel?.signups ?? 0,
+      paidUsers: raw.funnel?.paidUsers ?? 0,
+      examStarters: raw.funnel?.examStarters ?? 0,
+    },
   };
 }
 
@@ -240,6 +287,10 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
   const completedAttempts = useMemo(
     () => withLabels(data.completedAttemptsByMonth, locale),
     [data.completedAttemptsByMonth, locale]
+  );
+  const pageViewsTrend = useMemo(
+    () => withLabels(data.traffic.pageViewsByMonth, locale),
+    [data.traffic.pageViewsByMonth, locale]
   );
 
   const activityTrend = useMemo(
@@ -425,8 +476,255 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
     },
   ];
 
+  const trafficKpis = [
+    {
+      label: t("admin.analyticsTrafficViews"),
+      value: data.traffic.pageViews,
+      sub: t("admin.analyticsTrafficViewsSub"),
+      accent: CHART_COLORS[0],
+    },
+    {
+      label: t("admin.analyticsTrafficVisitors"),
+      value: data.traffic.visitors,
+      sub: t("admin.analyticsTrafficVisitorsSub"),
+      accent: CHART_COLORS[2],
+    },
+    {
+      label: t("admin.analyticsTrafficSessions"),
+      value: data.traffic.sessions,
+      sub: t("admin.analyticsTrafficSessionsSub"),
+      accent: CHART_COLORS[3],
+    },
+    {
+      label: t("admin.analyticsTrafficCheckout"),
+      value: data.traffic.checkoutStarts,
+      sub: t("admin.analyticsTrafficCheckoutSub", {
+        n: data.traffic.offerViews,
+      }),
+      accent: CHART_COLORS[4],
+    },
+  ];
+
+  const funnelSteps = [
+    {
+      key: "visitors",
+      label: t("admin.analyticsFunnelVisitors"),
+      value: data.funnel.visitors,
+    },
+    {
+      key: "signups",
+      label: t("admin.analyticsFunnelSignups"),
+      value: data.funnel.signups,
+    },
+    {
+      key: "paid",
+      label: t("admin.analyticsFunnelPaid"),
+      value: data.funnel.paidUsers,
+    },
+    {
+      key: "exams",
+      label: t("admin.analyticsFunnelExams"),
+      value: data.funnel.examStarters,
+    },
+  ];
+  const funnelMax = Math.max(1, ...funnelSteps.map((s) => s.value));
+
+  const sourcePie = useMemo(
+    () =>
+      toNamedPieData(
+        data.traffic.sources.map((s) => ({
+          name:
+            s.source === "direct"
+              ? t("admin.analyticsSourceDirect")
+              : s.source,
+          value: s.views,
+        })),
+        t("admin.analyticsNoData")
+      ),
+    [data.traffic.sources, t]
+  );
+
+  const devicePie = useMemo(
+    () =>
+      toNamedPieData(
+        data.traffic.devices.map((d) => ({
+          name:
+            d.device === "mobile"
+              ? t("admin.analyticsDeviceMobile")
+              : d.device === "tablet"
+                ? t("admin.analyticsDeviceTablet")
+                : t("admin.analyticsDeviceDesktop"),
+          value: d.views,
+        })),
+        t("admin.analyticsNoData")
+      ),
+    [data.traffic.devices, t]
+  );
+
+  const countryBars = useMemo(
+    () =>
+      data.traffic.countries.map((c) => ({
+        name: countryLabel(c.country, locale, t("admin.analyticsUnknown")),
+        views: c.views,
+      })),
+    [data.traffic.countries, locale, t]
+  );
+
+  const topPages = data.traffic.topPages;
+
   return (
     <div className="flex flex-col gap-xl">
+      <AnalyticsSection
+        title={t("admin.analyticsSectionTraffic")}
+        description={t("admin.analyticsSectionTrafficDesc")}
+      >
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-md">
+          {trafficKpis.map((kpi) => (
+            <div
+              key={kpi.label}
+              className="bg-surface rounded-2xl p-lg border border-outline-variant relative overflow-hidden"
+            >
+              <div
+                className="absolute top-0 left-0 w-1 h-full rounded-l-2xl"
+                style={{ backgroundColor: kpi.accent }}
+              />
+              <p className="font-label-sm text-label-sm text-on-surface-variant">
+                {kpi.label}
+              </p>
+              <p className="font-display-md text-[26px] font-bold text-on-surface mt-xs">
+                {kpi.value.toLocaleString(dateLocaleTag(locale))}
+              </p>
+              <p className="font-label-sm text-[11px] text-on-surface-variant mt-xs">
+                {kpi.sub}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-lg">
+          <ChartCard
+            title={t("admin.analyticsTopPages")}
+            subtitle={t("admin.analyticsTopPagesSub")}
+          >
+            {topPages.length === 0 ? (
+              <EmptyChartMessage />
+            ) : (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart
+                  data={topPages}
+                  layout="vertical"
+                  margin={{ left: 8, right: 12 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e6e0e9" />
+                  <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <YAxis
+                    type="category"
+                    dataKey="path"
+                    width={120}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} />
+                  <Bar
+                    dataKey="views"
+                    name={t("admin.analyticsTrafficViews")}
+                    fill={CHART_COLORS[0]}
+                    radius={[0, 4, 4, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+
+          <ChartCard
+            title={t("admin.analyticsSources")}
+            subtitle={t("admin.analyticsDonut")}
+          >
+            <DonutChart data={sourcePie} />
+          </ChartCard>
+
+          <ChartCard
+            title={t("admin.analyticsCountries")}
+            subtitle={t("admin.analyticsHorizontalBars")}
+          >
+            {countryBars.length === 0 ? (
+              <EmptyChartMessage />
+            ) : (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart
+                  data={countryBars}
+                  layout="vertical"
+                  margin={{ left: 8, right: 12 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e6e0e9" />
+                  <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={110}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} />
+                  <Bar
+                    dataKey="views"
+                    name={t("admin.analyticsTrafficViews")}
+                    fill={CHART_COLORS[2]}
+                    radius={[0, 4, 4, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+
+          <ChartCard
+            title={t("admin.analyticsDevices")}
+            subtitle={t("admin.analyticsDonut")}
+          >
+            <DonutChart data={devicePie} />
+          </ChartCard>
+        </div>
+      </AnalyticsSection>
+
+      <AnalyticsSection
+        title={t("admin.analyticsSectionFunnel")}
+        description={t("admin.analyticsSectionFunnelDesc")}
+      >
+        <div className="bg-surface rounded-2xl p-lg border border-outline-variant flex flex-col gap-md">
+          {funnelSteps.map((step, index) => {
+            const prev = index === 0 ? step.value : funnelSteps[index - 1]!.value;
+            const fromStart = pct(step.value, funnelSteps[0]!.value);
+            const fromPrev = index === 0 ? 100 : pct(step.value, prev);
+            return (
+              <div key={step.key} className="flex flex-col gap-xs">
+                <div className="flex items-baseline justify-between gap-md">
+                  <p className="font-label-md text-[13px] font-semibold text-on-surface">
+                    {index + 1}. {step.label}
+                  </p>
+                  <p className="font-label-sm text-[12px] text-on-surface-variant">
+                    {step.value.toLocaleString(dateLocaleTag(locale))}
+                    {index > 0
+                      ? ` · ${fromPrev}% ${t("admin.analyticsFunnelFromPrev")} · ${fromStart}% ${t("admin.analyticsFunnelFromStart")}`
+                      : ""}
+                  </p>
+                </div>
+                <div className="h-3 rounded-full bg-surface-container-high overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-[width]"
+                    style={{
+                      width: `${
+                        step.value === 0
+                          ? 0
+                          : Math.max(2, (step.value / funnelMax) * 100)
+                      }%`,
+                      backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </AnalyticsSection>
+
       <AnalyticsSection
         title={t("admin.analyticsSectionKpis")}
         description={t("admin.analyticsSectionKpisDesc")}
@@ -460,6 +758,29 @@ export function AdminAnalyticsCharts({ data: rawData }: { data: AdminAnalyticsDa
         description={t("admin.analyticsSectionTimeDesc")}
       >
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-lg">
+          <ChartCard
+            title={t("admin.analyticsTrafficViews")}
+            subtitle={t("admin.analyticsAreaCurve")}
+          >
+            <ResponsiveContainer width="100%" height={240}>
+              <AreaChart data={pageViewsTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e6e0e9" />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  name={t("admin.analyticsTrafficViews")}
+                  stroke={CHART_COLORS[5]}
+                  fill={CHART_COLORS[5]}
+                  fillOpacity={0.18}
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
           <ChartCard
             title={t("admin.analyticsRegistrations")}
             subtitle={t("admin.analyticsAreaCurve")}

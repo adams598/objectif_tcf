@@ -163,6 +163,10 @@ export function ExamView({ seriesId, guestMode, examTab }: ExamViewProps) {
     return set;
   }, [answers, QUESTIONS]);
 
+  const seriesVideoUrl = seriesData?.videoUrl?.trim() || "";
+  const seriesAudioUrl = seriesData?.audioUrl?.trim() || "";
+  const hasSeriesMedia = Boolean(seriesVideoUrl || seriesAudioUrl);
+
   if (isLoading && !seriesData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-container-low">
@@ -245,41 +249,61 @@ export function ExamView({ seriesId, guestMode, examTab }: ExamViewProps) {
           </div>
         )}
 
-        <ExamMediaPanel
-          imageUrl={question.imageUrl}
-          documentType={question.documentType}
-          fallbackIcon="hearing"
-          fallbackLabel={t("exam.audioDocumentQuestion", { n: question.order })}
-          showFallback={!question.videoUrl && !question.audioUrl && !question.imageUrl}
-        />
+        {hasSeriesMedia ? (
+            <div className="sticky top-0 z-10 flex flex-col gap-xs bg-surface-container-low pb-sm">
+            {seriesVideoUrl ? (
+              <ExamVideoPlayer
+                videoUrl={seriesVideoUrl}
+                label={t("exam.videoDocument")}
+              />
+            ) : (
+              <ExamAudioPlayer
+                audioUrl={seriesAudioUrl}
+                label={t("exam.audioDocument")}
+              />
+            )}
+            <p className="font-label-sm text-[12px] text-on-surface-variant px-xs">
+              {t("exam.seriesMediaHint")}
+            </p>
+          </div>
+        ) : (
+          <>
+            <ExamMediaPanel
+              imageUrl={question.imageUrl}
+              documentType={question.documentType}
+              fallbackIcon="hearing"
+              fallbackLabel={t("exam.audioDocumentQuestion", { n: question.order })}
+              showFallback={!question.videoUrl && !question.audioUrl && !question.imageUrl}
+            />
 
-        {question.videoUrl && (
-          <ExamVideoPlayer
-            videoUrl={question.videoUrl}
-            label={
-              question.documentType
-                ? t("exam.watchDocumentType", {
-                    type: question.documentType,
-                  })
-                : t("exam.videoDocument")
-            }
-          />
-        )}
-        {!question.videoUrl && (question.audioUrl || question.audioScript) && (
-          <ExamAudioPlayer
-            audioUrl={question.audioUrl}
-            audioScript={question.audioScript}
-            label={
-              question.documentType
-                ? t("exam.listenDocumentType", {
-                    type: question.documentType,
-                  })
-                : t("exam.audioDocument")
-            }
-          />
+            {question.videoUrl && (
+              <ExamVideoPlayer
+                videoUrl={question.videoUrl}
+                label={
+                  question.documentType
+                    ? t("exam.watchDocumentType", {
+                        type: question.documentType,
+                      })
+                    : t("exam.videoDocument")
+                }
+              />
+            )}
+            {!question.videoUrl && (question.audioUrl || question.audioScript) && (
+              <ExamAudioPlayer
+                audioUrl={question.audioUrl}
+                audioScript={question.audioScript}
+                label={
+                  question.documentType
+                    ? t("exam.listenDocumentType", {
+                        type: question.documentType,
+                      })
+                    : t("exam.audioDocument")
+                }
+              />
+            )}
+          </>
         )}
 
-        {/* Question card */}
         <AnimatePresence mode="wait">
           <motion.div
             key={question.id}

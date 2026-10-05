@@ -1097,8 +1097,7 @@ export const appExtFr = {
     newExam: "Nouvel examen",
     seriesTitle: "Séries",
     seriesPageTitle: "Séries d'examen",
-    seriesSubtitle:
-      "Créez une série en 2 étapes : informations de base, puis questions CO / CE / EE / EO.",
+    seriesSubtitle: "CO, CE, EE et EO.",
     newSeries: "Nouvelle série",
     seriesCount: "Séries ({{n}})",
     pageOf: "Page {{page}} / {{total}}",

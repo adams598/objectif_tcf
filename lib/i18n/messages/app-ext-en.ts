@@ -1081,8 +1081,7 @@ export const appExtEn = {
     newExam: "New exam",
     seriesTitle: "Series",
     seriesPageTitle: "Exam series",
-    seriesSubtitle:
-      "Create a series in 2 steps: basic information, then CO / CE / EE / EO questions.",
+    seriesSubtitle: "CO, CE, EE and EO.",
     newSeries: "New series",
     seriesCount: "Series ({{n}})",
     pageOf: "Page {{page}} / {{total}}",

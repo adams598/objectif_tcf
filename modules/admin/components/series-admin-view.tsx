@@ -354,7 +354,7 @@ function SkillPanel({
         <div className="h-24 animate-pulse rounded-xl bg-surface-container" />
       ) : questions.length === 0 ? (
         <p className="font-label-sm text-label-sm text-on-surface-variant text-center py-lg">
-          Aucune question — cliquez sur Ajouter pour commencer.
+          Aucune question.
         </p>
       ) : (
         <div className="flex flex-col gap-xs">
@@ -563,7 +563,7 @@ export function SeriesAdminView() {
       setCreateForm(emptyCreateForm());
       setSelectedGroupKey(groupKey(data.examId, data.order));
       setActiveSkill(null);
-      toast.success("Brouillon créé — ajoutez vos questions par compétence");
+      toast.success("Série créée");
     },
     onError: (e) =>
       toast.error(e instanceof Error ? e.message : "Erreur création"),
@@ -669,12 +669,9 @@ export function SeriesAdminView() {
     <div className="flex flex-col gap-xl">
       <div className="flex flex-col gap-sm md:flex-row md:items-start md:justify-between">
         <div>
-          <h1 className="font-display-md text-display-md text-on-surface font-bold mb-xs">
+          <h1 className="font-display-md text-display-md text-on-surface font-bold">
             {t("admin.seriesPageTitle")}
           </h1>
-          <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl">
-            {t("admin.seriesSubtitle")}
-          </p>
         </div>
         <Button onClick={() => setShowCreate(true)} className="shrink-0">
           <span className="material-symbols-outlined text-[18px]">add</span>
@@ -797,7 +794,7 @@ export function SeriesAdminView() {
             <p className="text-on-surface-variant font-label-sm">Chargement…</p>
           ) : filteredGroups.length === 0 ? (
             <p className="text-on-surface-variant font-label-sm">
-              Aucune série. Créez un brouillon pour commencer.
+              Aucune série.
             </p>
           ) : (
             <div className="flex flex-col gap-xs">
@@ -820,21 +817,7 @@ export function SeriesAdminView() {
                     {g.title}
                   </p>
                   <p className="font-label-sm text-[11px] text-on-surface-variant mt-xs">
-                    {g.examTitle} · #{g.order}
-                  </p>
-                  <p className="font-label-sm text-[10px] text-on-surface-variant/80 mt-xs flex flex-col gap-0.5">
-                    <span>
-                      Ajoutée le {formatShortDate(g.createdAt)}
-                      {g.createdByName ? ` · Par ${g.createdByName}` : ""}
-                    </span>
-                    <span>
-                      Modifiée le {formatShortDate(g.updatedAt)}
-                      {" · "}
-                      {new Date(g.updatedAt).toLocaleTimeString("fr-FR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
+                    {g.examTitle}
                   </p>
                   <div className="flex flex-wrap gap-xs mt-sm">
                     {g.isDraft && (
@@ -887,52 +870,28 @@ export function SeriesAdminView() {
                         }}
                         className="font-headline-lg text-lg font-bold"
                       />
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="shrink-0"
-                        disabled={
-                          updateBundle.isPending ||
-                          titleDraft.trim() === selectedGroup.title ||
-                          titleDraft.trim().length < 2
-                        }
-                        onClick={saveTitle}
-                      >
-                        Enregistrer le titre
-                      </Button>
+                      {titleDraft.trim() !== selectedGroup.title &&
+                        titleDraft.trim().length >= 2 && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="shrink-0"
+                            disabled={updateBundle.isPending}
+                            onClick={saveTitle}
+                          >
+                            Enregistrer
+                          </Button>
+                        )}
                     </div>
-                    <p className="font-label-sm text-label-sm text-on-surface-variant mt-xs">
+                    <p className="font-label-sm text-[12px] text-on-surface-variant mt-sm">
                       {selectedGroup.examTitle}
-                      {selectedGroup.isDraft && " · Brouillon — non visible des apprenants"}
-                    </p>
-                    <p className="font-label-sm text-[11px] text-on-surface-variant mt-xs">
-                      Ajoutée le{" "}
-                      {new Date(selectedGroup.createdAt).toLocaleDateString(
-                        "fr-FR",
-                        {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        }
-                      )}
+                      {" · "}
+                      {selectedGroup.isDraft ? "Brouillon" : "Publié"}
                       {selectedGroup.createdByName
-                        ? ` · Par ${selectedGroup.createdByName}`
+                        ? ` · ${selectedGroup.createdByName}`
                         : ""}
                       {" · "}
-                      Dernière modif. le{" "}
-                      {new Date(selectedGroup.updatedAt).toLocaleDateString(
-                        "fr-FR",
-                        {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        }
-                      )}{" "}
-                      à{" "}
-                      {new Date(selectedGroup.updatedAt).toLocaleTimeString(
-                        "fr-FR",
-                        { hour: "2-digit", minute: "2-digit" }
-                      )}
+                      {formatShortDate(selectedGroup.updatedAt)}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-sm">
@@ -944,7 +903,7 @@ export function SeriesAdminView() {
                         confirm({
                           title: "Dupliquer cette série ?",
                           description:
-                            "Une copie brouillon sera créée avec les mêmes questions, médias et réglages. Vous pourrez ensuite modifier le titre et le contenu.",
+                            "Questions et médias inclus. La copie reste en brouillon.",
                           confirmLabel: "Dupliquer",
                           onConfirm: () =>
                             duplicateBundle.mutateAsync({
@@ -998,7 +957,7 @@ export function SeriesAdminView() {
                       })
                     }
                   />
-                  Série gratuite (accessible sans abonnement)
+                  Gratuite
                 </label>
 
                 <div className="border-t border-outline-variant pt-md flex flex-col gap-md">
@@ -1029,7 +988,7 @@ export function SeriesAdminView() {
                           }
                           maxLength={500}
                           rows={3}
-                          placeholder="Résumé visible avec la série"
+                          placeholder="Optionnel"
                           className="w-full rounded-xl border border-outline-variant px-md py-sm bg-surface font-body-md text-body-md"
                         />
                       </div>
@@ -1089,11 +1048,6 @@ export function SeriesAdminView() {
                           </div>
                         ))}
                       </div>
-
-                      <p className="font-label-sm text-[12px] text-on-surface-variant">
-                        Les questions, consignes et médias se modifient en ouvrant
-                        une compétence (CO, CE, EE ou EO) juste en dessous.
-                      </p>
 
                       <Button
                         size="sm"
@@ -1155,12 +1109,6 @@ export function SeriesAdminView() {
                   />
                 </div>
               )}
-
-              {!activeSkill && (
-                <p className="text-center font-label-sm text-label-sm text-on-surface-variant py-md">
-                  Cliquez sur une compétence (CO, CE, EE ou EO) pour ajouter des questions.
-                </p>
-              )}
             </>
           )}
         </div>
@@ -1172,9 +1120,6 @@ export function SeriesAdminView() {
             <div className="flex items-center justify-between mb-md">
               <div>
                 <h2 className="font-headline-lg text-[18px] font-bold">Nouvelle série</h2>
-                <p className="font-label-sm text-label-sm text-on-surface-variant mt-xs">
-                  Étape 1 — vous ajouterez les questions juste après.
-                </p>
               </div>
               <button
                 type="button"
@@ -1226,7 +1171,7 @@ export function SeriesAdminView() {
                     setCreateForm((f) => ({ ...f, isFree: v }))
                   }
                 />
-                Série gratuite
+                Gratuite
               </label>
 
               <Button
@@ -1238,7 +1183,7 @@ export function SeriesAdminView() {
                 }
                 className="w-full"
               >
-                Créer le brouillon
+                Créer
               </Button>
             </div>
           </div>

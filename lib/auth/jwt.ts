@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
+import { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from "@/lib/auth/durations";
 
 function resolveSecret(
   value: string | undefined,
@@ -37,8 +38,8 @@ function getRefreshSecret(): Uint8Array {
   );
 }
 
-const ACCESS_TOKEN_EXPIRES = process.env.JWT_EXPIRES_IN ?? "15m";
-const REFRESH_TOKEN_EXPIRES = process.env.JWT_REFRESH_EXPIRES_IN ?? "7d";
+const ACCESS_TOKEN_EXPIRES = ACCESS_TOKEN_TTL;
+const REFRESH_TOKEN_EXPIRES = REFRESH_TOKEN_TTL;
 
 export interface JWTUserPayload extends JWTPayload {
   userId: string;
@@ -73,19 +74,4 @@ export async function verifyRefreshToken(token: string): Promise<JWTUserPayload>
   return payload as JWTUserPayload;
 }
 
-export function parseDuration(duration: string): number {
-  const match = duration.match(/^(\d+)([smhd])$/);
-  if (!match) throw new Error(`Invalid duration: ${duration}`);
-
-  const value = parseInt(match[1]);
-  const unit = match[2];
-
-  const multipliers: Record<string, number> = {
-    s: 1000,
-    m: 60 * 1000,
-    h: 60 * 60 * 1000,
-    d: 24 * 60 * 60 * 1000,
-  };
-
-  return value * (multipliers[unit] ?? 0);
-}
+export { parseDuration } from "@/lib/auth/durations";

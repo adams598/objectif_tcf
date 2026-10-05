@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAccessToken } from "@/lib/auth/jwt";
-import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/cookies";
+import { verifyAccessToken, verifyRefreshToken } from "@/lib/auth/jwt";
+import {
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+} from "@/lib/auth/cookies";
 import { toPublicUrl } from "@/lib/env/app-url";
 
 const PROTECTED_ROUTES = [
@@ -27,24 +30,35 @@ const AUTH_ROUTES = [
   "/reinitialisation-mot-de-passe",
 ];
 
-async function resolveUser(accessToken: string) {
-  try {
-    return await verifyAccessToken(accessToken);
-  } catch {
-    return null;
+async function resolveUser(accessToken?: string, refreshToken?: string) {
+  if (accessToken) {
+    try {
+      return await verifyAccessToken(accessToken);
+    } catch {
+      /* access expiré : on tente le refresh */
+    }
   }
+  if (refreshToken) {
+    try {
+      return await verifyRefreshToken(refreshToken);
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
 
   const isProtected = PROTECTED_ROUTES.some((route) =>
     pathname.startsWith(route)
   );
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
 
-  if (!accessToken) {
+  if (!accessToken && !refreshToken) {
     if (isProtected) {
       const url = toPublicUrl(request, "/connexion");
       url.searchParams.set("redirect", pathname);
@@ -57,7 +71,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const user = await resolveUser(accessToken);
+  const user = await resolveUser(accessToken, refreshToken);
 
   if (isAuthRoute) {
     if (user) {

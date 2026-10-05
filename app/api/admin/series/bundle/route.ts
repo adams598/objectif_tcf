@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { requireRole } from "@/lib/auth/session";
 import {
@@ -127,6 +128,16 @@ export async function PATCH(req: NextRequest) {
         examId: z.string().min(1),
         order: z.number().int().min(0),
         title: z.string().min(2).max(200).optional(),
+        description: z.string().max(500).optional().nullable(),
+        difficulty: z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]).optional(),
+        durations: z
+          .object({
+            COMPREHENSION_ORALE: z.number().int().min(1).max(180).optional(),
+            COMPREHENSION_ECRITE: z.number().int().min(1).max(180).optional(),
+            EXPRESSION_ECRITE: z.number().int().min(1).max(180).optional(),
+            EXPRESSION_ORALE: z.number().int().min(1).max(180).optional(),
+          })
+          .optional(),
         isFree: z.boolean().optional(),
         isPublished: z.boolean().optional(),
       })
@@ -136,12 +147,32 @@ export async function PATCH(req: NextRequest) {
       return validationErrorResponse(body.error.flatten().fieldErrors);
     }
 
-    const { examId, order, ...data } = body.data;
+    const { examId, order, durations, ...data } = body.data;
 
-    await prisma.examSeries.updateMany({
-      where: { examId, order, deletedAt: null },
-      data,
-    });
+    const scalarUpdates: Prisma.ExamSeriesUpdateManyMutationInput = {};
+    if (data.title !== undefined) scalarUpdates.title = data.title;
+    if (data.description !== undefined) scalarUpdates.description = data.description;
+    if (data.difficulty !== undefined) scalarUpdates.difficulty = data.difficulty;
+    if (data.isFree !== undefined) scalarUpdates.isFree = data.isFree;
+    if (data.isPublished !== undefined) scalarUpdates.isPublished = data.isPublished;
+
+    if (Object.keys(scalarUpdates).length > 0) {
+      await prisma.examSeries.updateMany({
+        where: { examId, order, deletedAt: null },
+        data: scalarUpdates,
+      });
+    }
+
+    if (durations) {
+      for (const skill of BUNDLE_SKILLS) {
+        const durationMin = durations[skill];
+        if (durationMin == null) continue;
+        await prisma.examSeries.updateMany({
+          where: { examId, order, skill, deletedAt: null },
+          data: { durationMin },
+        });
+      }
+    }
 
     return successResponse({ updated: true });
   } catch (error) {

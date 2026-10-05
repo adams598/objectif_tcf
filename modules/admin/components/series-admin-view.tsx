@@ -74,6 +74,14 @@ const emptyCreateForm = (): CreateForm => ({
   isFree: false,
 });
 
+const DIFFICULTIES = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
+
+type SeriesDraft = {
+  description: string;
+  difficulty: (typeof DIFFICULTIES)[number];
+  durations: Partial<Record<BundleSkill, number>>;
+};
+
 function questionToQcmForm(q: AdminQuestion, skill: AdminSkill): QcmFormState {
   const choices = q.choices.slice(0, 4);
   while (choices.length < 4) {
@@ -434,6 +442,12 @@ export function SeriesAdminView() {
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState(emptyCreateForm);
   const [titleDraft, setTitleDraft] = useState("");
+  const [showSeriesEdit, setShowSeriesEdit] = useState(false);
+  const [seriesDraft, setSeriesDraft] = useState<SeriesDraft>({
+    description: "",
+    difficulty: "B1",
+    durations: {},
+  });
 
   const examsQuery = useQuery({
     queryKey: ["admin-exams"],
@@ -523,8 +537,14 @@ export function SeriesAdminView() {
   const selectedGroup = filteredGroups.find((g) => g.key === selectedGroupKey) ?? null;
 
   React.useEffect(() => {
-    if (selectedGroup) setTitleDraft(selectedGroup.title);
-  }, [selectedGroup?.key, selectedGroup?.title]);
+    if (!selectedGroup) return;
+    setTitleDraft(selectedGroup.title);
+    setSeriesDraft({
+      description: selectedGroup.description ?? "",
+      difficulty: selectedGroup.difficulty ?? "B1",
+      durations: { ...selectedGroup.durations },
+    });
+  }, [selectedGroup]);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-series"] });
@@ -554,6 +574,9 @@ export function SeriesAdminView() {
       examId: string;
       order: number;
       title?: string;
+      description?: string | null;
+      difficulty?: SeriesDraft["difficulty"];
+      durations?: Partial<Record<BundleSkill, number>>;
       isFree?: boolean;
       isPublished?: boolean;
     }) =>
@@ -566,6 +589,26 @@ export function SeriesAdminView() {
       toast.success("Série mise à jour");
     },
     onError: () => toast.error("Erreur mise à jour"),
+  });
+
+  const duplicateBundle = useMutation({
+    mutationFn: ({ examId, order }: { examId: string; order: number }) =>
+      fetchJson<{ examId: string; order: number; title: string }>(
+        "/api/admin/series/bundle/duplicate",
+        {
+          method: "POST",
+          body: JSON.stringify({ examId, order }),
+        }
+      ),
+    onSuccess: (data) => {
+      invalidate();
+      setSelectedGroupKey(groupKey(data.examId, data.order));
+      setActiveSkill(null);
+      setShowSeriesEdit(false);
+      toast.success(`Copie créée : ${data.title}`);
+    },
+    onError: (e) =>
+      toast.error(e instanceof Error ? e.message : "Impossible de dupliquer"),
   });
 
   const deleteBundle = useMutation({
@@ -582,6 +625,32 @@ export function SeriesAdminView() {
   });
 
   const { confirm, dialog: confirmDialog } = useConfirmDialog();
+
+  const saveTitle = () => {
+    if (!selectedGroup) return;
+    const next = titleDraft.trim();
+    if (next.length < 2) {
+      toast.error("Le titre doit contenir au moins 2 caractères");
+      return;
+    }
+    if (next === selectedGroup.title) return;
+    updateBundle.mutate({
+      examId: selectedGroup.examId,
+      order: selectedGroup.order,
+      title: next,
+    });
+  };
+
+  const saveSeriesDetails = () => {
+    if (!selectedGroup) return;
+    updateBundle.mutate({
+      examId: selectedGroup.examId,
+      order: selectedGroup.order,
+      description: seriesDraft.description.trim() || null,
+      difficulty: seriesDraft.difficulty,
+      durations: seriesDraft.durations,
+    });
+  };
 
   const handlePublish = () => {
     if (!selectedGroup) return;
@@ -802,24 +871,36 @@ export function SeriesAdminView() {
             <>
               <div className="bg-surface border border-outline-variant rounded-2xl p-lg flex flex-col gap-md">
                 <div className="flex flex-wrap items-start justify-between gap-md">
-                  <div className="flex-1 min-w-[200px]">
-                    <Input
-                      value={titleDraft}
-                      onChange={(e) => setTitleDraft(e.target.value)}
-                      onBlur={() => {
-                        if (
-                          titleDraft.trim() &&
-                          titleDraft !== selectedGroup.title
-                        ) {
-                          updateBundle.mutate({
-                            examId: selectedGroup.examId,
-                            order: selectedGroup.order,
-                            title: titleDraft.trim(),
-                          });
+                  <div className="flex-1 min-w-[220px]">
+                    <label className="font-label-sm text-label-sm text-on-surface-variant mb-xs block">
+                      Titre de la série
+                    </label>
+                    <div className="flex flex-col sm:flex-row gap-sm">
+                      <Input
+                        value={titleDraft}
+                        onChange={(e) => setTitleDraft(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            saveTitle();
+                          }
+                        }}
+                        className="font-headline-lg text-lg font-bold"
+                      />
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="shrink-0"
+                        disabled={
+                          updateBundle.isPending ||
+                          titleDraft.trim() === selectedGroup.title ||
+                          titleDraft.trim().length < 2
                         }
-                      }}
-                      className="font-headline-lg text-lg font-bold"
-                    />
+                        onClick={saveTitle}
+                      >
+                        Enregistrer le titre
+                      </Button>
+                    </div>
                     <p className="font-label-sm text-label-sm text-on-surface-variant mt-xs">
                       {selectedGroup.examTitle}
                       {selectedGroup.isDraft && " · Brouillon — non visible des apprenants"}
@@ -855,6 +936,29 @@ export function SeriesAdminView() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-sm">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={duplicateBundle.isPending}
+                      onClick={() =>
+                        confirm({
+                          title: "Dupliquer cette série ?",
+                          description:
+                            "Une copie brouillon sera créée avec les mêmes questions, médias et réglages. Vous pourrez ensuite modifier le titre et le contenu.",
+                          confirmLabel: "Dupliquer",
+                          onConfirm: () =>
+                            duplicateBundle.mutateAsync({
+                              examId: selectedGroup.examId,
+                              order: selectedGroup.order,
+                            }),
+                        })
+                      }
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        content_copy
+                      </span>
+                      Dupliquer
+                    </Button>
                     {!selectedGroup.isPublished && (
                       <Button size="sm" onClick={handlePublish}>
                         Publier
@@ -896,6 +1000,112 @@ export function SeriesAdminView() {
                   />
                   Série gratuite (accessible sans abonnement)
                 </label>
+
+                <div className="border-t border-outline-variant pt-md flex flex-col gap-md">
+                  <button
+                    type="button"
+                    className="flex items-center gap-xs font-label-sm text-label-sm font-bold text-primary w-fit"
+                    onClick={() => setShowSeriesEdit((open) => !open)}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      {showSeriesEdit ? "expand_less" : "edit"}
+                    </span>
+                    {showSeriesEdit ? "Fermer la modification" : "Modifier la série"}
+                  </button>
+
+                  {showSeriesEdit && (
+                    <div className="flex flex-col gap-md">
+                      <div>
+                        <label className="font-label-sm text-label-sm text-on-surface-variant mb-xs block">
+                          Description
+                        </label>
+                        <textarea
+                          value={seriesDraft.description}
+                          onChange={(e) =>
+                            setSeriesDraft((draft) => ({
+                              ...draft,
+                              description: e.target.value,
+                            }))
+                          }
+                          maxLength={500}
+                          rows={3}
+                          placeholder="Résumé visible avec la série"
+                          className="w-full rounded-xl border border-outline-variant px-md py-sm bg-surface font-body-md text-body-md"
+                        />
+                      </div>
+
+                      <div className="flex flex-wrap gap-md">
+                        <div>
+                          <label className="font-label-sm text-label-sm text-on-surface-variant mb-xs block">
+                            Niveau
+                          </label>
+                          <select
+                            className="rounded-xl border border-outline-variant px-md py-sm bg-surface font-label-sm"
+                            value={seriesDraft.difficulty}
+                            onChange={(e) =>
+                              setSeriesDraft((draft) => ({
+                                ...draft,
+                                difficulty: e.target
+                                  .value as SeriesDraft["difficulty"],
+                              }))
+                            }
+                          >
+                            {DIFFICULTIES.map((level) => (
+                              <option key={level} value={level}>
+                                {level}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        {BUNDLE_SKILLS.map((skill) => (
+                          <div key={skill}>
+                            <label className="font-label-sm text-label-sm text-on-surface-variant mb-xs block">
+                              Durée {SKILL_SHORT[skill]} (min)
+                            </label>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={180}
+                              value={seriesDraft.durations[skill] ?? ""}
+                              onChange={(e) => {
+                                const raw = e.target.value.trim();
+                                const value = Number(raw);
+                                setSeriesDraft((draft) => ({
+                                  ...draft,
+                                  durations: {
+                                    ...draft.durations,
+                                    [skill]:
+                                      raw !== "" &&
+                                      Number.isFinite(value) &&
+                                      value >= 1 &&
+                                      value <= 180
+                                        ? value
+                                        : draft.durations[skill],
+                                  },
+                                }));
+                              }}
+                              className="w-[110px]"
+                            />
+                          </div>
+                        ))}
+                      </div>
+
+                      <p className="font-label-sm text-[12px] text-on-surface-variant">
+                        Les questions, consignes et médias se modifient en ouvrant
+                        une compétence (CO, CE, EE ou EO) juste en dessous.
+                      </p>
+
+                      <Button
+                        size="sm"
+                        className="w-fit"
+                        disabled={updateBundle.isPending}
+                        onClick={saveSeriesDetails}
+                      >
+                        Enregistrer la série
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-sm">

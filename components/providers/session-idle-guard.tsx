@@ -3,14 +3,14 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import {
+  IDLE_WARN_BEFORE_MS,
+  INACTIVITY_LOGOUT_MS,
+  REFRESH_WHILE_ACTIVE_MS,
+} from "@/lib/auth/durations";
 
-/** Déconnexion après 10 minutes sans interaction utilisateur. */
-const INACTIVITY_LOGOUT_MS = 10 * 60 * 1000;
-const WARN_BEFORE_MS = 5 * 1000;
-const REFRESH_WHILE_ACTIVE_MS = 5 * 60 * 1000;
-const RECENT_ACTIVITY_MS = 60 * 1000;
 const ACTIVITY_THROTTLE_MS = 1000;
-const TICK_INTERVAL_MS = 1000;
+const TICK_INTERVAL_MS = 5000;
 
 const AUTH_PATH_PREFIXES = [
   "/connexion",
@@ -43,8 +43,8 @@ async function logoutQuietly() {
 }
 
 /**
- * Garde la session ouverte tant que l'utilisateur interagit avec l'app.
- * Après 10 min d'inactivité (sans souris, clavier, scroll, touch) → déconnexion.
+ * Garde la session ouverte tant que l'onglet est utilisé.
+ * Déconnexion seulement après 20 min sans souris, clavier, scroll ni focus.
  */
 export function SessionIdleGuard() {
   const pathname = usePathname();
@@ -54,6 +54,7 @@ export function SessionIdleGuard() {
   const warnShownRef = useRef(false);
   const loggingOutRef = useRef(false);
   const hasSessionRef = useRef(false);
+  const refreshInFlightRef = useRef(false);
 
   useEffect(() => {
     if (isPublicAuthPath(pathname)) return;
@@ -74,11 +75,27 @@ export function SessionIdleGuard() {
       "scroll",
       "touchstart",
       "pointerdown",
+      "focus",
     ];
 
     for (const event of windowEvents) {
       window.addEventListener(event, markActivity, { passive: true });
     }
+
+    const tryRefresh = async () => {
+      if (refreshInFlightRef.current) return true;
+      refreshInFlightRef.current = true;
+      try {
+        const ok = await refreshSession();
+        if (ok) {
+          lastRefreshRef.current = Date.now();
+          hasSessionRef.current = true;
+        }
+        return ok;
+      } finally {
+        refreshInFlightRef.current = false;
+      }
+    };
 
     const tick = async () => {
       if (cancelled || loggingOutRef.current || !hasSessionRef.current) return;
@@ -94,33 +111,31 @@ export function SessionIdleGuard() {
       }
 
       if (
-        idleFor >= INACTIVITY_LOGOUT_MS - WARN_BEFORE_MS &&
+        idleFor >= INACTIVITY_LOGOUT_MS - IDLE_WARN_BEFORE_MS &&
         !warnShownRef.current
       ) {
         warnShownRef.current = true;
-        toast("La session sera fermée dans quelques secondes…", {
+        toast("La session sera fermée dans 1 minute pour inactivité…", {
           id: "session-idle-warn",
-          duration: 5000,
+          duration: 8000,
           position: "bottom-right",
           className:
             "!bg-surface-container !text-on-surface-variant !border-outline-variant/60 !shadow-sm !text-sm !py-2 !px-3",
         });
       }
 
-      // Renouvelle le JWT tant que l'utilisateur est actif (onglet visible)
       if (
         document.visibilityState === "visible" &&
-        idleFor < RECENT_ACTIVITY_MS &&
+        idleFor < INACTIVITY_LOGOUT_MS &&
         Date.now() - lastRefreshRef.current > REFRESH_WHILE_ACTIVE_MS
       ) {
-        lastRefreshRef.current = Date.now();
-        const ok = await refreshSession();
-        if (!ok) hasSessionRef.current = false;
+        await tryRefresh();
       }
     };
 
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") {
+        markActivity();
         void tick();
       }
     };
@@ -128,11 +143,10 @@ export function SessionIdleGuard() {
     document.addEventListener("visibilitychange", onVisibilityChange);
 
     void (async () => {
-      const ok = await refreshSession();
+      const ok = await tryRefresh();
       if (cancelled) return;
       hasSessionRef.current = ok;
       if (ok) {
-        lastRefreshRef.current = Date.now();
         lastActivityRef.current = Date.now();
       }
     })();

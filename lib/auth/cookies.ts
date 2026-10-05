@@ -1,5 +1,9 @@
 import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
+import {
+  ACCESS_TOKEN_MAX_AGE_SEC,
+  REFRESH_TOKEN_MAX_AGE_SEC,
+} from "@/lib/auth/durations";
 
 export const ACCESS_TOKEN_COOKIE = "oc_access_token";
 export const REFRESH_TOKEN_COOKIE = "oc_refresh_token";
@@ -11,7 +15,7 @@ const ACCESS_COOKIE_OPTIONS = {
   secure: IS_PRODUCTION,
   sameSite: "lax" as const,
   path: "/",
-  maxAge: 15 * 60,
+  maxAge: ACCESS_TOKEN_MAX_AGE_SEC,
 };
 
 const REFRESH_COOKIE_OPTIONS = {
@@ -19,7 +23,7 @@ const REFRESH_COOKIE_OPTIONS = {
   secure: IS_PRODUCTION,
   sameSite: "lax" as const,
   path: "/",
-  maxAge: 7 * 24 * 60 * 60,
+  maxAge: REFRESH_TOKEN_MAX_AGE_SEC,
 };
 
 export function applyAuthCookiesToResponse(

@@ -1,4 +1,4 @@
-import type { Skill } from "@prisma/client";
+import type { DifficultyLevel, Skill } from "@prisma/client";
 
 export const BUNDLE_SKILLS = [
   "COMPREHENSION_ORALE",
@@ -42,6 +42,9 @@ export interface AdminFlatSeries {
   examId: string;
   skill: Skill;
   title: string;
+  description?: string | null;
+  difficulty?: DifficultyLevel;
+  durationMin?: number;
   order: number;
   isPublished: boolean;
   isFree: boolean;
@@ -78,6 +81,9 @@ export interface AdminSeriesGroup {
   examTitle: string;
   order: number;
   title: string;
+  description: string | null;
+  difficulty: DifficultyLevel;
+  durations: Partial<Record<BundleSkill, number>>;
   isFree: boolean;
   isPublished: boolean;
   isDraft: boolean;
@@ -125,6 +131,18 @@ export function buildAdminSeriesGroups(series: AdminFlatSeries[]): AdminSeriesGr
       const title =
         items.find((s) => s.title.trim())?.title ??
         `Série ${first.order}`;
+      const description =
+        items.find((s) => s.description?.trim())?.description ?? null;
+      const difficulty = first.difficulty ?? "B1";
+      const durations: Partial<Record<BundleSkill, number>> = {};
+      for (const item of items) {
+        if (
+          BUNDLE_SKILLS.includes(item.skill as BundleSkill) &&
+          typeof item.durationMin === "number"
+        ) {
+          durations[item.skill as BundleSkill] = item.durationMin;
+        }
+      }
 
       const createdAt = items.reduce(
         (min, s) => (s.createdAt < min ? s.createdAt : min),
@@ -148,6 +166,9 @@ export function buildAdminSeriesGroups(series: AdminFlatSeries[]): AdminSeriesGr
         examTitle: first.exam.title,
         order: first.order,
         title,
+        description,
+        difficulty,
+        durations,
         isFree,
         isPublished,
         isDraft: !isPublished,

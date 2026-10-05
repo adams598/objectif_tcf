@@ -45,6 +45,8 @@ export interface InitiatePaymentInput {
   currency: PaymentCurrency;
   method: PaymentMethod;
   phoneNumber?: string;
+  /** STRIPE = carte internationale, en plus de pawaPay. */
+  provider?: PaymentProvider;
 }
 
 export interface InitiatePaymentResult {

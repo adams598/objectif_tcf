@@ -41,6 +41,7 @@ import {
   isMockPaymentsEnabled,
   isAnyPaymentProviderConfigured,
 } from "./providers/mock";
+import { createStripeCheckout, isStripeConfigured } from "./providers/stripe";
 import { issueInvoiceForPayment } from "@/lib/invoices/issue-invoice";
 import { inferSubscriptionPlan } from "@/lib/payments/plan-from-offer";
 import type { PaymentInvoiceMetadata } from "@/lib/invoices/types";
@@ -201,8 +202,14 @@ export async function getPaymentForUser(
 
 function resolveProvider(
   method: PaymentMethod,
-  currency: PaymentCurrency
+  currency: PaymentCurrency,
+  explicit?: PaymentProvider
 ): PaymentProvider {
+  if (explicit === "STRIPE") {
+    if (!isStripeConfigured()) throw new Error("STRIPE_NOT_CONFIGURED");
+    return "STRIPE";
+  }
+
   const preferred = getProviderForMethod(method, currency);
 
   if (preferred === "PAWAPAY" && isPawaPayConfigured()) return "PAWAPAY";
@@ -239,9 +246,18 @@ export async function initiatePayment(
     eur: payment.amountEur ?? 0,
   };
 
-  const currency = input.currency === "EUR" ? "USD" : input.currency;
+  let currency: PaymentCurrency = input.currency;
+  const provider = resolveProvider(input.method, currency, input.provider);
+
+  // Stripe n'encaisse pas le franc CFA : débit en euros, les autres moyens restent inchangés.
+  if (provider === "STRIPE" && (currency === "XAF" || currency === "XOF")) {
+    currency = "EUR";
+  }
+
   const amount = getAmountForCurrency(amounts, currency);
-  const provider = resolveProvider(input.method, currency);
+  if (provider === "STRIPE" && amount < 1) {
+    throw new Error("STRIPE_AMOUNT_UNAVAILABLE");
+  }
   let providerReference = payment.providerReference ?? buildProviderReference();
   const baseUrl = getAppUrl();
   const redirectUrl = `${baseUrl}/offres/paiement/succes?paymentId=${payment.id}`;
@@ -267,6 +283,7 @@ export async function initiatePayment(
 
   let checkoutUrl: string;
   let externalId: string | undefined;
+  let stripeCustomerId: string | undefined;
 
   if (provider === "MOCK") {
     const mock = createMockCheckout(chargeParams);
@@ -285,9 +302,28 @@ export async function initiatePayment(
     checkoutUrl = pp.checkoutUrl;
     providerReference = pp.providerReference;
     externalId = undefined;
+  } else if (provider === "STRIPE") {
+    const stripe = await createStripeCheckout({
+      ...chargeParams,
+      currency,
+      amount,
+      stripeCustomerId:
+        typeof (payment.metadata as { stripeCustomerId?: string } | null)
+          ?.stripeCustomerId === "string"
+          ? (payment.metadata as { stripeCustomerId: string }).stripeCustomerId
+          : null,
+    });
+    checkoutUrl = stripe.checkoutUrl;
+    externalId = stripe.externalId;
+    stripeCustomerId = stripe.stripeCustomerId;
   } else {
     throw new Error("NO_PAYMENT_PROVIDER_CONFIGURED");
   }
+
+  const previousMeta =
+    typeof payment.metadata === "object" && payment.metadata
+      ? (payment.metadata as Record<string, unknown>)
+      : {};
 
   await prisma.payment.update({
     where: { id: payment.id },
@@ -301,6 +337,10 @@ export async function initiatePayment(
       externalId,
       checkoutUrl,
       failureReason: null,
+      metadata: {
+        ...previousMeta,
+        ...(stripeCustomerId ? { stripeCustomerId } : {}),
+      },
     },
   });
 

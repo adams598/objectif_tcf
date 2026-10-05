@@ -542,7 +542,9 @@ export const appExtFr = {
     modifyChoice: "Modifier mon choix",
     payAmount: "Payer {{amount}}",
     paymentProvidersDesc:
-      "Paiements sécurisés via pawaPay : Mobile Money (MTN, Orange, Wave…) et carte bancaire selon votre pays. Devises : XAF, XOF, USD.",
+      "Mobile Money (MTN, Orange, Wave…) via pawaPay, et carte Visa/Mastercard internationale via Stripe. Devises : XAF, XOF, USD, EUR.",
+    stripeEurChargeHint:
+      "La carte internationale est débitée en euros. Le montant en francs est converti automatiquement.",
     redirecting: "Redirection…",
     simulateSuccess: "Paiement simulé avec succès.",
     simulateError: "Simulation impossible.",
@@ -1068,6 +1070,7 @@ export const appExtFr = {
     statusRefunded: "Remboursé",
     statusCancelled: "Annulé",
     methodCard: "Carte",
+    methodCardInternational: "Carte internationale",
     methodTransfer: "Virement",
     refund: "Rembourser",
     refundConfirmTitle: "Rembourser ce paiement ?",

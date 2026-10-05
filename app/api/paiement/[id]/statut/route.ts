@@ -10,7 +10,7 @@ import {
 import { verifyPawaPayCheckout } from "@/lib/payments/providers/pawapay";
 import { verifyPaycardPayment } from "@/lib/payments/providers/paycard";
 import { verifyFlutterwaveTransaction } from "@/lib/payments/providers/flutterwave";
-import { retrieveStripeSession } from "@/lib/payments/providers/stripe";
+import { retrieveStripeCheckoutSession, retrieveStripeSession } from "@/lib/payments/providers/stripe";
 import {
   successResponse,
   serverErrorResponse,
@@ -85,9 +85,17 @@ export async function GET(
         } else if (sessionId && payment.provider === "STRIPE") {
           const verified = await retrieveStripeSession(sessionId);
           if (verified.status === "SUCCEEDED" && verified.txRef) {
+            const session = await retrieveStripeCheckoutSession(sessionId);
             payment =
-              (await finalizeSuccessfulPayment(verified.txRef, sessionId)) ??
-              payment;
+              (await finalizeSuccessfulPayment(
+                verified.txRef,
+                sessionId,
+                session.paymentIntentId ?? undefined,
+                {
+                  customerId: session.customerId,
+                  subscriptionId: session.subscriptionId,
+                }
+              )) ?? payment;
           }
         }
       } catch (verifyError) {

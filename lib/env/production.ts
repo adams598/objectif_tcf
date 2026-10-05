@@ -89,6 +89,12 @@ export function validateProductionEnv(): ProductionValidationResult {
     warnings.push("RESEND_API_KEY absent — emails transactionnels désactivés");
   }
 
+  if (!process.env.STRIPE_SECRET_KEY?.trim()?.startsWith("sk_")) {
+    warnings.push(
+      "STRIPE_SECRET_KEY absent — la carte internationale (Stripe) n'est pas proposée"
+    );
+  }
+
   if (
     isPlaceholder(process.env.RESEND_FROM_EMAIL, [
       "onboarding@resend.dev",

@@ -1,6 +1,7 @@
 import type { PaymentCurrency, PaymentMethod, PaymentProvider } from "@prisma/client";
 import { isPawaPayConfigured } from "./providers/pawapay";
 import { isPaycardConfigured } from "./providers/paycard";
+import { isStripeConfigured } from "./providers/stripe";
 import {
   CHECKOUT_METHOD_IDS,
   sortMethodsForLocale,
@@ -27,6 +28,12 @@ export interface PaymentMethodOption {
 
   requiresPhone?: boolean;
 
+}
+
+export function methodOptionKey(
+  method: Pick<PaymentMethodOption, "id" | "provider">
+): string {
+  return `${method.provider}:${method.id}`;
 }
 
 
@@ -70,6 +77,24 @@ export const PAYMENT_METHODS: PaymentMethodOption[] = [
     regions: ["Afrique centrale", "Afrique de l'Ouest"],
 
     requiresPhone: true,
+
+  },
+
+  {
+
+    id: "CARD",
+
+    label: "Carte internationale",
+
+    description: "Visa, Mastercard — tous pays, via Stripe. Paiement unique.",
+
+    icon: "credit_card",
+
+    provider: "STRIPE",
+
+    currencies: ["XAF", "XOF", "USD", "EUR"],
+
+    regions: ["International"],
 
   },
 
@@ -211,6 +236,8 @@ export const CURRENCY_OPTIONS: {
 
   { id: "USD", label: "Dollar US", symbol: "$", hint: "International, diaspora" },
 
+  { id: "EUR", label: "Euro", symbol: "€", hint: "Carte internationale (Stripe)" },
+
 ];
 
 
@@ -221,10 +248,14 @@ export function filterMethodsByProviders(
   const pawapay = isPawaPayConfigured();
   const paycard = isPaycardConfigured();
 
-  if (!pawapay && !paycard) return methods.filter((m) => m.provider === "PAWAPAY");
+  const stripe = isStripeConfigured();
+
+  if (!pawapay && !paycard && !stripe) {
+    return methods.filter((m) => m.provider === "PAWAPAY");
+  }
 
   return methods.filter((m) => {
-    if (m.provider === "STRIPE") return false;
+    if (m.provider === "STRIPE") return stripe;
     if (
       m.id === "MOBILE_MONEY_ORANGE" ||
       m.id === "MOBILE_MONEY_MTN" ||

@@ -26,6 +26,7 @@ const initiateSchema = z.object({
     "BANK_TRANSFER",
   ]),
   phoneNumber: z.string().min(8).max(20).optional(),
+  provider: z.enum(["PAWAPAY", "PAYCARD", "STRIPE"]).optional(),
 });
 
 export async function POST(
@@ -84,6 +85,18 @@ export async function POST(
       return errorResponse(
         "Paycard n’est pas configuré (PAYCARD_API_KEY manquant).",
         503
+      );
+    }
+    if (error instanceof Error && error.message === "STRIPE_NOT_CONFIGURED") {
+      return errorResponse(
+        "Stripe n’est pas configuré (STRIPE_SECRET_KEY manquant).",
+        503
+      );
+    }
+    if (error instanceof Error && error.message === "STRIPE_AMOUNT_UNAVAILABLE") {
+      return errorResponse(
+        "Montant en euros indisponible pour un paiement par carte internationale.",
+        422
       );
     }
     if (error instanceof Error && error.message === "PAWAPAY_NOT_CONFIGURED") {

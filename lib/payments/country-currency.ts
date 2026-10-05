@@ -70,6 +70,9 @@ const EUROPE = new Set([
   "espagne",
   "it",
   "italie",
+]);
+
+const CANADA = new Set([
   "ca",
   "canada",
   "qc",
@@ -192,9 +195,18 @@ export function resolvePaymentLocaleFromCountry(
 
   if (EUROPE.has(key)) {
     return {
-      currency: "USD",
+      currency: "EUR",
       countryLabel: country ?? null,
       phonePrefix: PHONE_PREFIX[key] ?? "+33",
+      preferredMethods: ["CARD"],
+    };
+  }
+
+  if (CANADA.has(key)) {
+    return {
+      currency: "USD",
+      countryLabel: country ?? null,
+      phonePrefix: "+1",
       preferredMethods: ["CARD", "BANK_TRANSFER"],
     };
   }

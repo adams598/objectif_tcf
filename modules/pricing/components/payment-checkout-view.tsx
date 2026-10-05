@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import type { PaymentCurrency, PaymentMethod } from "@prisma/client";
+import type { PaymentCurrency } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ import {
   CURRENCY_OPTIONS,
   formatPaymentAmount,
   getAmountForCurrency,
+  methodOptionKey,
   type PaymentMethodOption,
 } from "@/lib/payments/methods";
 import type { PaymentLocaleContext } from "@/lib/payments/country-currency";
@@ -36,7 +37,7 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
   const { t } = useTranslation();
   const router = useRouter();
   const [currency, setCurrency] = useState<PaymentCurrency>("XAF");
-  const [method, setMethod] = useState<PaymentMethod | null>(null);
+  const [methodKey, setMethodKey] = useState<string | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [localeApplied, setLocaleApplied] = useState(false);
 
@@ -51,8 +52,7 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
 
   React.useEffect(() => {
     if (!data || localeApplied) return;
-    const suggested =
-      data.suggestedCurrency === "EUR" ? "USD" : data.suggestedCurrency;
+    const suggested = data.suggestedCurrency;
     setCurrency(suggested);
     if (data.userPhone) {
       setPhoneNumber(data.userPhone);
@@ -61,7 +61,7 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
     }
     const methods = data.methodsByCurrency[suggested] ?? [];
     if (methods.length > 0) {
-      setMethod(methods[0].id);
+      setMethodKey(methodOptionKey(methods[0]));
     }
     setLocaleApplied(true);
   }, [data, localeApplied]);
@@ -79,9 +79,16 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
     [data, currency]
   );
 
-  const selectedMethod = availableMethods.find((m) => m.id === method);
+  const selectedMethod = availableMethods.find(
+    (m) => methodOptionKey(m) === methodKey
+  );
+  const chargeCurrency: PaymentCurrency =
+    selectedMethod?.provider === "STRIPE" &&
+    (currency === "XAF" || currency === "XOF")
+      ? "EUR"
+      : currency;
   const amount = data
-    ? getAmountForCurrency(data.payment.amounts, currency)
+    ? getAmountForCurrency(data.payment.amounts, chargeCurrency)
     : 0;
 
   const initiateMutation = useMutation({
@@ -89,8 +96,9 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
       fetchJson<{ checkoutUrl: string }>(`/api/paiement/${paymentId}/initier`, {
         method: "POST",
         body: JSON.stringify({
-          currency,
-          method,
+          currency: chargeCurrency,
+          method: selectedMethod?.id,
+          provider: selectedMethod?.provider,
           ...(phoneNumber ? { phoneNumber } : {}),
         }),
       }),
@@ -197,8 +205,14 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
           </span>
         </div>
         <p className="font-display-md text-[28px] font-bold text-primary">
-          {formatPaymentAmount(amount, currency)}
+          {formatPaymentAmount(amount, chargeCurrency)}
         </p>
+        {selectedMethod?.provider === "STRIPE" &&
+          (currency === "XAF" || currency === "XOF") && (
+            <p className="font-label-sm text-label-sm text-on-surface-variant mt-sm">
+              {t("pricing.stripeEurChargeHint")}
+            </p>
+          )}
         <p className="font-label-sm text-label-sm text-on-surface-variant mt-md">
           {t("pricing.autoRenewNotice")}
         </p>
@@ -229,7 +243,7 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
               type="button"
               onClick={() => {
                 setCurrency(option.id);
-                setMethod(null);
+                setMethodKey(null);
               }}
               className={cn(
                 "rounded-xl border p-md text-left transition-all",
@@ -259,12 +273,12 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm">
           {availableMethods.map((option) => (
             <button
-              key={option.id}
+              key={methodOptionKey(option)}
               type="button"
-              onClick={() => setMethod(option.id)}
+              onClick={() => setMethodKey(methodOptionKey(option))}
               className={cn(
                 "rounded-xl border p-md text-left flex items-start gap-sm transition-all",
-                method === option.id
+                methodKey === methodOptionKey(option)
                   ? "border-primary bg-primary/5"
                   : "border-outline-variant hover:border-primary/50"
               )}
@@ -305,7 +319,7 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
           size="lg"
           className="sm:flex-1"
           disabled={
-            !method ||
+            !methodKey ||
             initiateMutation.isPending ||
             !data.providersConfigured ||
             (selectedMethod?.requiresPhone && phoneNumber.trim().length < 8)
@@ -314,7 +328,7 @@ export function PaymentCheckoutView({ paymentId }: { paymentId: string }) {
           onClick={() => initiateMutation.mutate()}
         >
           {t("pricing.payAmount", {
-            amount: formatPaymentAmount(amount, currency),
+            amount: formatPaymentAmount(amount, chargeCurrency),
           })}
         </Button>
       </div>

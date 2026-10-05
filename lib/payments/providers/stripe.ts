@@ -105,10 +105,6 @@ export async function createStripeCheckout(
       ? params.amount * 100
       : params.amount;
 
-  const rawDays = params.subscriptionDays ?? 0;
-  const useSubscription = rawDays >= 1;
-  const days = Math.max(1, Math.min(365, rawDays || 30));
-
   const customerId = await findOrCreateStripeCustomer({
     email: params.customerEmail,
     name: params.customerName,
@@ -116,7 +112,9 @@ export async function createStripeCheckout(
   });
 
   const body = new URLSearchParams();
-  body.set("mode", useSubscription ? "subscription" : "payment");
+  // Paiement unique : l'accès est ouvert pour la durée payée, sans enregistrer
+  // la carte pour un renouvellement automatique.
+  body.set("mode", "payment");
   body.set("success_url", `${params.redirectUrl}?session_id={CHECKOUT_SESSION_ID}`);
   body.set(
     "cancel_url",
@@ -133,16 +131,6 @@ export async function createStripeCheckout(
   body.set("line_items[0][quantity]", "1");
   body.set("metadata[payment_id]", params.paymentId);
   body.set("metadata[tx_ref]", params.providerReference);
-
-  if (useSubscription) {
-    body.set("line_items[0][price_data][recurring][interval]", "day");
-    body.set(
-      "line_items[0][price_data][recurring][interval_count]",
-      String(days)
-    );
-    body.set("subscription_data[metadata][tx_ref]", params.providerReference);
-    body.set("subscription_data[metadata][payment_id]", params.paymentId);
-  }
 
   for (const type of stripePaymentMethodTypes(params.method)) {
     body.append("payment_method_types[]", type);

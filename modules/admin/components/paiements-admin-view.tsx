@@ -300,9 +300,11 @@ export function PaiementsAdminView() {
                       {formatPaymentAmount(payment.amount, payment.currency)}
                     </td>
                     <td className="px-md py-sm font-label-sm text-label-sm">
-                      {payment.method
-                        ? methodLabels[payment.method] ?? payment.method
-                        : "—"}
+                      {payment.provider === "STRIPE"
+                        ? t("admin.methodCardInternational")
+                        : payment.method
+                          ? methodLabels[payment.method] ?? payment.method
+                          : "—"}
                       {payment.provider && (
                         <span className="block text-on-surface-variant text-[11px]">
                           {payment.provider}

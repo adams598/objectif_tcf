@@ -530,7 +530,9 @@ export const appExtEn = {
     modifyChoice: "Change my selection",
     payAmount: "Pay {{amount}}",
     paymentProvidersDesc:
-      "Secure payments via pawaPay: Mobile Money (MTN, Orange, Wave…) and cards depending on your country. Currencies: XAF, XOF, USD.",
+      "Mobile Money (MTN, Orange, Wave…) via pawaPay, and international Visa/Mastercard via Stripe. Currencies: XAF, XOF, USD, EUR.",
+    stripeEurChargeHint:
+      "International cards are charged in euros. The CFA amount is converted automatically.",
     redirecting: "Redirecting…",
     simulateSuccess: "Payment simulated successfully.",
     simulateError: "Simulation failed.",
@@ -1052,6 +1054,7 @@ export const appExtEn = {
     statusRefunded: "Refunded",
     statusCancelled: "Cancelled",
     methodCard: "Card",
+    methodCardInternational: "International card",
     methodTransfer: "Bank transfer",
     refund: "Refund",
     refundConfirmTitle: "Refund this payment?",

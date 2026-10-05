@@ -100,9 +100,13 @@ export function validateProductionEnv(): ProductionValidationResult {
     );
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN?.trim()) {
+  if (
+    !process.env.BLOB_READ_WRITE_TOKEN?.trim() &&
+    !process.env.UPLOADS_DIR?.trim() &&
+    process.env.VERCEL === "1"
+  ) {
     warnings.push(
-      "BLOB_READ_WRITE_TOKEN absent — uploads médias (admin, avatars, EO) nécessitent Vercel Blob en production"
+      "BLOB_READ_WRITE_TOKEN absent — uploads médias (admin, avatars, EO) nécessitent Vercel Blob sur Vercel"
     );
   }
 

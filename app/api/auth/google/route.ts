@@ -3,17 +3,21 @@ import { cookies } from "next/headers";
 import {
   buildGoogleAuthUrl,
   createOAuthState,
-  getGoogleCallbackUriFromOrigin,
   GOOGLE_OAUTH_ACTION_COOKIE,
   GOOGLE_OAUTH_REDIRECT_URI_COOKIE,
   GOOGLE_OAUTH_STATE_COOKIE,
   isGoogleOAuthConfigured,
 } from "@/lib/auth/google";
+import {
+  getGoogleCallbackUriFromOrigin,
+  resolvePublicOrigin,
+  toPublicUrl,
+} from "@/lib/env/app-url";
 
 export async function GET(request: NextRequest) {
   if (!isGoogleOAuthConfigured()) {
     return NextResponse.redirect(
-      new URL("/connexion?error=google_not_configured", request.url)
+      toPublicUrl(request, "/connexion?error=google_not_configured")
     );
   }
 
@@ -21,7 +25,9 @@ export async function GET(request: NextRequest) {
     const action = request.nextUrl.searchParams.get("action") ?? "login";
     const redirectTo = request.nextUrl.searchParams.get("redirect");
     const state = createOAuthState();
-    const redirectUri = getGoogleCallbackUriFromOrigin(request.nextUrl.origin);
+    const redirectUri = getGoogleCallbackUriFromOrigin(
+      resolvePublicOrigin(request)
+    );
 
     const cookieStore = await cookies();
     const cookieOptions = {
@@ -44,7 +50,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("[Google OAuth] Init error:", error);
     return NextResponse.redirect(
-      new URL("/connexion?error=google_auth_failed", request.url)
+      toPublicUrl(request, "/connexion?error=google_auth_failed")
     );
   }
 }

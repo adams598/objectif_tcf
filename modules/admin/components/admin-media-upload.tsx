@@ -24,12 +24,6 @@ interface AdminMediaUploadProps {
   allowExternalLink?: boolean;
 }
 
-function isBrowserLocalhost() {
-  if (typeof window === "undefined") return false;
-  const host = window.location.hostname;
-  return host === "localhost" || host === "127.0.0.1";
-}
-
 function formatUploadError(error: unknown): string {
   const message =
     error instanceof Error ? error.message : "Impossible d'envoyer le fichier";
@@ -41,7 +35,7 @@ function formatUploadError(error: unknown): string {
     message.includes("Too Large") ||
     message.includes("413")
   ) {
-    return "Fichier trop volumineux pour l'ancien upload serveur. Rechargez la page (Ctrl+F5) puis réessayez — l'envoi doit aller vers Vercel Blob.";
+    return "Fichier trop volumineux pour l'hébergeur. Réessayez un fichier plus léger, ou vérifiez la limite d'upload.";
   }
 
   if (
@@ -50,7 +44,7 @@ function formatUploadError(error: unknown): string {
     message.includes("client token") ||
     message.includes("Failed to retrieve")
   ) {
-    return "Vercel Blob non configuré ou inaccessible (BLOB_READ_WRITE_TOKEN). Vérifiez Storage → Blob sur Vercel.";
+    return "Stockage cloud Vercel indisponible. Sur Hostinger, l'envoi se fait vers le disque du serveur.";
   }
 
   return message;
@@ -97,9 +91,6 @@ export function AdminMediaUpload({
 
   const uploadMediaLocalFallback = async (file: File) => {
     const detected = detectMediaKindFromFile(file);
-    if (detected === "video" || kind === "video") {
-      throw new Error("Vidéo : Vercel Blob requis (BLOB_READ_WRITE_TOKEN).");
-    }
 
     const formData = new FormData();
     formData.append("file", file);
@@ -143,13 +134,26 @@ export function AdminMediaUpload({
     try {
       const detected = detectMediaKindFromFile(file);
       let url: string;
+      let backend: string | undefined;
       try {
+        const probe = await fetch("/api/admin/upload/media");
+        const probeJson = (await probe.json()) as {
+          data?: { backend?: string };
+        };
+        backend = probeJson.data?.backend;
+      } catch {
+        backend = undefined;
+      }
+
+      if (backend === "vercel-blob") {
         url = await uploadViaBlobClient(file);
-      } catch (blobError) {
-        if (!isBrowserLocalhost()) {
-          throw blobError;
+      } else {
+        try {
+          url = await uploadMediaLocalFallback(file);
+        } catch (diskError) {
+          if (backend === "disk" || backend === "local") throw diskError;
+          url = await uploadViaBlobClient(file);
         }
-        url = await uploadMediaLocalFallback(file);
       }
 
       const resolvedKind =
@@ -168,10 +172,10 @@ export function AdminMediaUpload({
       setExternalUrl("");
       toast.success(
         resolvedKind === "audio"
-          ? "Audio enregistré sur le cloud"
+          ? "Audio enregistré"
           : resolvedKind === "video"
-            ? "Vidéo enregistrée sur le cloud"
-            : "Image enregistrée sur le cloud"
+            ? "Vidéo enregistrée"
+            : "Image enregistrée"
       );
     } catch (error) {
       toast.error(formatUploadError(error));

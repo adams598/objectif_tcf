@@ -18,10 +18,10 @@ export {
   MAX_VIDEO_BYTES,
 } from "@/lib/media/content-media-types";
 
-/** Upload serveur (local / petits fichiers). Éviter sur Vercel pour > ~4 Mo. */
+/** Upload serveur (disque Hostinger / local). Éviter sur Vercel pour > ~4 Mo. */
 export async function uploadContentMedia(
   file: File,
-  kind: Exclude<ContentMediaKind, "video">
+  kind: ContentMediaKind
 ): Promise<string> {
   const validationError = validateContentMediaFile(file, kind);
   if (validationError) throw new Error(validationError);

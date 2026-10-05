@@ -50,7 +50,11 @@ export async function GET() {
         backend: getBlobStorageBackend(),
         blobConfigured: getBlobStorageBackend() === "vercel-blob",
         hint:
-          "Vercel Dashboard → Storage → Blob → connecter le projet → BLOB_READ_WRITE_TOKEN",
+          getBlobStorageBackend() === "disk"
+            ? "Fichiers stockés sur le disque Hostinger (dossier objectif-tcf-media, conservé entre les déploiements)."
+            : getBlobStorageBackend() === "vercel-blob"
+              ? "Vercel Blob actif."
+              : "Uploads locaux (public/uploads) ou disque Hostinger (UPLOADS_DIR).",
       },
     });
   } catch (error) {

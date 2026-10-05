@@ -1,16 +1,36 @@
 import { mkdir, writeFile } from "fs/promises";
+import os from "os";
 import path from "path";
 import { put } from "@vercel/blob";
 import { isLocalDevelopment, isVercelRuntime } from "@/lib/env/runtime";
+
+export type StorageBackend = "vercel-blob" | "disk" | "local" | "none";
 
 export function isVercelBlobConfigured(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
 }
 
+export function getUploadsRoot(): string {
+  if (process.env.UPLOADS_DIR?.trim()) {
+    return path.resolve(process.env.UPLOADS_DIR.trim());
+  }
+  if (!isVercelRuntime() && process.env.NODE_ENV === "production") {
+    return path.join(os.homedir(), "objectif-tcf-media");
+  }
+  return path.join(process.cwd(), "public", "uploads");
+}
+
+export function isDiskStorageEnabled(): boolean {
+  if (isVercelBlobConfigured()) return false;
+  if (process.env.UPLOADS_DIR?.trim()) return true;
+  return !isVercelRuntime();
+}
+
 export function blobStorageRequiredMessage(): string {
-  return isVercelRuntime()
-    ? "Vercel Blob requis : ajoutez BLOB_READ_WRITE_TOKEN dans Vercel → Settings → Environment Variables (Storage → Blob)."
-    : "Stockage cloud requis : configurez BLOB_READ_WRITE_TOKEN (Vercel Blob) pour les uploads en production.";
+  if (isVercelRuntime()) {
+    return "Vercel Blob requis : ajoutez BLOB_READ_WRITE_TOKEN dans Vercel → Settings → Environment Variables (Storage → Blob).";
+  }
+  return "Stockage disque indisponible : définissez UPLOADS_DIR (ex. /home/USER/objectif-tcf-media).";
 }
 
 export async function uploadBufferToVercelBlob(
@@ -39,7 +59,20 @@ export async function uploadToLocalPublicDir(
   return `${baseUrl.replace(/\/$/, "")}/uploads/${subdir}/${filename}`;
 }
 
-/** Blob en prod/preview ; disque local uniquement en dev sans token. */
+async function uploadToPersistentDisk(
+  subdir: string,
+  filename: string,
+  buffer: Buffer
+): Promise<string> {
+  const destDir = path.join(getUploadsRoot(), subdir);
+  await mkdir(destDir, { recursive: true });
+  await writeFile(path.join(destDir, filename), buffer);
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  return `${baseUrl.replace(/\/$/, "")}/media/${subdir}/${filename}`;
+}
+
+/** Blob sur Vercel ; disque Hostinger/VPS (hors dossier de déploiement) ; public/uploads en local. */
 export async function uploadWithBlobOrLocal(options: {
   blobPathname: string;
   localSubdir: string;
@@ -49,15 +82,27 @@ export async function uploadWithBlobOrLocal(options: {
   cacheBustQuery?: string;
 }): Promise<string> {
   if (isVercelBlobConfigured()) {
-    return uploadBufferToVercelBlob(
+    const url = await uploadBufferToVercelBlob(
       options.blobPathname,
       options.buffer,
       options.contentType
     );
+    return options.cacheBustQuery ? `${url}?v=${options.cacheBustQuery}` : url;
   }
 
-  if (isLocalDevelopment()) {
+  if (isLocalDevelopment() && !process.env.UPLOADS_DIR?.trim()) {
     const url = await uploadToLocalPublicDir(
+      options.localSubdir,
+      options.localFilename,
+      options.buffer
+    );
+    return options.cacheBustQuery
+      ? `${url}?v=${options.cacheBustQuery}`
+      : url;
+  }
+
+  if (isDiskStorageEnabled()) {
+    const url = await uploadToPersistentDisk(
       options.localSubdir,
       options.localFilename,
       options.buffer
@@ -70,8 +115,10 @@ export async function uploadWithBlobOrLocal(options: {
   throw new Error(blobStorageRequiredMessage());
 }
 
-export function getBlobStorageBackend(): "vercel-blob" | "local" | "none" {
+export function getBlobStorageBackend(): StorageBackend {
   if (isVercelBlobConfigured()) return "vercel-blob";
+  if (process.env.UPLOADS_DIR?.trim()) return "disk";
+  if (!isVercelRuntime() && process.env.NODE_ENV === "production") return "disk";
   if (isLocalDevelopment()) return "local";
   return "none";
 }

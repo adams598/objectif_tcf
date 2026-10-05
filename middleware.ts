@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAccessToken } from "@/lib/auth/jwt";
 import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/cookies";
+import { toPublicUrl } from "@/lib/env/app-url";
 
 const PROTECTED_ROUTES = [
   "/tableau-de-bord",
@@ -45,8 +46,7 @@ export async function middleware(request: NextRequest) {
 
   if (!accessToken) {
     if (isProtected) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/connexion";
+      const url = toPublicUrl(request, "/connexion");
       url.searchParams.set("redirect", pathname);
       return NextResponse.redirect(url);
     }
@@ -63,14 +63,15 @@ export async function middleware(request: NextRequest) {
     if (user) {
       const savedRedirect = request.nextUrl.searchParams.get("redirect");
       if (savedRedirect?.startsWith("/")) {
-        return NextResponse.redirect(new URL(savedRedirect, request.url));
+        return NextResponse.redirect(toPublicUrl(request, savedRedirect));
       }
 
-      const url = request.nextUrl.clone();
-      url.pathname =
+      const url = toPublicUrl(
+        request,
         user.role === "ADMIN" || user.role === "SUPER_ADMIN"
           ? "/admin"
-          : "/tableau-de-bord";
+          : "/tableau-de-bord"
+      );
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
@@ -78,8 +79,7 @@ export async function middleware(request: NextRequest) {
 
   if (isProtected) {
     if (!user) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/connexion";
+      const url = toPublicUrl(request, "/connexion");
       url.searchParams.set("redirect", pathname);
       return NextResponse.redirect(url);
     }
@@ -89,7 +89,7 @@ export async function middleware(request: NextRequest) {
       user.role !== "ADMIN" &&
       user.role !== "SUPER_ADMIN"
     ) {
-      return NextResponse.redirect(new URL("/tableau-de-bord", request.url));
+      return NextResponse.redirect(toPublicUrl(request, "/tableau-de-bord"));
     }
 
     if (
@@ -98,7 +98,7 @@ export async function middleware(request: NextRequest) {
       user.role !== "ADMIN" &&
       user.role !== "SUPER_ADMIN"
     ) {
-      return NextResponse.redirect(new URL("/tableau-de-bord", request.url));
+      return NextResponse.redirect(toPublicUrl(request, "/tableau-de-bord"));
     }
   }
 

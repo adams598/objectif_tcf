@@ -78,7 +78,7 @@ if (mode === "local") {
   const blob = get("BLOB_READ_WRITE_TOKEN");
   if (!blob) {
     warnings.push(
-      "BLOB_READ_WRITE_TOKEN absent — uploads locaux dans public/uploads/ ; en prod Vercel, créez un Blob store"
+      "BLOB_READ_WRITE_TOKEN absent — en local : public/uploads/ ; Hostinger : disque (UPLOADS_DIR) ; Vercel : Blob store"
     );
   } else {
     ok.push("BLOB_READ_WRITE_TOKEN");

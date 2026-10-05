@@ -12,6 +12,7 @@ import {
   GOOGLE_OAUTH_REDIRECT_URI_COOKIE,
   GOOGLE_OAUTH_STATE_COOKIE,
 } from "@/lib/auth/google";
+import { toPublicUrl } from "@/lib/env/app-url";
 
 export const runtime = "nodejs";
 
@@ -21,7 +22,9 @@ function redirectWithError(
   action: string = "login"
 ) {
   const basePath = action === "register" ? "/inscription" : "/connexion";
-  return NextResponse.redirect(new URL(`${basePath}?error=${error}`, request.url));
+  return NextResponse.redirect(
+    toPublicUrl(request, `${basePath}?error=${error}`)
+  );
 }
 
 function hasProductionJwtSecrets(): boolean {
@@ -99,7 +102,7 @@ async function createSessionForUser(
     destination = "/onboarding";
   }
 
-  const response = NextResponse.redirect(new URL(destination, request.url));
+  const response = NextResponse.redirect(toPublicUrl(request, destination));
   return applyAuthCookiesToResponse(response, accessToken, refreshToken);
 }
 
@@ -197,7 +200,7 @@ export async function GET(request: NextRequest) {
 
       if (hasCredentials && action === "register") {
         return NextResponse.redirect(
-          new URL("/inscription?error=email_exists", request.url)
+          toPublicUrl(request, "/inscription?error=email_exists")
         );
       }
 
